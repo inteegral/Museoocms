@@ -26,17 +26,17 @@ export function PublishFlow() {
   }, [currentStep, guideUrl]);
 
   if (!guide) {
-    return <div className="p-8">Audioguida non trovata</div>;
+    return <div className="p-8">Guide not found</div>;
   }
 
   const recommendedPack = guide.poiCount <= 10 ? "voice_10" : "voice_20";
 
   const steps = [
-    { key: "review", label: "Revisione" },
-    { key: "packs", label: "Pacchetti" },
-    { key: "payment", label: "Pagamento" },
-    { key: "generating", label: "Generazione" },
-    { key: "live", label: "Pubblicata" },
+    { key: "review", label: "Review" },
+    { key: "packs", label: "Packages" },
+    { key: "payment", label: "Payment" },
+    { key: "generating", label: "Generating" },
+    { key: "live", label: "Published" },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.key === currentStep);
@@ -70,13 +70,13 @@ export function PublishFlow() {
       {/* Header */}
       <div className="mb-8">
         <Link
-          to={`/studio/guides/${id}`}
+          to={`/guides/${id}`}
           className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
         >
           <ArrowLeft className="size-4" />
-          Torna all'editor
+          Back to editor
         </Link>
-        <h1 className="text-3xl font-light text-slate-900 mb-2">Pubblica Audioguida</h1>
+        <h1 className="text-3xl font-light text-slate-900 mb-2">Publish Guide</h1>
         <p className="text-slate-600">{guide.title}</p>
       </div>
 
@@ -128,31 +128,31 @@ export function PublishFlow() {
       <div className="bg-white rounded-xl border border-slate-200 p-8">
         {currentStep === "review" && (
           <div>
-            <h2 className="text-2xl font-light text-slate-900 mb-6">Revisione</h2>
+            <h2 className="text-2xl font-light text-slate-900 mb-6">Review</h2>
             <div className="space-y-6">
               <div>
-                <label className="text-sm text-slate-600 mb-1 block">Titolo</label>
+                <label className="text-sm text-slate-600 mb-1 block">Title</label>
                 <div className="text-slate-900">{guide.title}</div>
               </div>
               <div>
-                <label className="text-sm text-slate-600 mb-1 block">Descrizione</label>
+                <label className="text-sm text-slate-600 mb-1 block">Description</label>
                 <div className="text-slate-900">{guide.description}</div>
               </div>
               <div className="flex gap-8">
                 <div>
-                  <label className="text-sm text-slate-600 mb-1 block">Punti di Interesse</label>
+                  <label className="text-sm text-slate-600 mb-1 block">Points of Interest</label>
                   <div className="text-2xl font-light text-slate-900">{guide.poiCount}</div>
                 </div>
                 <div>
-                  <label className="text-sm text-slate-600 mb-1 block">Lingue</label>
+                  <label className="text-sm text-slate-600 mb-1 block">Languages</label>
                   <div className="text-2xl font-light text-slate-900">{guide.languages.length}</div>
                 </div>
               </div>
 
               <div className="bg-slate-50 rounded-lg p-4 mt-6">
                 <p className="text-sm text-slate-600">
-                  ✓ La tua audioguida è pronta per essere pubblicata. 
-                  Dovrai acquistare un pacchetto di generazione vocale per renderla accessibile ai visitatori.
+                  ✓ Your guide is ready to be published.
+                  You will need to purchase a voice generation package to make it accessible to visitors.
                 </p>
               </div>
             </div>
@@ -160,16 +160,16 @@ export function PublishFlow() {
               onClick={handleContinue}
               className="w-full mt-8 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
             >
-              Continua
+              Continue
             </button>
           </div>
         )}
 
         {currentStep === "packs" && (
           <div>
-            <h2 className="text-2xl font-light text-slate-900 mb-2">Seleziona Pacchetto</h2>
+            <h2 className="text-2xl font-light text-slate-900 mb-2">Select Package</h2>
             <p className="text-slate-600 mb-6">
-              Scegli il pacchetto adatto per la tua audioguida con {guide.poiCount} POI
+              Choose the right package for your guide with {guide.poiCount} POIs
             </p>
 
             <div className="grid md:grid-cols-2 gap-4 mb-6">
@@ -189,12 +189,12 @@ export function PublishFlow() {
                 >
                   {pack.type === recommendedPack && (
                     <div className="inline-block px-2 py-0.5 bg-slate-900 text-white text-xs rounded mb-3">
-                      Consigliato
+                      Recommended
                     </div>
                   )}
                   <div className="flex items-baseline gap-2 mb-2">
                     <span className="text-2xl font-light text-slate-900">{pack.price}</span>
-                    <span className="text-sm text-slate-500">una tantum</span>
+                    <span className="text-sm text-slate-500">one-time</span>
                   </div>
                   <div className="font-medium text-slate-900 mb-1">{pack.name}</div>
                   <div className="text-sm text-slate-600">{pack.description}</div>
@@ -203,12 +203,12 @@ export function PublishFlow() {
             </div>
 
             <div className="bg-slate-50 rounded-lg p-4 mb-6">
-              <h4 className="font-medium text-slate-900 mb-2">Cosa include:</h4>
+              <h4 className="font-medium text-slate-900 mb-2">What's included:</h4>
               <ul className="text-sm text-slate-600 space-y-1">
-                <li>✓ Generazione vocale professionale con AI</li>
-                <li>✓ Audio di alta qualità in italiano</li>
-                <li>✓ QR code per accesso visitatori</li>
-                <li>✓ Aggiornamenti illimitati dei contenuti</li>
+                <li>✓ Professional AI voice generation</li>
+                <li>✓ High-quality audio in your language</li>
+                <li>✓ QR code for visitor access</li>
+                <li>✓ Unlimited content updates</li>
               </ul>
             </div>
 
@@ -217,24 +217,24 @@ export function PublishFlow() {
               disabled={!selectedPack}
               className="w-full px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Procedi al pagamento
+              Proceed to payment
             </button>
           </div>
         )}
 
         {currentStep === "payment" && (
           <div>
-            <h2 className="text-2xl font-light text-slate-900 mb-6">Pagamento</h2>
-            
+            <h2 className="text-2xl font-light text-slate-900 mb-6">Payment</h2>
+
             <div className="bg-slate-50 rounded-lg p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-slate-600">Pacchetto selezionato</span>
+                <span className="text-slate-600">Selected package</span>
                 <span className="font-medium text-slate-900">
                   {mockPacks.find((p) => p.type === selectedPack)?.name}
                 </span>
               </div>
               <div className="flex items-center justify-between text-lg">
-                <span className="text-slate-900">Totale</span>
+                <span className="text-slate-900">Total</span>
                 <span className="font-medium text-slate-900">
                   {mockPacks.find((p) => p.type === selectedPack)?.price}
                 </span>
@@ -252,7 +252,7 @@ export function PublishFlow() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-600 mb-2">Numero carta</label>
+                <label className="block text-sm text-slate-600 mb-2">Card number</label>
                 <input
                   type="text"
                   placeholder="4242 4242 4242 4242"
@@ -261,10 +261,10 @@ export function PublishFlow() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-600 mb-2">Scadenza</label>
+                  <label className="block text-sm text-slate-600 mb-2">Expiry</label>
                   <input
                     type="text"
-                    placeholder="MM/AA"
+                    placeholder="MM/YY"
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg"
                   />
                 </div>
@@ -287,7 +287,7 @@ export function PublishFlow() {
             </button>
 
             <p className="text-xs text-center text-slate-500 mt-4">
-              Modalità test Stripe - nessun addebito reale
+              Stripe test mode — no real charges
             </p>
           </div>
         )}
@@ -295,14 +295,14 @@ export function PublishFlow() {
         {currentStep === "generating" && (
           <div className="text-center py-12">
             <Loader2 className="size-16 text-slate-900 animate-spin mx-auto mb-4" />
-            <h2 className="text-2xl font-light text-slate-900 mb-2">Generazione in corso...</h2>
+            <h2 className="text-2xl font-light text-slate-900 mb-2">Generating...</h2>
             <p className="text-slate-600">
-              Stiamo creando le tracce audio per la tua audioguida.
-              Questo può richiedere alcuni minuti.
+              We are creating the audio tracks for your guide.
+              This may take a few minutes.
             </p>
             <div className="mt-8 max-w-md mx-auto">
               <div className="flex justify-between text-sm text-slate-600 mb-2">
-                <span>Progresso</span>
+                <span>Progress</span>
                 <span>75%</span>
               </div>
               <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -320,20 +320,20 @@ export function PublishFlow() {
             <div className="size-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="size-8 text-green-600" />
             </div>
-            <h2 className="text-2xl font-light text-slate-900 mb-2">Audioguida Pubblicata!</h2>
+            <h2 className="text-2xl font-light text-slate-900 mb-2">Guide Published!</h2>
             <p className="text-slate-600 mb-8">
-              La tua audioguida è ora accessibile ai visitatori
+              Your guide is now accessible to visitors
             </p>
 
             {/* QR Code */}
             <div className="bg-slate-50 rounded-xl p-8 inline-block mb-6">
               <canvas ref={canvasRef} className="mx-auto" />
-              <p className="text-sm text-slate-600 mt-4">Scansiona per accedere</p>
+              <p className="text-sm text-slate-600 mt-4">Scan to access</p>
             </div>
 
             {/* URL */}
             <div className="max-w-md mx-auto mb-6">
-              <label className="block text-sm text-slate-600 mb-2 text-left">Link pubblico</label>
+              <label className="block text-sm text-slate-600 mb-2 text-left">Public link</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -354,22 +354,22 @@ export function PublishFlow() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors inline-flex items-center justify-center gap-2">
                 <Download className="size-5" />
-                Scarica QR Code
+                Download QR Code
               </button>
               <Link
                 to={`/museo-archeologico/${id}`}
                 className="px-6 py-3 border border-slate-200 text-slate-900 rounded-lg hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-2"
               >
                 <ExternalLink className="size-5" />
-                Visualizza come visitatore
+                View as visitor
               </Link>
             </div>
 
             <Link
-              to="/studio/guides"
+              to="/guides"
               className="inline-block mt-8 text-slate-600 hover:text-slate-900"
             >
-              Torna alle audioguide
+              Back to guides
             </Link>
           </div>
         )}

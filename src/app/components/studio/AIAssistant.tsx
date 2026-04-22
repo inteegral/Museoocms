@@ -53,7 +53,7 @@ export function AIAssistant({
     {
       id: "welcome",
       role: "assistant",
-      content: `Ciao! Sono qui per aiutarti a costruire la narrazione di "${guideName}".\n\nPossiamo lavorare insieme per definire:\n\n1️⃣ **Il concept narrativo** - Che storia vuoi raccontare?\n2️⃣ **La struttura** - Quali POI includere e in che ordine?\n3️⃣ **I contenuti** - Testi coerenti per ogni punto del percorso\n\nPer iniziare, dimmi: che tipo di esperienza vuoi creare per i visitatori? (es. tour cronologico, highlights, percorso tematico, tour per famiglie...)`,
+      content: `Hi! I'm here to help you build the narrative for "${guideName}".\n\nWe can work together to define:\n\n1️⃣ **The narrative concept** — What story do you want to tell?\n2️⃣ **The structure** — Which POIs to include and in what order?\n3️⃣ **The content** — Consistent texts for each stop on the tour\n\nTo get started, tell me: what kind of experience do you want to create for visitors? (e.g. chronological tour, highlights, thematic tour, family tour...)`,
       timestamp: new Date(),
     },
   ]);
@@ -116,16 +116,16 @@ export function AIAssistant({
     // Step 1: Concept Narrative
     if (step === "concept") {
       const conceptProposal = {
-        type: "Tour Cronologico",
-        target: "Pubblico generale e appassionati d'arte",
-        narrative: "Un viaggio attraverso i secoli dell'arte italiana",
-        tone: "Informale ma autorevole, accessibile a tutti",
+        type: "Chronological Tour",
+        target: "General public and art enthusiasts",
+        narrative: "A journey through centuries of Italian art",
+        tone: "Informal yet authoritative, accessible to all",
       };
 
       return {
-        message: `Ottima idea! Basandomi sui tuoi documenti, ti propongo questo **concept narrativo**:\n\n📖 **Tipo**: ${conceptProposal.type}\n👥 **Target**: ${conceptProposal.target}\n✨ **Filo conduttore**: ${conceptProposal.narrative}\n🎭 **Tono**: ${conceptProposal.tone}\n\n---\n\nHo analizzato questi documenti:\n${documentsContext.slice(0, 3).map((d) => `• ${d.name}`).join("\n")}\n\nTi piace questo concept? Posso modificarlo se vuoi cambiare il tono, il target o il filo narrativo. Oppure dimmi "procedi" per passare alla struttura del percorso.`,
+        message: `Great idea! Based on your documents, here's a **narrative concept** I'd suggest:\n\n📖 **Type**: ${conceptProposal.type}\n👥 **Target**: ${conceptProposal.target}\n✨ **Thread**: ${conceptProposal.narrative}\n🎭 **Tone**: ${conceptProposal.tone}\n\n---\n\nI analysed these documents:\n${documentsContext.slice(0, 3).map((d) => `• ${d.name}`).join("\n")}\n\nDo you like this concept? I can adjust the tone, target, or narrative thread. Or say "proceed" to move on to the tour structure.`,
         updateProposal: { concept: conceptProposal },
-        nextStep: lowerInput.includes("procedi") || lowerInput.includes("ok") ? "structure" : "concept",
+        nextStep: lowerInput.includes("proceed") || lowerInput.includes("ok") ? "structure" : "concept",
       };
     }
 
@@ -135,40 +135,40 @@ export function AIAssistant({
         pois: [
           {
             id: "poi-1",
-            title: "Ingresso e Atrio Principale",
+            title: "Entrance and Main Hall",
             order: 1,
-            reason: "Introduzione al museo e contestualizzazione storica",
+            reason: "Introduction to the museum and historical context",
           },
           {
             id: "poi-2",
-            title: "Sala del Rinascimento",
+            title: "Renaissance Gallery",
             order: 2,
-            reason: "Prime opere cronologiche, fondamenta del percorso",
+            reason: "First chronological works, foundation of the tour",
           },
           {
             id: "poi-3",
-            title: "Capolavori del Barocco",
+            title: "Baroque Masterpieces",
             order: 3,
-            reason: "Evoluzione stilistica e momento di massimo splendore",
+            reason: "Stylistic evolution and peak of artistic splendour",
           },
           {
             id: "poi-4",
-            title: "Collezione Moderna",
+            title: "Modern Collection",
             order: 4,
-            reason: "Connessione con il contemporaneo, chiusura del viaggio",
+            reason: "Connection to the contemporary, closing the journey",
           },
         ],
       };
 
       return {
-        message: `Perfetto! Ecco la **struttura del percorso** che ti propongo:\n\n${structureProposal.pois
+        message: `Perfect! Here's the **tour structure** I'd suggest:\n\n${structureProposal.pois
           .map(
             (poi) =>
               `**${poi.order}. ${poi.title}**\n   ↳ ${poi.reason}`
           )
-          .join("\n\n")}\n\n---\n\nQuesta sequenza crea un flusso narrativo coerente dal ${proposal.concept?.type || "concept scelto"}.\n\nPosso:\n• Aggiungere o rimuovere POI\n• Cambiare l'ordine\n• Modificare il focus di un punto\n\nOppure dimmi "genera i contenuti" per procedere con la scrittura dei testi.`,
+          .join("\n\n")}\n\n---\n\nThis sequence creates a coherent narrative flow from the ${proposal.concept?.type || "chosen concept"}.\n\nI can:\n• Add or remove POIs\n• Change the order\n• Adjust the focus of a stop\n\nOr say "generate content" to proceed with writing the texts.`,
         updateProposal: { structure: structureProposal },
-        nextStep: lowerInput.includes("genera") || lowerInput.includes("contenut") ? "content" : "structure",
+        nextStep: lowerInput.includes("generate") || lowerInput.includes("content") ? "content" : "structure",
       };
     }
 
@@ -176,30 +176,30 @@ export function AIAssistant({
     if (step === "content") {
       const contentProposal = {
         "poi-1": {
-          title: "Benvenuti al Museo",
-          description: "Varchi la soglia di un viaggio attraverso cinque secoli di arte italiana. Questo palazzo, costruito nel 1650, custodisce una delle collezioni più straordinarie del paese.",
-          audioScript: "Benvenuto al nostro museo. Ti trovi nell'atrio principale di Palazzo Rossi, costruito nel diciassettesimo secolo per ospitare la famiglia nobiliare che ha dato vita a questa incredibile collezione. Guardati intorno: le volte affrescate sopra di te raccontano già la prima storia del nostro viaggio attraverso l'arte italiana. Preparati a scoprire cinque secoli di bellezza, innovazione e passione.",
+          title: "Welcome to the Museum",
+          description: "Step across the threshold of a journey through five centuries of Italian art. This palazzo, built in 1650, houses one of the most extraordinary collections in the country.",
+          audioScript: "Welcome to our museum. You're standing in the main atrium of Palazzo Rossi, built in the seventeenth century to house the noble family behind this incredible collection. Look around you — the frescoed vaults above already tell the opening chapter of our journey through Italian art. Prepare to discover five centuries of beauty, innovation, and passion.",
         },
       };
 
       return {
-        message: `Ecco il **primo contenuto generato**:\n\n---\n\n### ${contentProposal["poi-1"].title}\n\n**Descrizione breve:**\n${contentProposal["poi-1"].description}\n\n**Script audio (60s):**\n"${contentProposal["poi-1"].audioScript}"\n\n---\n\n📚 *Generato da: Documento_Storia_Museo.pdf, Guida_Collezioni.pdf*\n\nPosso:\n• Renderlo più breve o più dettagliato\n• Cambiare il tono (più formale, più coinvolgente, per bambini...)\n• Aggiungere riferimenti specifici\n• Generare i contenuti per gli altri POI\n\nCosa preferisci?`,
+        message: `Here's the **first generated content**:\n\n---\n\n### ${contentProposal["poi-1"].title}\n\n**Short description:**\n${contentProposal["poi-1"].description}\n\n**Audio script (60s):**\n"${contentProposal["poi-1"].audioScript}"\n\n---\n\n📚 *Generated from: Museum_History.pdf, Collection_Guide.pdf*\n\nI can:\n• Make it shorter or more detailed\n• Change the tone (more formal, more engaging, for children...)\n• Add specific references\n• Generate content for the other POIs\n\nWhat would you prefer?`,
         updateProposal: { contents: contentProposal },
-        nextStep: lowerInput.includes("altri") || lowerInput.includes("tutti") ? "complete" : "content",
+        nextStep: lowerInput.includes("other") || lowerInput.includes("all") ? "complete" : "content",
       };
     }
 
     // Step 4: Complete
     if (step === "complete") {
       return {
-        message: `✅ **Proposta completa generata!**\n\nHo creato:\n• 1 concept narrativo coerente\n• 4 POI strutturati in sequenza logica\n• Contenuti testuali e audio per ogni punto\n\nPuoi ancora chiedermi di modificare qualsiasi parte, oppure clicca su "Accetta e Applica" per usare questa proposta nella tua audioguida.\n\nRicorda: potrai sempre modificare manualmente ogni elemento dopo averlo applicato!`,
+        message: `✅ **Complete proposal generated!**\n\nI've created:\n• 1 coherent narrative concept\n• 4 POIs structured in logical sequence\n• Text and audio content for each stop\n\nYou can still ask me to modify any part, or click "Accept and Apply" to use this proposal in your guide.\n\nRemember: you can always manually edit each element after applying it!`,
         nextStep: "complete",
       };
     }
 
     // Generic refinement response
     return {
-      message: `Capisco, ${lowerInput.includes("breve") ? "renderò il contenuto più conciso" : lowerInput.includes("dettagli") ? "aggiungerò più dettagli e profondità" : "modifico come richiesto"}.\n\n[Qui apparirebbe la versione aggiornata]\n\nVa meglio così?`,
+      message: `Understood, ${lowerInput.includes("short") ? "I'll make the content more concise" : lowerInput.includes("detail") ? "I'll add more depth and detail" : "I'll update as requested"}.\n\n[Updated version would appear here]\n\nDoes this look better?`,
     };
   };
 
@@ -221,7 +221,7 @@ export function AIAssistant({
             </div>
             <div>
               <h2 className="font-medium text-slate-900 text-sm md:text-base">AI Assistant</h2>
-              <p className="text-xs md:text-sm text-slate-600 line-clamp-1">Costruiamo insieme "{guideName}"</p>
+              <p className="text-xs md:text-sm text-slate-600 line-clamp-1">Let's build "{guideName}" together</p>
             </div>
           </div>
           <button
@@ -240,9 +240,9 @@ export function AIAssistant({
               const isPast = ["concept", "structure", "content", "complete"].indexOf(currentStep) > index;
               const labels = {
                 concept: "Concept",
-                structure: "Struttura",
-                content: "Contenuti",
-                complete: "Completo",
+                structure: "Structure",
+                content: "Content",
+                complete: "Complete",
               };
 
               return (
@@ -272,7 +272,7 @@ export function AIAssistant({
             <div className="flex items-center gap-2 text-xs md:text-sm text-blue-900">
               <FileText className="size-4 flex-shrink-0" />
               <span>
-                Contesto: <strong>{documentsContext.length} documenti</strong> caricati
+                Context: <strong>{documentsContext.length} documents</strong> loaded
               </span>
             </div>
           </div>
@@ -304,7 +304,7 @@ export function AIAssistant({
               </div>
               {message.role === "user" && (
                 <div className="size-8 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0 text-slate-600 font-medium text-sm">
-                  Tu
+                  You
                 </div>
               )}
             </div>
@@ -315,7 +315,7 @@ export function AIAssistant({
                 <RefreshCw className="size-4 text-white animate-spin" />
               </div>
               <div className="bg-slate-100 px-4 py-3 rounded-2xl text-slate-600">
-                Sto elaborando...
+                Processing...
               </div>
             </div>
           )}
@@ -330,7 +330,7 @@ export function AIAssistant({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Scrivi la tua richiesta o modifica..."
+              placeholder="Type your request or feedback..."
               disabled={isGenerating}
               className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             />
@@ -351,7 +351,7 @@ export function AIAssistant({
                 className="w-full px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
               >
                 <CheckCircle className="size-5" />
-                Accetta e Applica alla Audioguida
+                Accept and Apply to Guide
               </button>
             </div>
           )}

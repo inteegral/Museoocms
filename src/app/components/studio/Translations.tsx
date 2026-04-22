@@ -1,841 +1,720 @@
 import { useState } from "react";
 import {
-  Languages,
-  Globe,
-  Plus,
-  Check,
-  AlertTriangle,
-  X,
-  ChevronDown,
-  Search,
-  Filter,
-  Sparkles,
-  Clock,
-  Eye,
-  Save,
-  Trash2,
-  Download,
-  Upload,
-  ArrowLeft,
-  CheckCircle2,
-  Circle,
+  Search, Sparkles, CheckCircle2, Mic, Play, Pause,
+  X, ChevronDown, FileText, ArrowRight, RotateCcw, Clock, Eye, Lock, Plus,
 } from "lucide-react";
+import { PageShell } from "./PageShell";
 
-interface Language {
-  code: string;
-  name: string;
-  nativeName: string;
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Guide {
-  id: string;
-  name: string;
-  totalPOIs: number;
-  sourceLanguage: string;
-  targetLanguages: {
-    code: string;
-    status: "approved" | "pending"; // approved = verde, pending = arancione
-    poiStats: {
-      draft: number;
-      underReview: number;
-      approved: number;
-    };
-  }[];
-}
+type TextStatus = "draft" | "review" | "approved";
+type AudioStatus = "none" | "pending" | "review" | "ready";
 
-interface POI {
-  id: string;
-  name: string;
-  status: "draft" | "under-review" | "approved";
-  sourceText: string;
-  targetText: string;
-}
+interface Translation { text: string; status: TextStatus; audioStatus: AudioStatus }
+interface POI { id: string; name: string; sourceText: string; translations: Record<string, Translation> }
+interface Voice { id: string; name: string; language: string; gender: string; style: string[]; avatarUrl: string }
+interface Guide { id: string; name: string; targetLanguages: string[]; voiceAssignments: Record<string, string | null> }
 
-interface TranslationEditorData {
-  poiName: string;
-  guideName: string;
-  sourceLang: string;
-  targetLang: string;
-  sourceText: string;
-  targetText: string;
-  status: "draft" | "under-review" | "approved";
-}
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
-const availableLanguages: Language[] = [
-  { code: "EN", name: "English", nativeName: "English" },
-  { code: "IT", name: "Italian", nativeName: "Italiano" },
-  { code: "ES", name: "Spanish", nativeName: "Español" },
-  { code: "FR", name: "French", nativeName: "Français" },
-  { code: "DE", name: "German", nativeName: "Deutsch" },
-  { code: "PT", name: "Portuguese", nativeName: "Português" },
-  { code: "RU", name: "Russian", nativeName: "Русский" },
-  { code: "ZH", name: "Chinese", nativeName: "中文" },
-  { code: "JA", name: "Japanese", nativeName: "日本語" },
+const allVoices: Voice[] = [
+  { id: "v1", name: "Sarah Mitchell", language: "EN", gender: "Female", style: ["Warm", "Clear"], avatarUrl: "https://images.unsplash.com/photo-1768853972795-2739a9685567?w=200&h=200&fit=crop&crop=face" },
+  { id: "v2", name: "Marco Rossi", language: "IT", gender: "Male", style: ["Professional", "Deep"], avatarUrl: "https://images.unsplash.com/photo-1769636930047-4478f12cf430?w=200&h=200&fit=crop&crop=face" },
+  { id: "v3", name: "Sofia García", language: "ES", gender: "Female", style: ["Friendly", "Modern"], avatarUrl: "https://images.unsplash.com/photo-1614436201459-156d322d38c6?w=200&h=200&fit=crop&crop=face" },
+  { id: "v4", name: "Jean Dupont", language: "FR", gender: "Male", style: ["Calm", "Refined"], avatarUrl: "https://images.unsplash.com/photo-1695266391814-a276948f1775?w=200&h=200&fit=crop&crop=face" },
+  { id: "v5", name: "Emma Watson", language: "EN", gender: "Female", style: ["Conversational", "Bright"], avatarUrl: "https://images.unsplash.com/photo-1762522921456-cdfe882d36c3?w=200&h=200&fit=crop&crop=face" },
 ];
 
-const mockGuides: Guide[] = [
+const initialGuides: Guide[] = [
+  { id: "g1", name: "Renaissance Tour", targetLanguages: ["IT", "ES", "FR"], voiceAssignments: { IT: "v2", ES: "v3", FR: null } },
+  { id: "g2", name: "Modern Art Collection", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: "v2", ES: null } },
+  { id: "g3", name: "Ancient Sculptures", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: null, ES: null } },
+];
+
+const initialPOIs: POI[] = [
   {
-    id: "1",
-    name: "Renaissance Tour",
-    totalPOIs: 15,
-    sourceLanguage: "EN",
-    targetLanguages: [
-      {
-        code: "IT",
-        status: "approved",
-        poiStats: { draft: 0, underReview: 0, approved: 15 },
-      },
-      {
-        code: "ES",
-        status: "pending",
-        poiStats: { draft: 10, underReview: 3, approved: 2 },
-      },
-      {
-        code: "FR",
-        status: "pending",
-        poiStats: { draft: 15, underReview: 0, approved: 0 },
-      },
-    ],
+    id: "p1", name: "Renaissance Hall",
+    sourceText: "This magnificent hall showcases the finest examples of Renaissance art from the 15th and 16th centuries. The space was designed to immerse visitors in the grandeur of the period, with soaring ceilings and carefully curated lighting that brings each masterpiece to life.",
+    translations: {
+      IT: { text: "Questa magnifica sala presenta i migliori esempi dell'arte rinascimentale del XV e XVI secolo.", status: "approved", audioStatus: "ready" },
+      ES: { text: "Esta magnífica sala presenta los mejores ejemplos del arte renacentista de los siglos XV y XVI.", status: "review", audioStatus: "review" },
+      FR: { text: "Cette magnifique salle présente les plus beaux exemples de l'art de la Renaissance.", status: "draft", audioStatus: "none" },
+    },
   },
   {
-    id: "2",
-    name: "Modern Art Collection",
-    totalPOIs: 8,
-    sourceLanguage: "EN",
-    targetLanguages: [
-      {
-        code: "IT",
-        status: "approved",
-        poiStats: { draft: 0, underReview: 0, approved: 8 },
-      },
-      {
-        code: "ES",
-        status: "approved",
-        poiStats: { draft: 0, underReview: 0, approved: 8 },
-      },
-      {
-        code: "FR",
-        status: "approved",
-        poiStats: { draft: 0, underReview: 0, approved: 8 },
-      },
-    ],
+    id: "p2", name: "Leonardo's Workshop",
+    sourceText: "Step into the recreated workshop of Leonardo da Vinci, where genius and craftsmanship converged. This space replicates the environment where Leonardo developed his groundbreaking inventions and created his most celebrated artworks.",
+    translations: {
+      IT: { text: "Entra nel laboratorio ricreato di Leonardo da Vinci, dove genio e maestria si incontrano.", status: "approved", audioStatus: "ready" },
+      ES: { text: "Entra en el taller recreado de Leonardo da Vinci, donde el genio y la artesanía se fusionaron.", status: "review", audioStatus: "none" },
+      FR: { text: "", status: "draft", audioStatus: "none" },
+    },
   },
   {
-    id: "3",
-    name: "Ancient Sculptures",
-    totalPOIs: 12,
-    sourceLanguage: "EN",
-    targetLanguages: [
-      {
-        code: "IT",
-        status: "pending",
-        poiStats: { draft: 5, underReview: 5, approved: 2 },
-      },
-      {
-        code: "ES",
-        status: "pending",
-        poiStats: { draft: 12, underReview: 0, approved: 0 },
-      },
-    ],
+    id: "p3", name: "The Last Supper Room",
+    sourceText: "This room houses a faithful reproduction of The Last Supper by Leonardo da Vinci. Visitors can study the intricate details of this masterpiece, including the emotional expressions of the apostles.",
+    translations: {
+      IT: { text: "Questa sala ospita una fedele riproduzione dell'Ultima Cena di Leonardo da Vinci.", status: "approved", audioStatus: "ready" },
+      ES: { text: "Esta sala alberga una reproducción fiel de La Última Cena de Leonardo da Vinci.", status: "approved", audioStatus: "ready" },
+      FR: { text: "", status: "draft", audioStatus: "none" },
+    },
+  },
+  {
+    id: "p4", name: "Michelangelo's Sculptures",
+    sourceText: "Marvel at the mastery of Michelangelo's sculptural works. The raw power and emotional depth captured in marble continues to astonish viewers five centuries after their creation.",
+    translations: {
+      IT: { text: "", status: "draft", audioStatus: "none" },
+      ES: { text: "", status: "draft", audioStatus: "none" },
+      FR: { text: "", status: "draft", audioStatus: "none" },
+    },
+  },
+  {
+    id: "p5", name: "Raphael Gallery",
+    sourceText: "Explore the harmonious compositions of Raphael, whose work represents the pinnacle of Renaissance artistic achievement. The gallery presents a curated selection of his most significant paintings.",
+    translations: {
+      IT: { text: "", status: "draft", audioStatus: "none" },
+      ES: { text: "", status: "draft", audioStatus: "none" },
+      FR: { text: "", status: "draft", audioStatus: "none" },
+    },
   },
 ];
 
-const guideImages: { [key: string]: string } = {
-  "1": "https://images.unsplash.com/photo-1761334859641-139cffff4a47?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZW5haXNzYW5jZSUyMGFydCUyMG11c2V1bSUyMGhhbGx8ZW58MXx8fHwxNzc0ODg2NzQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "2": "https://images.unsplash.com/photo-1759803534574-8e703d9914c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcnQlMjBnYWxsZXJ5JTIwaW50ZXJpb3J8ZW58MXx8fHwxNzc0ODAyNTk3fDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "3": "https://images.unsplash.com/photo-1558707426-05574ae8aeae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmNpZW50JTIwc2N1bHB0dXJlJTIwbXVzZXVtfGVufDF8fHx8MTc3NDg1MTQxOXww&ixlib=rb-4.1.0&q=80&w=1080",
+// ─── Split Status Pill ────────────────────────────────────────────────────────
+
+type SlotState = "empty" | "active" | "review" | "done";
+
+const slotColor: Record<SlotState, string> = {
+  empty: "#e4e4e7",
+  active: "#93c5fd",
+  review: "#fcd34d",
+  done: "#4ade80",
 };
 
-const mockPOIs: POI[] = [
-  {
-    id: "1",
-    name: "Renaissance Hall",
-    status: "draft",
-    sourceText: "This magnificent hall showcases the finest examples of Renaissance art...",
-    targetText: "Esta magnífica sala presenta los mejores ejemplos del arte renacentista...",
-  },
-  {
-    id: "2",
-    name: "Leonardo's Workshop",
-    status: "under-review",
-    sourceText: "Step into the recreated workshop of Leonardo da Vinci...",
-    targetText: "Entra en el taller recreado de Leonardo da Vinci...",
-  },
-  {
-    id: "3",
-    name: "The Last Supper Room",
-    status: "approved",
-    sourceText: "This room houses a faithful reproduction of The Last Supper...",
-    targetText: "Esta sala alberga una reproducción fiel de La Última Cena...",
-  },
-  {
-    id: "4",
-    name: "Michelangelo's Sculptures",
-    status: "draft",
-    sourceText: "Marvel at the mastery of Michelangelo's sculptural works...",
-    targetText: "",
-  },
-  {
-    id: "5",
-    name: "Raphael Gallery",
-    status: "draft",
-    sourceText: "Explore the harmonious compositions of Raphael...",
-    targetText: "",
-  },
-];
+function textSlot(status: TextStatus, text: string): SlotState {
+  if (status === "approved") return "done";
+  if (status === "review") return "review";
+  if (text) return "active";
+  return "empty";
+}
 
-export function Translations() {
-  const [guides, setGuides] = useState<Guide[]>(mockGuides);
-  const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
-  const [pois, setPois] = useState<POI[]>(mockPOIs);
-  const [showAddLanguageModal, setShowAddLanguageModal] = useState(false);
-  const [showTranslationEditor, setShowTranslationEditor] = useState(false);
-  const [editorData, setEditorData] = useState<TranslationEditorData | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [guideToAddLanguage, setGuideToAddLanguage] = useState<Guide | null>(null);
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
-  const [languageToRemove, setLanguageToRemove] = useState<{ guide: Guide; langCode: string } | null>(null);
+function audioSlot(status: AudioStatus): SlotState {
+  if (status === "ready") return "done";
+  if (status === "review") return "review";
+  if (status === "pending") return "active";
+  return "empty";
+}
 
-  const openPOIList = (guide: Guide, langCode: string) => {
-    setSelectedGuide(guide);
-    setSelectedLanguage(langCode);
-  };
+function SplitPill({ t, v }: { t: SlotState; v: SlotState }) {
+  const both = t === "done" && v === "done";
+  return (
+    <div
+      className={`flex items-center rounded-full overflow-hidden flex-shrink-0 transition-all ${both ? "ring-1 ring-green-400 ring-offset-1" : ""}`}
+      style={{ border: "1.5px solid #e4e4e7" }}
+    >
+      <div className="w-5 h-4 flex items-center justify-center" style={{ backgroundColor: slotColor[t] }}>
+        <FileText className="size-2 text-white/80" strokeWidth={3} />
+      </div>
+      <div className="w-px h-full bg-white/60" />
+      <div className="w-5 h-4 flex items-center justify-center" style={{ backgroundColor: slotColor[v] }}>
+        <Mic className="size-2 text-white/80" strokeWidth={3} />
+      </div>
+    </div>
+  );
+}
 
-  const backToGuideList = () => {
-    setSelectedGuide(null);
-    setSelectedLanguage(null);
-  };
+// ─── Smart Action Banner ──────────────────────────────────────────────────────
 
-  const openTranslationEditor = (poi: POI) => {
-    if (!selectedGuide || !selectedLanguage) return;
+interface BannerProps {
+  trans: Translation | undefined;
+  editingText: string;
+  hasVoice: boolean;
+  onAITranslate: () => void;
+  onSubmitReview: () => void;
+  onApproveText: () => void;
+  onReopenText: () => void;
+  onChooseVoice: () => void;
+}
 
-    setEditorData({
-      poiName: poi.name,
-      guideName: selectedGuide.name,
-      sourceLang: selectedGuide.sourceLanguage,
-      targetLang: selectedLanguage,
-      sourceText: poi.sourceText,
-      targetText: poi.targetText,
-      status: poi.status,
-    });
-    setShowTranslationEditor(true);
-  };
+function SmartBanner({ trans, editingText, hasVoice, onAITranslate, onSubmitReview, onApproveText, onReopenText, onChooseVoice }: BannerProps) {
+  const textDone = trans?.status === "approved";
+  const audioDone = trans?.audioStatus === "ready";
+  const hasText = !!(trans?.text || editingText);
 
-  const getLanguageName = (code: string) => {
-    return availableLanguages.find((l) => l.code === code)?.nativeName || code;
-  };
-
-  const getStatusColor = (status: "draft" | "under-review" | "approved") => {
-    switch (status) {
-      case "approved":
-        return "text-zinc-900";
-      case "under-review":
-        return "bg-orange-50 border-orange-200 text-orange-700";
-      case "draft":
-        return "bg-zinc-50 border-zinc-200 text-zinc-700";
-    }
-  };
-
-  const getStatusIcon = (status: "draft" | "under-review" | "approved") => {
-    switch (status) {
-      case "approved":
-        return <CheckCircle2 className="size-4" style={{ color: '#D33333' }} />;
-      case "under-review":
-        return <Eye className="size-4 text-orange-600" />;
-      case "draft":
-        return <Sparkles className="size-4 text-zinc-600" />;
-    }
-  };
-
-  const getStatusBadge = (status: "draft" | "under-review" | "approved") => {
-    switch (status) {
-      case "approved":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded" style={{ backgroundColor: '#FEE2E2', color: '#D33333' }}>
-            <CheckCircle2 className="size-3" />
-            Approved
-          </span>
-        );
-      case "under-review":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 text-[11px] font-semibold rounded">
-            <Eye className="size-3" />
-            Under Review
-          </span>
-        );
-      case "draft":
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-zinc-50 text-zinc-700 text-[11px] font-semibold rounded">
-            <Sparkles className="size-3" />
-            Draft
-          </span>
-        );
-    }
-  };
-
-  const addLanguageToGuide = (guide: Guide, langCode: string) => {
-    setGuides(
-      guides.map((g) =>
-        g.id === guide.id
-          ? {
-              ...g,
-              targetLanguages: [
-                ...g.targetLanguages,
-                {
-                  code: langCode,
-                  status: "pending",
-                  poiStats: { draft: 0, underReview: 0, approved: 0 },
-                },
-              ],
-            }
-          : g
-      )
-    );
-    setShowAddLanguageModal(false);
-    setGuideToAddLanguage(null);
-  };
-
-  const confirmRemoveLanguage = (guide: Guide, langCode: string) => {
-    setLanguageToRemove({ guide, langCode });
-    setShowRemoveConfirm(true);
-  };
-
-  const removeLanguageFromGuide = () => {
-    if (!languageToRemove) return;
-    
-    setGuides(
-      guides.map((g) =>
-        g.id === languageToRemove.guide.id
-          ? {
-              ...g,
-              targetLanguages: g.targetLanguages.filter((tl) => tl.code !== languageToRemove.langCode),
-            }
-          : g
-      )
-    );
-    setShowRemoveConfirm(false);
-    setLanguageToRemove(null);
-  };
-
-  // VIEW 1: Guide List
-  if (!selectedGuide || !selectedLanguage) {
+  if (textDone && audioDone) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-[1800px] mx-auto p-6 md:p-12">
-          {/* Header */}
-          <div className="mb-12">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h1 className="text-[32px] font-semibold text-zinc-950 tracking-tight mb-2">
-                  Translations
-                </h1>
-                <p className="text-[15px] text-zinc-600 leading-relaxed">
-                  Manage multilingual content for your audioguides
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="mb-8">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search guides..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Guide Cards */}
-          <div className="space-y-8">
-            {guides.map((guide) => (
-              <div
-                key={guide.id}
-                className="bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
-                style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.04)" }}
-              >
-                <div className="flex">
-                  {/* Guide Image */}
-                  <div className="w-64 h-64 flex-shrink-0 overflow-hidden bg-zinc-100">
-                    <img
-                      src={guideImages[guide.id]}
-                      alt={guide.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 p-8">
-                    <div className="flex items-start justify-between mb-8">
-                      <div>
-                        <h3 className="text-[20px] font-semibold text-zinc-950 mb-2">
-                          {guide.name}
-                        </h3>
-                        <p className="text-[14px] text-zinc-600">
-                          {guide.totalPOIs} POIs · {guide.targetLanguages.length} target languages
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setGuideToAddLanguage(guide);
-                          setShowAddLanguageModal(true);
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold rounded-lg hover:bg-zinc-50 transition-all"
-                      >
-                        <Plus className="size-4" />
-                        Add Language
-                      </button>
-                    </div>
-
-                    {/* Language Pills */}
-                    <div className="flex flex-wrap gap-4">
-                      {/* Source Language */}
-                      <div className="inline-flex items-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                        <div className="size-8 bg-white rounded-lg flex items-center justify-center border border-blue-300">
-                          <span className="text-[11px] font-bold text-blue-700">
-                            {guide.sourceLanguage}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-[13px] font-semibold text-blue-900">
-                            {getLanguageName(guide.sourceLanguage)}
-                          </div>
-                          <div className="text-[11px] text-blue-600">Source</div>
-                        </div>
-                      </div>
-
-                      {/* Target Languages */}
-                      {guide.targetLanguages.map((lang) => (
-                        <div
-                          key={lang.code}
-                          className="group relative inline-flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all"
-                          style={lang.status === "approved"
-                            ? { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' }
-                            : { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }}
-                        >
-                          <button
-                            onClick={() => openPOIList(guide, lang.code)}
-                            className="flex items-center gap-2 flex-1"
-                          >
-                            <div
-                              className="size-8 bg-white rounded-lg flex items-center justify-center border"
-                              style={lang.status === "approved"
-                                ? { borderColor: '#FCA5A5' }
-                                : { borderColor: '#FDE68A' }}
-                            >
-                              <span
-                                className="text-[11px] font-bold"
-                                style={{ color: lang.status === "approved" ? "#D33333" : "#d97706" }}
-                              >
-                                {lang.code}
-                              </span>
-                            </div>
-                            <div className="text-left">
-                              <div
-                                className="text-[13px] font-semibold"
-                                style={{ color: lang.status === "approved" ? "#991b1b" : "#92400e" }}
-                              >
-                                {getLanguageName(lang.code)}
-                              </div>
-                              <div
-                                className="text-[11px]"
-                                style={{ color: lang.status === "approved" ? "#D33333" : "#d97706" }}
-                              >
-                                {lang.poiStats.approved}/{guide.totalPOIs} approved
-                              </div>
-                            </div>
-                            <div className="ml-2">
-                              {lang.status === "approved" ? (
-                                <CheckCircle2 className="size-5" style={{ color: '#D33333' }} />
-                              ) : (
-                                <Clock className="size-5 text-amber-600" />
-                              )}
-                            </div>
-                          </button>
-                          
-                          {/* Remove Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              confirmRemoveLanguage(guide, lang.code);
-                            }}
-                            className="absolute -top-2 -right-2 size-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-700"
-                          >
-                            <X className="size-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+        <div className="size-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <CheckCircle2 className="size-4 text-emerald-600" />
         </div>
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-emerald-900">Complete</p>
+          <p className="text-[12px] text-emerald-600 mt-0.5">Translation and voice over are both approved.</p>
+        </div>
+        <button onClick={onReopenText} className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors">
+          <RotateCcw className="size-3.5" />Reopen
+        </button>
+      </div>
+    );
+  }
 
-        {/* Add Language Modal */}
-        {showAddLanguageModal && guideToAddLanguage && (
-          <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-              <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between">
-                <h2 className="text-[18px] font-semibold text-zinc-950">
-                  Add Language to {guideToAddLanguage.name}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowAddLanguageModal(false);
-                    setGuideToAddLanguage(null);
-                  }}
-                  className="text-zinc-400 hover:text-zinc-900 transition-colors"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="grid grid-cols-2 gap-3">
-                  {availableLanguages
-                    .filter(
-                      (lang) =>
-                        lang.code !== guideToAddLanguage.sourceLanguage &&
-                        !guideToAddLanguage.targetLanguages.some((tl) => tl.code === lang.code)
-                    )
-                    .map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => addLanguageToGuide(guideToAddLanguage, lang.code)}
-                        className="flex items-center gap-3 p-4 bg-white border-2 border-zinc-200 rounded-lg hover:border-zinc-900 transition-all text-left"
-                      >
-                        <div className="size-10 bg-zinc-100 rounded-lg flex items-center justify-center">
-                          <span className="text-[13px] font-bold text-zinc-700">{lang.code}</span>
-                        </div>
-                        <div>
-                          <div className="text-[14px] font-semibold text-zinc-950">
-                            {lang.nativeName}
-                          </div>
-                          <div className="text-[12px] text-zinc-500">{lang.name}</div>
-                        </div>
-                      </button>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Remove Language Confirm Modal */}
-        {showRemoveConfirm && languageToRemove && (
-          <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-              <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between">
-                <h2 className="text-[18px] font-semibold text-zinc-950">
-                  Remove Language from {languageToRemove.guide.name}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowRemoveConfirm(false);
-                    setLanguageToRemove(null);
-                  }}
-                  className="text-zinc-400 hover:text-zinc-900 transition-colors"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="text-[14px] text-zinc-700">
-                  Are you sure you want to remove {getLanguageName(languageToRemove.langCode)} from {languageToRemove.guide.name}?
-                </div>
-              </div>
-
-              <div className="px-6 py-5 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setShowRemoveConfirm(false);
-                      setLanguageToRemove(null);
-                    }}
-                    className="px-5 py-2.5 text-[14px] font-semibold text-zinc-700 hover:bg-zinc-200 rounded-lg transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={removeLanguageFromGuide}
-                    className="px-5 py-2.5 bg-red-600 text-white text-[14px] font-semibold rounded-lg hover:bg-red-700 transition-all shadow-sm"
-                  >
-                    <Trash2 className="size-4 inline mr-1" />
-                    Remove Language
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+  if (textDone && !audioDone) {
+    return (
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3">
+        <div className="size-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Mic className="size-4 text-blue-600" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-blue-900">Text approved — voice over next</p>
+          <p className="text-[12px] text-blue-600 mt-0.5">
+            {hasVoice ? "Advance the voice recording workflow in the panel on the right." : "Assign a voice to start the recording process."}
+          </p>
+        </div>
+        {!hasVoice && (
+          <button onClick={onChooseVoice} className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-colors">
+            Assign Voice <ArrowRight className="size-3.5" />
+          </button>
         )}
       </div>
     );
   }
 
-  // VIEW 2: POI List for selected language
+  if (trans?.status === "review") {
+    return (
+      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+        <div className="size-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Eye className="size-4 text-amber-600" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-amber-900">Ready for approval</p>
+          <p className="text-[12px] text-amber-700 mt-0.5">Review the translation and approve it to move forward.</p>
+        </div>
+        <button onClick={onApproveText} className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-colors">
+          <CheckCircle2 className="size-3.5" />Approve
+        </button>
+      </div>
+    );
+  }
+
+  if (hasText) {
+    return (
+      <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center gap-3">
+        <div className="size-8 bg-zinc-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Clock className="size-4 text-zinc-500" />
+        </div>
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-zinc-800">Draft saved</p>
+          <p className="text-[12px] text-zinc-500 mt-0.5">Submit for review when ready.</p>
+        </div>
+        <button onClick={onSubmitReview} className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 bg-white text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-colors">
+          <Eye className="size-3.5" />Submit for Review
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-[1800px] mx-auto p-6 md:p-12">
+    <div className="p-4 bg-violet-50 border border-violet-100 rounded-xl flex items-center gap-3">
+      <div className="size-8 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        <Sparkles className="size-4 text-violet-600" />
+      </div>
+      <div className="flex-1">
+        <p className="text-[13px] font-semibold text-violet-900">No translation yet</p>
+        <p className="text-[12px] text-violet-600 mt-0.5">Generate a first draft with AI, then edit and review.</p>
+      </div>
+      <button onClick={onAITranslate} className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-colors">
+        <Sparkles className="size-3.5" />AI Translate
+      </button>
+    </div>
+  );
+}
+
+// ─── Smart Voice Banner ───────────────────────────────────────────────────────
+
+function SmartVoiceBanner({
+  textApproved, audioStatus, voiceName, lang,
+  onAdvance, onApprove, onReopen, onChooseVoice,
+}: {
+  textApproved: boolean; audioStatus: AudioStatus | undefined;
+  voiceName: string | undefined; lang: string;
+  onAdvance: () => void; onApprove: () => void;
+  onReopen: () => void; onChooseVoice: () => void;
+}) {
+  if (!textApproved) {
+    return (
+      <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <Lock className="size-3.5 text-zinc-400" />
+          <p className="text-[12px] font-semibold text-zinc-500">Locked</p>
+        </div>
+        <p className="text-[12px] text-zinc-400 leading-relaxed">Approve the translation first to unlock voice over.</p>
+      </div>
+    );
+  }
+  if (!voiceName) {
+    return (
+      <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <Mic className="size-3.5 text-blue-500" />
+          <p className="text-[12px] font-semibold text-zinc-700">No voice assigned</p>
+        </div>
+        <p className="text-[12px] text-zinc-500 leading-relaxed mb-3">Assign a voice talent to start the {lang} recording.</p>
+        <button onClick={onChooseVoice} className="w-full py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1.5">
+          Choose Voice <ArrowRight className="size-3.5" />
+        </button>
+      </div>
+    );
+  }
+  if (audioStatus === "pending") {
+    return (
+      <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <Clock className="size-3.5 text-zinc-500" />
+          <p className="text-[12px] font-semibold text-zinc-700">Awaiting recording</p>
+        </div>
+        <p className="text-[12px] text-zinc-500 leading-relaxed mb-3">Mark as received when the recording from {voiceName} arrives.</p>
+        <button onClick={onAdvance} className="w-full py-2 border border-zinc-200 bg-white text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-colors">
+          Mark as Received
+        </button>
+      </div>
+    );
+  }
+  if (audioStatus === "review") {
+    return (
+      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <Eye className="size-3.5 text-amber-600" />
+          <p className="text-[12px] font-semibold text-amber-900">Under review</p>
+        </div>
+        <p className="text-[12px] text-amber-700 leading-relaxed mb-3">Listen and approve if quality meets standards.</p>
+        <button onClick={onApprove} className="w-full py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1.5">
+          <CheckCircle2 className="size-3.5" />Approve Voice
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+      <div className="flex items-center gap-2.5 mb-1.5">
+        <CheckCircle2 className="size-3.5 text-emerald-600" />
+        <p className="text-[12px] font-semibold text-emerald-900">Voice approved</p>
+      </div>
+      <p className="text-[12px] text-emerald-600 leading-relaxed mb-3">The {lang} recording by {voiceName} is ready to publish.</p>
+      <button onClick={onReopen} className="w-full py-2 border border-emerald-200 text-emerald-700 text-[12px] font-semibold rounded-lg hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1.5">
+        <RotateCcw className="size-3.5" />Reopen
+      </button>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export function Translations() {
+  const [pois, setPois] = useState<POI[]>(initialPOIs);
+  const [guides, setGuides] = useState<Guide[]>(initialGuides);
+  const [guideId, setGuideId] = useState(initialGuides[0].id);
+  const [lang, setLang] = useState(initialGuides[0].targetLanguages[0]);
+  const [poiId, setPoiId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [search, setSearch] = useState("");
+  const [playingVoice, setPlayingVoice] = useState<string | null>(null);
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const [voiceSearch, setVoiceSearch] = useState("");
+
+  const guide = guides.find((g) => g.id === guideId)!;
+  const poi = pois.find((p) => p.id === poiId) ?? null;
+  const trans = poi ? poi.translations[lang] : undefined;
+  const voiceId = guide.voiceAssignments[lang] ?? null;
+  const voice = voiceId ? allVoices.find((v) => v.id === voiceId) ?? null : null;
+
+  const patch = (p: Partial<Translation>) => {
+    if (!poiId) return;
+    setPois((prev) => prev.map((x) =>
+      x.id === poiId
+        ? { ...x, translations: { ...x.translations, [lang]: { ...x.translations[lang], ...p } } }
+        : x
+    ));
+  };
+
+  const assignVoice = (v: Voice) => {
+    setGuides((prev) => prev.map((g) =>
+      g.id === guideId ? { ...g, voiceAssignments: { ...g.voiceAssignments, [lang]: v.id } } : g
+    ));
+    setShowVoicePicker(false);
+    setVoiceSearch("");
+  };
+
+  const openPOI = (p: POI, l?: string) => {
+    const activeLang = l ?? lang;
+    setPoiId(p.id);
+    if (l) setLang(l);
+    setEditingText(p.translations[activeLang]?.text ?? "");
+    setShowVoicePicker(false);
+  };
+
+  const closeModal = () => {
+    setPoiId(null);
+    setShowVoicePicker(false);
+  };
+
+  const changeGuide = (id: string) => {
+    const g = guides.find((x) => x.id === id)!;
+    const l = g.targetLanguages[0];
+    setGuideId(id);
+    setLang(l);
+    setPoiId(null);
+  };
+
+  const changeLang = (l: string) => {
+    setLang(l);
+    if (poi) setEditingText(poi.translations[l]?.text ?? "");
+  };
+
+  const togglePlay = (id: string) => {
+    setPlayingVoice((prev) => {
+      if (prev === id) return null;
+      setTimeout(() => setPlayingVoice(null), 3000);
+      return id;
+    });
+  };
+
+  const complete = pois.filter(
+    (p) => p.translations[lang]?.status === "approved" && p.translations[lang]?.audioStatus === "ready"
+  ).length;
+
+  const filteredPOIs = pois.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <PageShell>
+      <div className="max-w-5xl mx-auto">
+
         {/* Header */}
-        <div className="mb-10">
-          <button
-            onClick={backToGuideList}
-            className="inline-flex items-center gap-2 text-[14px] font-semibold text-zinc-600 hover:text-zinc-900 mb-6 transition-colors"
-          >
-            <ArrowLeft className="size-4" />
-            Back to Guides
-          </button>
-
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-[32px] font-semibold text-zinc-950 tracking-tight mb-2">
-                {selectedGuide.name} → {getLanguageName(selectedLanguage)}
-              </h1>
-              <p className="text-[15px] text-zinc-600 leading-relaxed">
-                {selectedGuide.totalPOIs} POIs · Translating from {selectedGuide.sourceLanguage} to {selectedLanguage}
-              </p>
-            </div>
-            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-semibold rounded-lg hover:bg-[#b82828] transition-all shadow-sm">
-              <Sparkles className="size-4" />
-              AI Translate All POIs
-            </button>
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-[26px] font-semibold text-zinc-900 tracking-tight mb-1">Translations</h1>
+            <p className="text-[13px] text-zinc-500">
+              {complete} of {pois.length} POIs complete · {guide.name}
+            </p>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="p-4 rounded-lg" style={{ backgroundColor: '#FEE2E2', borderWidth: '1px', borderColor: '#FCA5A5' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="size-5" style={{ color: '#D33333' }} />
-              <span className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: '#991b1b' }}>
-                Approved
-              </span>
-            </div>
-            <div className="text-[28px] font-bold" style={{ color: '#7f1d1d' }}>
-              {pois.filter((p) => p.status === "approved").length}
-            </div>
-          </div>
-
-          <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Eye className="size-5 text-orange-600" />
-              <span className="text-[13px] font-semibold text-orange-900 uppercase tracking-wide">
-                Under Review
-              </span>
-            </div>
-            <div className="text-[28px] font-bold text-orange-950">
-              {pois.filter((p) => p.status === "under-review").length}
-            </div>
-          </div>
-
-          <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="size-5 text-zinc-600" />
-              <span className="text-[13px] font-semibold text-zinc-900 uppercase tracking-wide">
-                Draft (AI)
-              </span>
-            </div>
-            <div className="text-[28px] font-bold text-zinc-950">
-              {pois.filter((p) => p.status === "draft").length}
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Search POIs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-            />
-          </div>
-
+        {/* Toolbar */}
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          {/* Guide selector */}
           <div className="relative">
             <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent cursor-pointer"
+              value={guideId}
+              onChange={(e) => changeGuide(e.target.value)}
+              className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer"
             >
-              <option value="all">All Status</option>
-              <option value="approved">Approved</option>
-              <option value="under-review">Under Review</option>
-              <option value="draft">Draft</option>
+              {initialGuides.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
           </div>
+
+          {/* Language pills */}
+          <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-xl p-1">
+            {guide.targetLanguages.map((l) => (
+              <button
+                key={l}
+                onClick={() => changeLang(l)}
+                className={`px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+                  lang === l ? "bg-white text-zinc-900 shadow-sm border border-zinc-200" : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {/* Progress */}
+          <div className="ml-auto flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-24 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-400 rounded-full transition-all"
+                  style={{ width: `${(complete / pois.length) * 100}%` }}
+                />
+              </div>
+              <span className="text-[12px] font-semibold text-zinc-500">{complete}/{pois.length}</span>
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center gap-3 text-[11px] text-zinc-400">
+              <span className="flex items-center gap-1"><FileText className="size-3" /> Text</span>
+              <span className="flex items-center gap-1"><Mic className="size-3" /> Voice</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
+          <input
+            type="text"
+            placeholder="Search POIs…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+          />
         </div>
 
         {/* POI List */}
-        <div className="space-y-3">
-          {pois
-            .filter(
-              (poi) =>
-                poi.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                (filterStatus === "all" || poi.status === filterStatus)
-            )
-            .map((poi) => (
-              <div
-                key={poi.id}
-                onClick={() => openTranslationEditor(poi)}
-                className={`p-4 rounded-lg border-2 transition-all cursor-pointer hover:shadow-md ${getStatusColor(
-                  poi.status
-                )}`}
+        <div className="space-y-2">
+          {filteredPOIs.map((p, i) => {
+            const t = p.translations[lang];
+            const ts = textSlot(t?.status ?? "draft", t?.text ?? "");
+            const as_ = audioSlot(t?.audioStatus ?? "none");
+            const isDone = ts === "done" && as_ === "done";
+
+            return (
+              <button
+                key={p.id}
+                onClick={() => openPOI(p)}
+                className={`w-full group flex items-center gap-4 px-5 py-4 bg-white rounded-xl border transition-all text-left hover:shadow-sm ${
+                  isDone ? "border-emerald-200 hover:border-emerald-300" : "border-zinc-200 hover:border-zinc-300"
+                }`}
+                style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    {getStatusIcon(poi.status)}
-                    <div className="flex-1">
-                      <h3 className="text-[15px] font-semibold text-zinc-950 mb-1">
-                        {poi.name}
-                      </h3>
-                      <p className="text-[13px] text-zinc-600 line-clamp-1">
-                        {poi.sourceText}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {getStatusBadge(poi.status)}
-                  </div>
-                </div>
-              </div>
-            ))}
+                <span className="text-[11px] font-medium text-zinc-400 w-5 flex-shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                <span className={`flex-1 text-[14px] font-semibold truncate ${isDone ? "text-emerald-800" : "text-zinc-900"}`}>
+                  {p.name}
+                </span>
+                <SplitPill t={ts} v={as_} />
+                <span className="text-[12px] font-semibold text-zinc-400 group-hover:text-zinc-700 transition-colors ml-2">
+                  {isDone ? "Complete" : t?.text ? "In progress" : "Not started"}
+                </span>
+              </button>
+            );
+          })}
         </div>
+
       </div>
 
-      {/* Translation Editor Modal */}
-      {showTranslationEditor && editorData && (
+      {/* ── Translation Modal ── */}
+      {poi && (
         <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+
+            {/* Modal header */}
+            <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between flex-shrink-0">
               <div>
-                <h2 className="text-[18px] font-semibold text-zinc-950">
-                  {editorData.poiName}
-                </h2>
-                <p className="text-[13px] text-zinc-600 mt-1">
-                  {editorData.guideName} · {editorData.sourceLang} → {editorData.targetLang}
+                <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">
+                  {guide.name} · EN → {lang}
                 </p>
+                <h2 className="text-[18px] font-semibold text-zinc-900">{poi.name}</h2>
               </div>
               <div className="flex items-center gap-3">
-                {getStatusBadge(editorData.status)}
-                <button
-                  onClick={() => setShowTranslationEditor(false)}
-                  className="text-zinc-400 hover:text-zinc-900 transition-colors"
-                >
+                {/* Lang switcher inside modal */}
+                <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-xl p-1">
+                  {guide.targetLanguages.map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => changeLang(l)}
+                      className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                        lang === l ? "bg-white text-zinc-900 shadow-sm border border-zinc-200" : "text-zinc-500 hover:text-zinc-800"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={closeModal} className="text-zinc-400 hover:text-zinc-700 transition-colors">
                   <X className="size-5" />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Source */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide">
-                      {editorData.sourceLang} (Source)
-                    </label>
-                    <span className="text-[12px] text-zinc-500">
-                      {editorData.sourceText.length} characters
-                    </span>
-                  </div>
-                  <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-lg text-[14px] text-zinc-900 leading-relaxed min-h-[300px]">
-                    {editorData.sourceText}
-                  </div>
-                </div>
+            {/* Modal body */}
+            <div className="flex flex-1 overflow-hidden">
 
-                {/* Target */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide">
-                      {editorData.targetLang} (Target)
-                    </label>
-                    <span className="text-[12px] text-zinc-500">
-                      {editorData.targetText.length} characters
-                    </span>
-                  </div>
-                  <textarea
-                    value={editorData.targetText}
-                    onChange={(e) =>
-                      setEditorData({ ...editorData, targetText: e.target.value })
-                    }
-                    placeholder={`Translation in ${editorData.targetLang}...`}
-                    className="w-full p-4 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 leading-relaxed min-h-[300px] focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-none"
+              {/* Center: source + translation */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Smart banner */}
+                <div className="px-6 pt-5 pb-4 flex-shrink-0">
+                  <SmartBanner
+                    trans={trans}
+                    editingText={editingText}
+                    hasVoice={!!voice}
+                    onAITranslate={() => {
+                      const draft = "[AI] " + poi.sourceText.slice(0, 80) + "…";
+                      setEditingText(draft);
+                      patch({ text: draft, status: "draft" });
+                    }}
+                    onSubmitReview={() => patch({ status: "review", text: editingText })}
+                    onApproveText={() => patch({ status: "approved", text: editingText })}
+                    onReopenText={() => patch({ status: "draft" })}
+                    onChooseVoice={() => setShowVoicePicker(true)}
                   />
                 </div>
-              </div>
 
-              {/* AI Suggestion */}
-              {editorData.status === "draft" && !editorData.targetText && (
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <Sparkles className="size-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="text-[14px] font-semibold text-blue-900 mb-1">
-                        AI Translation Available
-                      </h4>
-                      <p className="text-[13px] text-blue-700 mb-3">
-                        Get an instant translation using AI. You can review and edit it before publishing.
-                      </p>
-                      <button className="inline-flex items-center gap-2 px-4 py-2 bg-[#D33333] text-white text-[13px] font-semibold rounded-lg hover:bg-[#b82828] transition-all">
-                        <Sparkles className="size-4" />
-                        Generate AI Translation
-                      </button>
+                {/* Text panels */}
+                <div className="flex-1 overflow-y-auto px-6 pb-6">
+                  <div className="grid grid-cols-2 gap-4 h-full min-h-[240px]">
+                    {/* Source */}
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded tracking-wider">EN</span>
+                        <span className="text-[12px] font-semibold text-zinc-500">Source</span>
+                        <span className="ml-auto text-[11px] text-zinc-400">{poi.sourceText.length} chars</span>
+                      </div>
+                      <div className="flex-1 p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-[13px] text-zinc-600 leading-relaxed overflow-y-auto">
+                        {poi.sourceText}
+                      </div>
+                    </div>
+                    {/* Translation */}
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-bold rounded tracking-wider">{lang}</span>
+                        <span className="text-[12px] font-semibold text-zinc-500">Translation</span>
+                        <span className="ml-auto text-[11px] text-zinc-400">{editingText.length} chars</span>
+                      </div>
+                      <textarea
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        disabled={trans?.status === "approved"}
+                        placeholder={`Type the ${lang} translation here…`}
+                        className="flex-1 p-4 bg-white border border-zinc-200 rounded-xl text-[13px] text-zinc-900 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent disabled:bg-zinc-50 disabled:text-zinc-500 min-h-[200px] transition-all"
+                      />
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Right: voice panel */}
+              <div className="w-[220px] flex-shrink-0 border-l border-zinc-200 flex flex-col bg-zinc-50/50 overflow-hidden">
+                <div className="px-4 pt-4 pb-3 border-b border-zinc-100 flex-shrink-0">
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Voice Over · {lang}</p>
+                </div>
+
+                {showVoicePicker ? (
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between flex-shrink-0">
+                      <span className="text-[12px] font-semibold text-zinc-700">Choose voice</span>
+                      <button onClick={() => setShowVoicePicker(false)} className="text-zinc-400 hover:text-zinc-700">
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                    <div className="px-3 py-2.5 border-b border-zinc-100 flex-shrink-0">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-400" />
+                        <input
+                          type="text"
+                          placeholder="Search…"
+                          value={voiceSearch}
+                          onChange={(e) => setVoiceSearch(e.target.value)}
+                          className="w-full pl-7 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      {allVoices
+                        .filter((v) => v.name.toLowerCase().includes(voiceSearch.toLowerCase()))
+                        .map((v) => (
+                          <button
+                            key={v.id}
+                            onClick={() => { assignVoice(v); patch({ audioStatus: "pending" }); }}
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-zinc-100 transition-colors border-b border-zinc-50 last:border-0"
+                          >
+                            <img src={v.avatarUrl} alt={v.name} className="size-9 rounded-full object-cover flex-shrink-0" />
+                            <div className="text-left flex-1 min-w-0">
+                              <p className="text-[12px] font-semibold text-zinc-900 truncate">{v.name}</p>
+                              <p className="text-[11px] text-zinc-400">{v.language} · {v.gender}</p>
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); togglePlay(v.id); }}
+                              className="size-6 rounded-full bg-zinc-200 hover:bg-zinc-300 flex items-center justify-center flex-shrink-0"
+                            >
+                              {playingVoice === v.id ? <Pause className="size-3 text-zinc-700" /> : <Play className="size-3 text-zinc-700 ml-0.5" />}
+                            </button>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <SmartVoiceBanner
+                      textApproved={trans?.status === "approved"}
+                      audioStatus={trans?.audioStatus}
+                      voiceName={voice?.name}
+                      lang={lang}
+                      onAdvance={() => patch({ audioStatus: "review" })}
+                      onApprove={() => patch({ audioStatus: "ready" })}
+                      onReopen={() => patch({ audioStatus: "review" })}
+                      onChooseVoice={() => setShowVoicePicker(true)}
+                    />
+
+                    {voice && (
+                      <div className="flex flex-col items-center pt-2">
+                        <div className="relative mb-3">
+                          <img src={voice.avatarUrl} alt={voice.name} className="size-14 rounded-full object-cover" />
+                          <button
+                            onClick={() => togglePlay(voice.id)}
+                            className="absolute -bottom-1 -right-1 size-6 rounded-full bg-zinc-900 hover:bg-zinc-700 flex items-center justify-center shadow-md transition-colors"
+                          >
+                            {playingVoice === voice.id ? <Pause className="size-2.5 text-white" /> : <Play className="size-2.5 text-white ml-0.5" />}
+                          </button>
+                        </div>
+                        <p className="text-[13px] font-semibold text-zinc-900">{voice.name}</p>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">{voice.language} · {voice.gender}</p>
+                        <div className="flex flex-wrap gap-1 justify-center mt-2">
+                          {voice.style.map((tag) => (
+                            <span key={tag} className="px-2 py-0.5 bg-zinc-100 text-zinc-500 text-[10px] font-semibold rounded-full">{tag}</span>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setShowVoicePicker(true)}
+                          className="mt-4 w-full py-1.5 border border-zinc-200 text-zinc-500 text-[11px] font-semibold rounded-lg hover:bg-zinc-100 transition-colors"
+                        >
+                          Change Voice
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="px-6 py-5 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {editorData.status !== "approved" && (
-                  <button className="text-[13px] font-semibold text-red-600 hover:text-red-700">
-                    <Trash2 className="size-4 inline mr-1" />
-                    Delete Translation
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
+            {/* Modal footer */}
+            <div className="px-6 py-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between flex-shrink-0">
+              <button onClick={closeModal} className="px-4 py-2 text-[13px] font-semibold text-zinc-600 hover:bg-zinc-200 rounded-lg transition-all">
+                Close
+              </button>
+              <div className="flex items-center gap-2">
+                {/* Navigate prev/next */}
+                {(() => {
+                  const idx = pois.findIndex((p) => p.id === poi.id);
+                  return (
+                    <>
+                      <button
+                        onClick={() => { const prev = pois[idx - 1]; if (prev) openPOI(prev); }}
+                        disabled={idx === 0}
+                        className="px-3 py-2 text-[12px] font-semibold text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-100 disabled:opacity-30 transition-all"
+                      >
+                        ← Prev
+                      </button>
+                      <button
+                        onClick={() => { const next = pois[idx + 1]; if (next) openPOI(next); }}
+                        disabled={idx === pois.length - 1}
+                        className="px-3 py-2 text-[12px] font-semibold text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-100 disabled:opacity-30 transition-all"
+                      >
+                        Next →
+                      </button>
+                    </>
+                  );
+                })()}
                 <button
-                  onClick={() => setShowTranslationEditor(false)}
-                  className="px-5 py-2.5 text-[14px] font-semibold text-zinc-700 hover:bg-zinc-200 rounded-lg transition-all"
+                  onClick={() => patch({ text: editingText })}
+                  disabled={trans?.status === "approved"}
+                  className="px-4 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Cancel
-                </button>
-                {editorData.status === "draft" && (
-                  <button className="px-5 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-[14px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
-                    <Eye className="size-4 inline mr-1" />
-                    Submit for Review
-                  </button>
-                )}
-                {editorData.status === "under-review" && (
-                  <button className="px-5 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-[14px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
-                    <Save className="size-4 inline mr-1" />
-                    Save Changes
-                  </button>
-                )}
-                <button className="px-5 py-2.5 bg-[#D33333] text-white text-[14px] font-semibold rounded-lg hover:bg-[#b82828] transition-all shadow-sm">
-                  <CheckCircle2 className="size-4 inline mr-1" />
-                  Approve Translation
+                  Save
                 </button>
               </div>
             </div>
+
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -1,72 +1,248 @@
 import { Outlet, Link, useLocation } from "react-router";
-import { LayoutDashboard, FileAudio, MapPin, FileText, Image, BarChart3, Settings, LogOut, Menu, X, Map, Languages, Mic, MessageSquare, Megaphone, DollarSign } from "lucide-react";
+import {
+  LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
+  Languages, Mic, Megaphone, DollarSign, MessageSquare,
+  FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight,
+} from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { useState } from "react";
-import MainLogoVariant from "../../../imports/MainLogoVariant5";
+
+type Badge =
+  | { type: "count"; value: number }
+  | { type: "dot"; color: string };
+
+type NavChild = {
+  path: string;
+  label: string;
+  badge?: Badge;
+};
+
+type NavItem = {
+  key: string;
+  path?: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  children?: NavChild[];
+  badge?: Badge;
+};
+
+type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+const navSections: NavSection[] = [
+  {
+    label: "Overview",
+    items: [
+      { key: "dashboard", path: "/", icon: LayoutDashboard, label: "Dashboard" },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      { key: "guides", path: "/guides", icon: Headphones, label: "Audio Guides" },
+      { key: "pois", path: "/pois", icon: MapPin, label: "Points of Interest" },
+      { key: "map", path: "/map", icon: Map, label: "Map" },
+    ],
+  },
+  {
+    label: "Media",
+    items: [
+      { key: "media", path: "/media", icon: FolderOpen, label: "Media Library" },
+    ],
+  },
+  {
+    label: "Production",
+    items: [
+      { key: "voice-talent", path: "/voice-talent", icon: Mic, label: "Voice Talent" },
+      { key: "translations", path: "/translations", icon: Languages, label: "Translations", badge: { type: "count", value: 12 } },
+    ],
+  },
+  {
+    label: "Growth",
+    items: [
+      { key: "marketing", path: "/marketing", icon: Megaphone, label: "Marketing" },
+      { key: "monetization", path: "/monetization", icon: DollarSign, label: "Monetization" },
+      { key: "reviews", path: "/reviews", icon: MessageSquare, label: "Reviews", badge: { type: "dot", color: "#22c55e" } },
+    ],
+  },
+];
+
+const bottomItems = [
+  { path: "/documents", icon: FileText, label: "Knowledge Base" },
+  { path: "/settings", icon: Settings, label: "Settings" },
+];
+
+function Badge({ badge }: { badge: Badge }) {
+  if (badge.type === "count") {
+    return (
+      <span className="ml-auto text-[10px] font-semibold bg-red-500 text-white rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
+        {badge.value}
+      </span>
+    );
+  }
+  return (
+    <span
+      className="ml-auto size-2 rounded-full flex-shrink-0"
+      style={{ backgroundColor: badge.color }}
+    />
+  );
+}
+
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const location = useLocation();
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
+    const open = new Set<string>();
+    navSections.forEach((section) => {
+      section.items.forEach((item) => {
+        if (item.children) {
+          const anyChildActive = item.children.some((c) =>
+            c.path === "/" ? location.pathname === "/" : location.pathname.startsWith(c.path)
+          );
+          if (anyChildActive) open.add(item.key);
+        }
+      });
+    });
+    return open;
+  });
+
+  const toggleGroup = (key: string) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const isActive = (path: string) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
+
+  return (
+    <nav className="flex-1 px-2 py-3 overflow-y-auto">
+      {navSections.map((section, si) => (
+        <div key={section.label} className={si > 0 ? "mt-4" : ""}>
+          <p className="px-2 mb-1 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
+            {section.label}
+          </p>
+          <div className="space-y-0.5">
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              const isOpen = openGroups.has(item.key);
+
+              if (item.children) {
+                const anyChildActive = item.children.some((c) => isActive(c.path));
+                return (
+                  <div key={item.key}>
+                    <button
+                      onClick={() => toggleGroup(item.key)}
+                      className={`
+                        w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors
+                        ${anyChildActive
+                          ? "text-zinc-900 font-medium"
+                          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
+                      `}
+                    >
+                      <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {item.badge && <Badge badge={item.badge} />}
+                      {isOpen
+                        ? <ChevronDown className="size-3.5 text-zinc-400 flex-shrink-0" />
+                        : <ChevronRight className="size-3.5 text-zinc-400 flex-shrink-0" />}
+                    </button>
+                    {isOpen && (
+                      <div className="ml-6 mt-0.5 space-y-0.5 border-l border-zinc-100 pl-3">
+                        {item.children.map((child) => {
+                          const active = isActive(child.path);
+                          return (
+                            <Link
+                              key={child.path}
+                              to={child.path}
+                              onClick={onNavigate}
+                              className={`
+                                flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-colors
+                                ${active
+                                  ? "bg-blue-50 text-blue-600 font-medium"
+                                  : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
+                              `}
+                            >
+                              <span className="flex-1">{child.label}</span>
+                              {child.badge && <Badge badge={child.badge} />}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              const active = isActive(item.path!);
+              return (
+                <Link
+                  key={item.key}
+                  to={item.path!}
+                  onClick={onNavigate}
+                  className={`
+                    flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors
+                    ${active
+                      ? "bg-blue-50 text-blue-600 font-medium"
+                      : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
+                  `}
+                >
+                  <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge && <Badge badge={item.badge} />}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
 
 export function StudioLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const coreNavItems = [
-    { path: "/studio", icon: LayoutDashboard, label: "Dashboard" },
-    { path: "/studio/guides", icon: FileAudio, label: "Audioguide" },
-    { path: "/studio/pois", icon: MapPin, label: "POI" },
-    { path: "/studio/map", icon: Map, label: "Mappa" },
-    { path: "/studio/media", icon: Image, label: "Media" },
-  ];
-
-  const localizationNavItems = [
-    { path: "/studio/translations", icon: Languages, label: "Translations" },
-    { path: "/studio/voice-talent", icon: Mic, label: "Voice Talent" },
-  ];
-
-  const marketingNavItems = [
-    { path: "/studio/marketing", icon: Megaphone, label: "Marketing" },
-    { path: "/studio/monetization", icon: DollarSign, label: "Monetization" },
-  ];
-
-  const resourceNavItems = [
-    { path: "/studio/reviews", icon: MessageSquare, label: "Reviews" },
-    { path: "/studio/analytics", icon: BarChart3, label: "Analytics" },
-  ];
-
-  const bottomNavItems = [
-    { path: "/studio/documents", icon: FileText, label: "Knowledge Base" },
-    { path: "/studio/settings", icon: Settings, label: "Settings" },
-  ];
-
   const isActive = (path: string) => {
-    if (path === "/studio") {
-      return location.pathname === "/studio";
-    }
+    if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
 
+  const mobileTabItems = [
+    { path: "/", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/guides", icon: Headphones, label: "Content" },
+    { path: "/translations", icon: Languages, label: "Localize" },
+    { path: "/marketing", icon: Megaphone, label: "Growth" },
+  ];
+
   return (
     <div className="min-h-screen bg-zinc-50">
-      {/* Desktop Sidebar - More refined */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col border-r border-zinc-200 bg-white">
-        <div className="flex flex-col flex-1 overflow-y-auto">
-          {/* Logo - Compact and precise */}
-          <div className="px-6 py-5 border-b border-zinc-200">
-            <Link to="/studio" className="flex items-center gap-3 mb-4">
-              <div className="h-[24px] w-[24px] rounded bg-[#D33333] flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-[11px] font-semibold">M</span>
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-[220px] lg:flex-col border-r border-zinc-200 bg-white">
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Logo */}
+          <div className="px-4 py-4 border-b border-zinc-100">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="size-6 rounded bg-[#D33333] flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-[10px] font-bold">M</span>
               </div>
-              <span className="font-semibold text-[13px] text-zinc-900 tracking-tight">
+              <span className="font-semibold text-[13px] text-zinc-900 truncate">
                 {mockMuseum.name}
               </span>
             </Link>
-            <p className="text-[11px] text-zinc-500 font-medium tracking-wide uppercase">
-              Studio
-            </p>
           </div>
 
-          {/* Navigation - Precise and minimal */}
-          <nav className="flex-1 px-3 py-4 space-y-0.5">
-            {/* Core Section */}
-            {coreNavItems.map((item) => {
+          <SidebarNav />
+
+          {/* Bottom */}
+          <div className="px-2 py-3 border-t border-zinc-100 space-y-0.5">
+            {bottomItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
               return (
@@ -74,136 +250,20 @@ export function StudioLayout() {
                   key={item.path}
                   to={item.path}
                   className={`
-                    flex items-center gap-3 px-3 py-2 rounded-md transition-all text-[13px]
-                    ${
-                      active
-                        ? "bg-zinc-100 text-zinc-900 font-medium"
-                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                    }
+                    flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors
+                    ${active
+                      ? "bg-blue-50 text-blue-600 font-medium"
+                      : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
                   `}
-                  style={active ? { borderLeft: '2px solid #D33333', paddingLeft: '10px' } : {}}
                 >
                   <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
-
-            {/* Separator */}
-            <div className="py-2">
-              <div className="h-px bg-zinc-200" />
-            </div>
-
-            {/* Localization Section */}
-            {localizationNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`
-                    flex items-center gap-3 px-3 py-2 rounded-md transition-all text-[13px]
-                    ${
-                      active
-                        ? "bg-zinc-100 text-zinc-900 font-medium"
-                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                    }
-                  `}
-                  style={active ? { borderLeft: '2px solid #D33333', paddingLeft: '10px' } : {}}
-                >
-                  <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-
-            {/* Separator */}
-            <div className="py-2">
-              <div className="h-px bg-zinc-200" />
-            </div>
-
-            {/* Marketing Section */}
-            {marketingNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`
-                    flex items-center gap-3 px-3 py-2 rounded-md transition-all text-[13px]
-                    ${
-                      active
-                        ? "bg-zinc-100 text-zinc-900 font-medium"
-                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                    }
-                  `}
-                  style={active ? { borderLeft: '2px solid #D33333', paddingLeft: '10px' } : {}}
-                >
-                  <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-
-            {/* Separator */}
-            <div className="py-2">
-              <div className="h-px bg-zinc-200" />
-            </div>
-
-            {/* Resources Section */}
-            {resourceNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`
-                    flex items-center gap-3 px-3 py-2 rounded-md transition-all text-[13px]
-                    ${
-                      active
-                        ? "bg-zinc-100 text-zinc-900 font-medium"
-                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                    }
-                  `}
-                  style={active ? { borderLeft: '2px solid #D33333', paddingLeft: '10px' } : {}}
-                >
-                  <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Menu */}
-          <div className="p-3 border-t border-zinc-200 space-y-0.5">
-            {bottomNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`
-                    flex items-center gap-3 px-3 py-2 rounded-md transition-all text-[13px]
-                    ${
-                      active
-                        ? "bg-zinc-100 text-zinc-900 font-medium"
-                        : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                    }
-                  `}
-                  style={active ? { borderLeft: '2px solid #D33333', paddingLeft: '10px' } : {}}
-                >
-                  <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-            <button className="flex items-center gap-3 px-3 py-2 w-full text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 rounded-md transition-all text-[13px]">
-              <LogOut className="size-4" strokeWidth={1.5} />
-              <span>Esci</span>
+            <button className="flex items-center gap-2.5 px-2 py-1.5 w-full text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 rounded-md transition-colors text-[13px]">
+              <LogOut className="size-4 flex-shrink-0" strokeWidth={1.5} />
+              <span>Log out</span>
             </button>
           </div>
         </div>
@@ -212,9 +272,9 @@ export function StudioLayout() {
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-zinc-200">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link to="/studio" className="flex items-center gap-2">
-            <div className="h-[20px] w-[20px] rounded bg-[#D33333] flex items-center justify-center">
-              <span className="text-white text-[9px] font-semibold">M</span>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="size-5 rounded bg-[#D33333] flex items-center justify-center">
+              <span className="text-white text-[9px] font-bold">M</span>
             </div>
             <span className="font-semibold text-[13px] text-zinc-900">
               {mockMuseum.name}
@@ -228,211 +288,49 @@ export function StudioLayout() {
           </button>
         </div>
 
-        {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="border-t border-zinc-200 bg-white">
-            <nav className="px-3 py-3 space-y-0.5">
-              {/* Core Section */}
-              {coreNavItems.map((item) => {
+          <div className="border-t border-zinc-200 bg-white max-h-[80vh] overflow-y-auto">
+            <SidebarNav onNavigate={() => setMobileMenuOpen(false)} />
+            <div className="px-2 pb-3 pt-1 border-t border-zinc-100 space-y-0.5">
+              {bottomItems.map((item) => {
                 const Icon = item.icon;
-                const active = isActive(item.path);
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`
-                      flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-[13px] font-medium
-                      ${
-                        active
-                          ? "bg-zinc-100 text-zinc-900"
-                          : "text-zinc-700 hover:bg-zinc-50"
-                      }
-                    `}
-                    style={active ? { borderLeft: '2px solid #D33333', paddingLeft: '10px' } : {}}
+                    className="flex items-center gap-2.5 px-2 py-1.5 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 rounded-md text-[13px]"
                   >
-                    <Icon className="size-4" />
+                    <Icon className="size-4" strokeWidth={1.5} />
                     <span>{item.label}</span>
                   </Link>
                 );
               })}
-              
-              {/* Separator */}
-              <div className="py-2">
-                <div className="h-px bg-zinc-200" />
-              </div>
-              
-              {/* Localization Section */}
-              {localizationNavItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`
-                      flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-[13px] font-medium
-                      ${
-                        active
-                          ? "bg-zinc-100 text-zinc-900"
-                          : "text-zinc-700 hover:bg-zinc-100"
-                      }
-                    `}
-                  >
-                    <Icon className="size-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-              
-              {/* Separator */}
-              <div className="py-2">
-                <div className="h-px bg-zinc-200" />
-              </div>
-              
-              {/* Marketing Section */}
-              {marketingNavItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`
-                      flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-[13px] font-medium
-                      ${
-                        active
-                          ? "bg-zinc-100 text-zinc-900"
-                          : "text-zinc-700 hover:bg-zinc-100"
-                      }
-                    `}
-                  >
-                    <Icon className="size-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-              
-              {/* Separator */}
-              <div className="py-2">
-                <div className="h-px bg-zinc-200" />
-              </div>
-              
-              {/* Resources Section */}
-              {resourceNavItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`
-                      flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-[13px] font-medium
-                      ${
-                        active
-                          ? "bg-zinc-100 text-zinc-900"
-                          : "text-zinc-700 hover:bg-zinc-100"
-                      }
-                    `}
-                  >
-                    <Icon className="size-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-              
-              {/* Separator */}
-              <div className="py-2">
-                <div className="h-px bg-zinc-200" />
-              </div>
-              
-              {/* Bottom Section */}
-              {bottomNavItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`
-                      flex items-center gap-2.5 px-3 py-2 rounded-md transition-all text-[13px] font-medium
-                      ${
-                        active
-                          ? "bg-zinc-100 text-zinc-900"
-                          : "text-zinc-700 hover:bg-zinc-100"
-                      }
-                    `}
-                  >
-                    <Icon className="size-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-              
-              <button className="flex items-center gap-3 px-4 py-3 w-full text-zinc-700 hover:bg-zinc-100 rounded-lg transition-all text-[14px] font-medium">
-                <LogOut className="size-5" />
-                <span>Esci</span>
+              <button className="flex items-center gap-2.5 px-2 py-1.5 w-full text-zinc-500 hover:bg-zinc-50 rounded-md text-[13px]">
+                <LogOut className="size-4" strokeWidth={1.5} />
+                <span>Log out</span>
               </button>
-            </nav>
+            </div>
           </div>
         )}
       </header>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-200 safe-area-pb">
-        <div className="flex items-center justify-around px-2 py-2">
-          {coreNavItems.map((item) => {
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-zinc-200">
+        <div className="flex items-center justify-around px-1 py-2">
+          {mobileTabItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`
-                  flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors flex-1
-                  ${active ? "text-zinc-900" : "text-zinc-500"}
-                `}
+                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg flex-1 transition-colors ${
+                  active ? "text-blue-600" : "text-zinc-400"
+                }`}
               >
-                <Icon className={`size-6 ${active ? "fill-zinc-900" : ""}`} />
-                <span className="text-[11px] font-semibold">{item.label}</span>
-              </Link>
-            );
-          })}
-          {resourceNavItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`
-                  flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors flex-1
-                  ${active ? "text-zinc-900" : "text-zinc-500"}
-                `}
-              >
-                <Icon className={`size-6 ${active ? "fill-zinc-900" : ""}`} />
-                <span className="text-[11px] font-semibold">{item.label}</span>
-              </Link>
-            );
-          })}
-          {bottomNavItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`
-                  flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors flex-1
-                  ${active ? "text-zinc-900" : "text-zinc-500"}
-                `}
-              >
-                <Icon className={`size-6 ${active ? "fill-zinc-900" : ""}`} />
-                <span className="text-[11px] font-semibold">{item.label}</span>
+                <Icon className="size-5" strokeWidth={active ? 2 : 1.5} />
+                <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
           })}
@@ -440,7 +338,7 @@ export function StudioLayout() {
       </nav>
 
       {/* Main Content */}
-      <main className="lg:pl-72 pt-14 pb-20 lg:pt-0 lg:pb-0">
+      <main className="lg:pl-[220px] pt-14 pb-20 lg:pt-0 lg:pb-0 bg-white min-h-screen">
         <Outlet />
       </main>
     </div>

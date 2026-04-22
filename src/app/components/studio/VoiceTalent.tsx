@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Mic,
   Play,
@@ -11,7 +10,8 @@ import {
   ChevronDown,
   Volume2,
 } from "lucide-react";
-
+import { useState } from "react";
+import { PageShell } from "./PageShell";
 interface VoiceTalent {
   id: string;
   name: string;
@@ -164,24 +164,18 @@ export function VoiceTalent() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-[1800px] mx-auto p-6 md:p-12">
+    <PageShell>
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-[32px] font-semibold text-zinc-950 tracking-tight mb-2">
-                Voice Talent
-              </h1>
-              <p className="text-[15px] text-zinc-600 leading-relaxed">
-                Choose professional voice talent for your audioguides
-              </p>
-            </div>
-            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-semibold rounded-lg hover:bg-[#b82828] transition-all shadow-sm">
-              <Upload className="size-4" />
-              Upload Custom Voice
-            </button>
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-[26px] font-semibold text-zinc-900 tracking-tight mb-1">Voice Talent</h1>
+            <p className="text-[13px] text-zinc-500">{mockVoices.length} voices available</p>
           </div>
+          <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+            <Upload className="size-4" />
+            Upload Custom Voice
+          </button>
         </div>
 
         {/* Filters */}
@@ -231,78 +225,57 @@ export function VoiceTalent() {
         </div>
 
         {/* Voice Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredVoices.map((voice) => (
             <div
               key={voice.id}
-              className="bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-lg transition-all p-6"
-              style={{ boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.04)" }}
+              className="flex flex-col bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md hover:border-zinc-300 transition-all p-6"
+              style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.06)" }}
             >
-              {/* Avatar Circle */}
-              <div className="flex justify-center mb-6">
+              {/* Avatar */}
+              <div className="flex justify-center mb-5">
                 <div className="relative">
-                  <img
-                    src={voice.avatarUrl}
-                    alt={voice.name}
-                    className="size-32 rounded-full object-cover"
-                  />
+                  <img src={voice.avatarUrl} alt={voice.name} className="size-28 rounded-full object-cover" />
                   <button
                     onClick={() => togglePlay(voice.id)}
-                    className="absolute -bottom-2 -right-2 size-12 rounded-full flex items-center justify-center transition-all shadow-lg"
-                    style={{ backgroundColor: '#D33333' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b82828'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D33333'}
+                    className="absolute -bottom-1.5 -right-1.5 size-10 bg-zinc-900 rounded-full flex items-center justify-center hover:bg-zinc-700 transition-all shadow-lg"
                   >
                     {playingVoice === voice.id ? (
-                      <Pause className="size-5 text-white" />
+                      <Pause className="size-4 text-white" />
                     ) : (
-                      <Play className="size-5 text-white ml-0.5" />
+                      <Play className="size-4 text-white ml-0.5" />
                     )}
                   </button>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="text-center mb-6">
-                <h3 className="text-[18px] font-semibold text-zinc-950 mb-1">
-                  {voice.name}
-                </h3>
-                <p className="text-[14px] text-zinc-600 mb-4">
+              <div className="text-center flex-1 flex flex-col">
+                <h3 className="text-[15px] font-semibold text-zinc-900 mb-0.5">{voice.name}</h3>
+                <p className="text-[12px] text-zinc-400 mb-4">
                   {voice.language} · {voice.gender.charAt(0).toUpperCase() + voice.gender.slice(1)} · {voice.age.charAt(0).toUpperCase() + voice.age.slice(1)}
                 </p>
 
-                {/* Language Badge */}
-                <div className="mb-4 flex justify-center">
-                  <span className="inline-block px-3 py-1.5 bg-zinc-100 text-zinc-900 text-[13px] font-semibold rounded-lg">
-                    {voice.language}
-                  </span>
-                </div>
-
                 {/* Style Tags */}
-                <div className="flex flex-wrap gap-2 mb-4 justify-center">
+                <div className="flex flex-wrap gap-1.5 mb-4 justify-center">
                   {voice.style.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2.5 py-1 bg-blue-50 text-blue-700 text-[12px] font-semibold rounded"
-                    >
+                    <span key={tag} className="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-[11px] font-semibold rounded-full">
                       {tag}
                     </span>
                   ))}
                 </div>
 
                 {/* Description */}
-                <p className="text-[14px] text-zinc-600 mb-6 leading-relaxed">
-                  {voice.description}
-                </p>
-              </div>
+                <p className="text-[13px] text-zinc-500 leading-relaxed mb-6">{voice.description}</p>
 
-              {/* Action */}
-              <button
-                onClick={() => setSelectedVoiceForAssignment(voice)}
-                className="w-full px-4 py-2.5 bg-[#D33333] text-white text-[14px] font-semibold rounded-lg hover:bg-[#b82828] transition-all"
-              >
-                Use Voice
-              </button>
+                {/* Action — pushed to bottom */}
+                <button
+                  onClick={() => setSelectedVoiceForAssignment(voice)}
+                  className="mt-auto w-full px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                >
+                  Use Voice
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -457,12 +430,12 @@ export function VoiceTalent() {
                           <h4 className="text-[14px] font-semibold text-zinc-950">
                             {guide.name}
                           </h4>
-                          <span
-                            className="px-2 py-0.5 text-[11px] font-semibold rounded"
-                            style={guide.status === "published"
-                              ? { backgroundColor: '#FEE2E2', color: '#D33333' }
-                              : { backgroundColor: '#FEF3C7', color: '#d97706' }}
-                          >
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            guide.status === "published"
+                              ? "bg-emerald-50 text-emerald-600"
+                              : "bg-zinc-100 text-zinc-500"
+                          }`}>
+                            <span className={`size-1.5 rounded-full ${guide.status === "published" ? "bg-emerald-400" : "bg-zinc-400"}`} />
                             {guide.status === "published" ? "Published" : "Draft"}
                           </span>
                         </div>
@@ -496,7 +469,7 @@ export function VoiceTalent() {
               <button
                 onClick={handleAssignVoice}
                 disabled={selectedGuides.length === 0}
-                className="px-6 py-2.5 bg-[#D33333] text-white text-[14px] font-semibold rounded-lg hover:bg-[#b82828] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-zinc-900 text-white text-[14px] font-semibold rounded-lg hover:bg-zinc-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Check className="size-4 inline mr-2" />
                 Assign to {selectedGuides.length} {selectedGuides.length === 1 ? "Guide" : "Guides"}
@@ -505,6 +478,6 @@ export function VoiceTalent() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

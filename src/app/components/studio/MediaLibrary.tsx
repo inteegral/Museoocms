@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { 
   Upload, 
   Search, 
@@ -14,7 +13,8 @@ import {
   Check,
   ExternalLink
 } from "lucide-react";
-
+import { useState } from "react";
+import { PageShell } from "./PageShell";
 interface MediaItem {
   id: string;
   url: string;
@@ -172,8 +172,8 @@ export function MediaLibrary() {
   const storagePercentage = (totalSize / 1024 / storageLimit) * 100;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-[1800px] mx-auto p-6 md:p-12">
+    <PageShell>
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
@@ -634,6 +634,6 @@ export function MediaLibrary() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

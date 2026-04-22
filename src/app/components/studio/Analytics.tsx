@@ -1,4 +1,5 @@
 import { TrendingUp, Users, Globe, AlertCircle } from "lucide-react";
+import { PageShell } from "./PageShell";
 import { mockAnalytics, mockMuseum } from "../../data/mockData";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -7,7 +8,7 @@ export function Analytics() {
   const isNearLimit = usagePercentage >= 80;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <PageShell><div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-light text-slate-900 mb-2">Analytics</h1>
@@ -211,6 +212,6 @@ export function Analytics() {
           </div>
         </div>
       </div>
-    </div>
+    </div></PageShell>
   );
 }

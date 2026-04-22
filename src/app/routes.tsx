@@ -8,7 +8,6 @@ import { PublishFlow } from "./components/studio/PublishFlow";
 import { POIsManager } from "./components/studio/POIsManager";
 import { DocumentsManager } from "./components/studio/DocumentsManager";
 import { MediaLibrary } from "./components/studio/MediaLibrary";
-import { Analytics } from "./components/studio/Analytics";
 import { Settings } from "./components/studio/Settings";
 import { Map } from "./components/studio/Map";
 import { Translations } from "./components/studio/Translations";
@@ -17,15 +16,12 @@ import { Reviews } from "./components/studio/Reviews";
 import { Marketing } from "./components/studio/Marketing";
 import { Monetization } from "./components/studio/Monetization";
 import { VisitorPlayer } from "./components/visitor/VisitorPlayer";
-import { LandingPage } from "./components/LandingPage";
+import { TenantOnboarding } from "./components/onboarding/TenantOnboarding";
+import { UserOnboarding } from "./components/onboarding/UserOnboarding";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: LandingPage,
-  },
-  {
-    path: "/studio",
     Component: StudioLayout,
     children: [
       { index: true, Component: StudioDashboard },
@@ -38,16 +34,24 @@ export const router = createBrowserRouter([
       { path: "translations", Component: Translations },
       { path: "documents", Component: DocumentsManager },
       { path: "media", Component: MediaLibrary },
+      { path: "media/images", Component: MediaLibrary },
       { path: "voice-talent", Component: VoiceTalent },
       { path: "reviews", Component: Reviews },
       { path: "marketing", Component: Marketing },
       { path: "monetization", Component: Monetization },
-      { path: "analytics", Component: Analytics },
       { path: "settings", Component: Settings },
     ],
   },
   {
-    path: "/:museumSlug/:guideId",
+    path: "/visitor/:museumSlug/:guideId",
     Component: VisitorPlayer,
+  },
+  {
+    path: "/onboarding",
+    Component: TenantOnboarding,
+  },
+  {
+    path: "/invite",
+    Component: UserOnboarding,
   },
 ]);

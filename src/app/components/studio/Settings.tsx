@@ -24,6 +24,7 @@ import {
   FileText
 } from "lucide-react";
 import { AppearanceEditor } from "./AppearanceEditor";
+import { PageShell } from "./PageShell";
 
 type SettingsTab = "general" | "team" | "billing" | "integrations" | "security" | "notifications";
 
@@ -79,10 +80,10 @@ export function Settings() {
   const [inviteRole, setInviteRole] = useState<"admin" | "editor">("editor");
 
   // Museum data
-  const [museumName, setMuseumName] = useState("Museo Civico di Arte");
-  const [museumAddress, setMuseumAddress] = useState("Via Roma 123, Milano, 20100");
-  const [museumDescription, setMuseumDescription] = useState("Un museo dedicato all'arte contemporanea e rinascimentale");
-  const [museumWebsite, setMuseumWebsite] = useState("https://www.museocivico.it");
+  const [museumName, setMuseumName] = useState("City Museum of Art");
+  const [museumAddress, setMuseumAddress] = useState("1 Museum Square, Milan, 20100");
+  const [museumDescription, setMuseumDescription] = useState("A museum dedicated to contemporary and Renaissance art");
+  const [museumWebsite, setMuseumWebsite] = useState("https://www.citymuseumofart.it");
 
   // Account data
   const [userName, setUserName] = useState("Maria Rossi");
@@ -160,8 +161,8 @@ export function Settings() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto p-6 md:p-12">
+    <PageShell>
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-[32px] font-semibold text-zinc-950 tracking-tight mb-2">
@@ -802,6 +803,6 @@ export function Settings() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Upload, FileText, Trash2, Download } from "lucide-react";
 import { mockDocuments } from "../../data/mockData";
+import { PageShell } from "./PageShell";
 
 export function DocumentsManager() {
   const [documents] = useState(mockDocuments);
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <PageShell><div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-light text-slate-900 mb-2">Knowledge Base</h1>
         <p className="text-slate-600">
-          Carica documenti per alimentare la knowledge base AI
+          Upload documents to power the AI knowledge base
         </p>
       </div>
 
@@ -20,13 +21,13 @@ export function DocumentsManager() {
         <div className="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center hover:border-slate-400 hover:bg-slate-50 transition-colors cursor-pointer">
           <Upload className="size-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900 mb-2">
-            Carica documenti
+            Upload documents
           </h3>
           <p className="text-slate-600 mb-4">
-            Trascina qui i file oppure clicca per selezionarli
+            Drag and drop files here or click to select
           </p>
           <p className="text-sm text-slate-500">
-            PDF, Word, TXT fino a 10MB ciascuno
+            PDF, Word, TXT up to 10MB each
           </p>
         </div>
       </div>
@@ -38,11 +39,11 @@ export function DocumentsManager() {
             💡
           </div>
           <div>
-            <h3 className="font-medium text-slate-900 mb-1">Come funziona</h3>
+            <h3 className="font-medium text-slate-900 mb-1">How it works</h3>
             <p className="text-sm text-slate-600">
-              I documenti caricati vengono analizzati e indicizzati. 
-              Quando generi contenuti per un POI con l'AI, il sistema cercherà 
-              informazioni rilevanti nei tuoi documenti per creare descrizioni accurate e contestualizzate.
+              Uploaded documents are analyzed and indexed.
+              When you generate content for a POI with AI, the system will search
+              for relevant information in your documents to create accurate, contextualised descriptions.
             </p>
           </div>
         </div>
@@ -52,15 +53,15 @@ export function DocumentsManager() {
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-6 border-b border-slate-200">
           <h2 className="text-lg font-medium text-slate-900">
-            Documenti caricati ({documents.length})
+            Uploaded documents ({documents.length})
           </h2>
         </div>
 
         {documents.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <FileText className="size-12 mx-auto mb-3 text-slate-300" />
-            <p>Nessun documento caricato</p>
-            <p className="text-sm mt-1">Carica il primo documento per iniziare</p>
+            <p>No documents uploaded</p>
+            <p className="text-sm mt-1">Upload your first document to get started</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-200">
@@ -80,7 +81,7 @@ export function DocumentsManager() {
                     <div className="flex items-center gap-4 text-sm text-slate-600">
                       <span>{doc.size}</span>
                       <span>•</span>
-                      <span>Caricato il {doc.uploadedAt}</span>
+                      <span>Uploaded on {doc.uploadedAt}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -100,7 +101,7 @@ export function DocumentsManager() {
 
       {/* Supported Formats */}
       <div className="mt-8">
-        <h3 className="text-sm font-medium text-slate-900 mb-3">Formati supportati</h3>
+        <h3 className="text-sm font-medium text-slate-900 mb-3">Supported formats</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {["PDF", "Word (.docx)", "Text (.txt)", "Markdown (.md)"].map((format) => (
             <div
@@ -112,6 +113,6 @@ export function DocumentsManager() {
           ))}
         </div>
       </div>
-    </div>
+    </div></PageShell>
   );
 }

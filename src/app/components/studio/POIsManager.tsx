@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Plus, Sparkles, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router";
+import { Plus, Sparkles, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen, X } from "lucide-react";
+import { PageShell } from "./PageShell";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { AIAssistant } from "./AIAssistant";
@@ -16,74 +18,97 @@ interface POI {
   category: string;
   imageUrl?: string;
   audioScript?: string;
+  scriptValidated?: boolean;
+  translations?: string[]; // language codes with translated text
+  voices?: string[];       // language codes with generated audio
   updatedAt: string;
   isGeolocated?: boolean;
-  assignedToGuides?: string[]; // IDs delle audioguide a cui è assegnato
+  assignedToGuides?: string[];
 }
 
 const mockPOIs: POI[] = [
   {
     id: "1",
-    title: "Ingresso Principale",
-    description: "Benvenuto al museo, introduzione storica del palazzo",
+    title: "Main Entrance",
+    description: "Welcome to the museum, historical introduction to the palazzo",
     status: "complete",
-    category: "Architettura",
+    category: "Architecture",
     imageUrl: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3c2?w=400",
-    audioScript: "Benvenuto al nostro museo...",
-    updatedAt: "2 ore fa",
+    audioScript: "Welcome to our museum...",
+    scriptValidated: true,
+    translations: ["en", "fr", "de"],
+    voices: ["it", "en"],
+    updatedAt: "2 hours ago",
     isGeolocated: true,
     assignedToGuides: ["guide-1", "guide-2"],
   },
   {
     id: "2",
-    title: "Sala del Rinascimento",
-    description: "Opere principali del periodo rinascimentale",
+    title: "Renaissance Gallery",
+    description: "Key works from the Renaissance period",
     status: "complete",
-    category: "Arte",
+    category: "Art",
     imageUrl: "https://images.unsplash.com/photo-1577083165633-14ebcdb0f658?w=400",
-    audioScript: "Entriamo ora nella sala dedicata...",
-    updatedAt: "1 giorno fa",
+    audioScript: "We now enter the gallery dedicated to...",
+    scriptValidated: true,
+    translations: ["en"],
+    voices: ["it", "en"],
+    updatedAt: "1 day ago",
     isGeolocated: true,
     assignedToGuides: ["guide-1"],
   },
   {
     id: "3",
-    title: "Capolavori Barocchi",
-    description: "La collezione barocca con focus su Caravaggio",
+    title: "Baroque Masterpieces",
+    description: "The baroque collection with a focus on Caravaggio",
     status: "under-revision",
-    category: "Arte",
+    category: "Art",
     imageUrl: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=400",
-    updatedAt: "3 giorni fa",
+    audioScript: "In this room...",
+    scriptValidated: false,
+    translations: ["en"],
+    voices: [],
+    updatedAt: "3 days ago",
     isGeolocated: true,
     assignedToGuides: [],
   },
   {
     id: "4",
-    title: "Sculture Antiche",
+    title: "Ancient Sculptures",
     description: "",
     status: "in-progress",
-    category: "Scultura",
-    updatedAt: "5 giorni fa",
+    category: "Sculpture",
+    scriptValidated: false,
+    translations: [],
+    voices: [],
+    updatedAt: "5 days ago",
     isGeolocated: false,
     assignedToGuides: [],
   },
   {
     id: "5",
-    title: "Giardino Segreto",
+    title: "Secret Garden",
     description: "",
     status: "idea",
-    category: "Esterni",
-    updatedAt: "1 settimana fa",
+    category: "Outdoors",
+    scriptValidated: false,
+    translations: [],
+    voices: [],
+    updatedAt: "1 week ago",
     isGeolocated: false,
     assignedToGuides: [],
   },
   {
     id: "6",
-    title: "Collezione Moderna",
-    description: "Arte contemporanea e installazioni",
+    title: "Modern Collection",
+    description: "Contemporary art and installations",
     status: "in-progress",
-    category: "Arte Moderna",
-    updatedAt: "4 giorni fa",
+    category: "Modern Art",
+    audioScript: "This collection explores...",
+    scriptValidated: false,
+    translations: [],
+    voices: [],
+    updatedAt: "4 days ago",
     isGeolocated: false,
     assignedToGuides: ["guide-3"],
   },
@@ -120,6 +145,60 @@ const statusConfig = {
   },
 };
 
+function POIBadges({ poi }: { poi: POI }) {
+  const hasScript = !!poi.audioScript;
+  const scriptOk = poi.scriptValidated;
+  const voiceCount = poi.voices?.length ?? 0;
+  const transCount = poi.translations?.length ?? 0;
+  const guideCount = poi.assignedToGuides?.length ?? 0;
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {/* Script */}
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+        scriptOk
+          ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+          : hasScript
+          ? "bg-amber-50 border-amber-200 text-amber-700"
+          : "bg-zinc-50 border-zinc-200 text-zinc-400"
+      }`}>
+        <FileText className="size-3" />
+        {scriptOk ? "Validated" : hasScript ? "Draft" : "No script"}
+      </span>
+
+      {/* Voices */}
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+        voiceCount > 0
+          ? "bg-blue-50 border-blue-200 text-blue-700"
+          : "bg-zinc-50 border-zinc-200 text-zinc-400"
+      }`}>
+        <Mic className="size-3" />
+        {voiceCount > 0 ? voiceCount : "—"}
+      </span>
+
+      {/* Translations */}
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+        transCount > 0
+          ? "bg-violet-50 border-violet-200 text-violet-700"
+          : "bg-zinc-50 border-zinc-200 text-zinc-400"
+      }`}>
+        <Globe className="size-3" />
+        {transCount > 0 ? transCount : "—"}
+      </span>
+
+      {/* Guides */}
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+        guideCount > 0
+          ? "bg-zinc-900 border-zinc-900 text-white"
+          : "bg-zinc-50 border-zinc-200 text-zinc-400"
+      }`}>
+        <BookOpen className="size-3" />
+        {guideCount > 0 ? guideCount : "—"}
+      </span>
+    </div>
+  );
+}
+
 function POICard({
   poi,
   onMove,
@@ -139,107 +218,63 @@ function POICard({
     }),
   });
 
-  const hasGuides = poi.assignedToGuides && poi.assignedToGuides.length > 0;
-  const assignedGuides = hasGuides
-    ? mockGuides.filter((g) => poi.assignedToGuides!.includes(g.id))
-    : [];
-
   const config = statusConfig[poi.status];
 
   return (
     <div
       ref={drag}
       onClick={() => onOpen(poi)}
-      className={`
-        group bg-white rounded-lg border ${config.border} p-5 cursor-pointer
-        hover:shadow-lg transition-all duration-200 relative
-        ${isDragging ? "opacity-40 scale-95" : ""}
-      `}
-      style={{
-        boxShadow: isDragging ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.04)'
-      }}
+      className={`group bg-white rounded-xl border border-zinc-200/80 overflow-hidden cursor-pointer transition-all duration-200 ${isDragging ? "opacity-40 scale-95 shadow-none" : "hover:shadow-md hover:border-zinc-300"}`}
+      style={{ boxShadow: isDragging ? 'none' : '0 1px 4px 0 rgba(0,0,0,0.05)' }}
     >
       {/* Image */}
       {poi.imageUrl && (
-        <div className="relative -mx-5 -mt-5 mb-5 overflow-hidden rounded-t-lg">
+        <div className="relative overflow-hidden">
           <img
             src={poi.imageUrl}
             alt={poi.title}
-            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-36 object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {/* Overlay badges */}
-          <div className="absolute top-3 right-3 flex items-center gap-2">
-            {poi.isGeolocated && (
-              <div className="bg-white/95 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
-                <MapPin className="size-3.5 text-[#D33333]" />
-                <span className="text-xs font-medium text-zinc-900">Mapped</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
+          {poi.isGeolocated && (
+            <div className="absolute top-2 left-2">
+              <div className="bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+                <MapPin className="size-3 text-[#D33333]" />
+                <span className="text-[10px] font-semibold text-zinc-800">Mapped</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Content */}
-      <div className="space-y-3">
-        {/* Title */}
-        <h3 className="font-semibold text-[15px] text-zinc-950 leading-tight tracking-tight">
-          {poi.title}
-        </h3>
-
-        {/* Description */}
-        {poi.description && (
-          <p className="text-[13px] text-zinc-600 leading-relaxed line-clamp-2">
-            {poi.description}
-          </p>
-        )}
-
-        {/* Category */}
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-zinc-100 text-[12px] font-medium text-zinc-700">
-            {poi.category}
-          </span>
+      <div className="p-4 space-y-2.5">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-[14px] text-zinc-950 leading-tight tracking-tight flex-1">
+            {poi.title}
+          </h3>
+          <span className="text-[10px] font-medium text-zinc-400 whitespace-nowrap mt-0.5">{poi.updatedAt}</span>
         </div>
 
-        {/* Assigned Guides Thumbnails */}
-        {hasGuides && (
-          <div className="flex items-center gap-2 pt-2 border-t border-zinc-100">
-            <div className="flex items-center -space-x-2">
-              {assignedGuides.map((guide) => (
-                <div
-                  key={guide.id}
-                  className="size-7 rounded-full border-2 border-white overflow-hidden shadow-sm hover:scale-110 hover:z-10 transition-transform"
-                  title={guide.title}
-                >
-                  <img
-                    src={guide.thumbnail}
-                    alt={guide.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-            <span className="text-[12px] text-zinc-500 font-medium">
-              {assignedGuides.length} {assignedGuides.length === 1 ? 'guide' : 'guides'}
-            </span>
-          </div>
+        {poi.description && (
+          <p className="text-[12px] text-zinc-500 leading-relaxed line-clamp-2">{poi.description}</p>
         )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-          <span className="text-[12px] text-zinc-500">{poi.updatedAt}</span>
-          
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[11px] px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 font-medium">{poi.category}</span>
           {poi.status === "idea" && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(poi);
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-md hover:bg-[#b82828] transition-colors"
+              onClick={(e) => { e.stopPropagation(); onEdit(poi); }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#D33333] text-white text-[11px] font-semibold rounded-md hover:bg-[#b82828] transition-colors"
             >
-              <Sparkles className="size-3.5" />
+              <Sparkles className="size-3" />
               Develop
             </button>
           )}
+        </div>
+
+        <div className="pt-2 border-t border-zinc-100">
+          <POIBadges poi={poi} />
         </div>
       </div>
     </div>
@@ -276,34 +311,23 @@ function KanbanColumn({
   return (
     <div
       ref={drop}
-      className={`
-        flex-1 min-w-[320px] bg-zinc-50 rounded-xl p-6
-        transition-all duration-200
-        ${isOver ? "ring-2 ring-zinc-900 ring-offset-4 bg-zinc-100" : ""}
-      `}
+      className={`flex-1 min-w-[260px] max-w-[320px] flex flex-col transition-all duration-200 ${isOver ? "ring-2 ring-zinc-900/20 ring-offset-2 rounded-xl" : ""}`}
     >
       {/* Column Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className={`size-2 rounded-full ${config.dot}`} />
-          <h2 className="font-semibold text-[14px] text-zinc-900 uppercase tracking-wide">
-            {config.label}
-          </h2>
-          <div className="flex items-center justify-center min-w-[24px] h-6 px-2 bg-white rounded-md border border-zinc-200">
-            <span className="text-[13px] font-semibold text-zinc-700">{pois.length}</span>
-          </div>
-        </div>
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <div className={`size-1.5 rounded-full ${config.dot}`} />
+        <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">{config.label}</span>
+        <span className="ml-auto text-[11px] font-semibold text-zinc-400">{pois.length}</span>
       </div>
 
       {/* Cards */}
-      <div className="space-y-4">
+      <div className={`flex-1 rounded-xl p-3 space-y-3 transition-colors ${isOver ? "bg-zinc-100" : "bg-zinc-50/70"}`}>
         {pois.map((poi) => (
           <POICard key={poi.id} poi={poi} onMove={onMove} onEdit={onEdit} onOpen={onOpen} />
         ))}
-        
         {pois.length === 0 && (
-          <div className="flex items-center justify-center h-32 border-2 border-dashed border-zinc-200 rounded-lg">
-            <p className="text-[13px] text-zinc-400 font-medium">Drop POIs here</p>
+          <div className="flex items-center justify-center h-24 border-2 border-dashed border-zinc-200 rounded-lg">
+            <p className="text-[12px] text-zinc-400">Drop here</p>
           </div>
         )}
       </div>
@@ -317,11 +341,24 @@ function POIsManagerContent() {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [showPOIEditor, setShowPOIEditor] = useState(false);
   const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [selectedGuideFilter, setSelectedGuideFilter] = useState<string>("all");
+  const [showNewPOI, setShowNewPOI] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newStatus, setNewStatus] = useState<POIStatus>("idea");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("new") === "true") {
+      setShowNewPOI(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
 
   const handleMovePOI = (poiId: string, newStatus: POIStatus) => {
     setPOIs(
       pois.map((poi) =>
-        poi.id === poiId ? { ...poi, status: newStatus, updatedAt: "Ora" } : poi
+        poi.id === poiId ? { ...poi, status: newStatus, updatedAt: "Just now" } : poi
       )
     );
   };
@@ -339,7 +376,7 @@ function POIsManagerContent() {
   const handleSavePOI = (updatedPOI: POI) => {
     setPOIs(
       pois.map((poi) =>
-        poi.id === updatedPOI.id ? { ...updatedPOI, updatedAt: "Ora" } : poi
+        poi.id === updatedPOI.id ? { ...updatedPOI, updatedAt: "Just now" } : poi
       )
     );
     setShowPOIEditor(false);
@@ -347,7 +384,7 @@ function POIsManagerContent() {
   };
 
   const handleDeletePOI = (poiId: string) => {
-    if (confirm("Sei sicuro di voler eliminare questo POI?")) {
+    if (confirm("Are you sure you want to delete this POI?")) {
       setPOIs(pois.filter((poi) => poi.id !== poiId));
       setShowPOIEditor(false);
       setSelectedPOI(null);
@@ -370,7 +407,7 @@ function POIsManagerContent() {
                 description: content.description,
                 audioScript: content.audioScript,
                 status: "complete" as POIStatus,
-                updatedAt: "Ora",
+                updatedAt: "Just now",
               }
             : poi
         )
@@ -380,7 +417,33 @@ function POIsManagerContent() {
     }
   };
 
+  const handleCreatePOI = () => {
+    if (!newTitle.trim()) return;
+    const newPOI: POI = {
+      id: `poi-${Date.now()}`,
+      title: newTitle.trim(),
+      description: newDescription.trim(),
+      status: newStatus,
+      category: "General",
+      scriptValidated: false,
+      translations: [],
+      voices: [],
+      updatedAt: "Just now",
+      isGeolocated: false,
+      assignedToGuides: [],
+    };
+    setPOIs([...pois, newPOI]);
+    setShowNewPOI(false);
+    setNewTitle("");
+    setNewDescription("");
+    setNewStatus("idea");
+  };
+
   const statuses: POIStatus[] = ["idea", "in-progress", "under-revision", "complete"];
+
+  const filteredPOIs = selectedGuideFilter === "all"
+    ? pois
+    : pois.filter((p) => p.assignedToGuides?.includes(selectedGuideFilter));
 
   const stats = {
     total: pois.length,
@@ -391,109 +454,73 @@ function POIsManagerContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-[1800px] mx-auto p-6 md:p-12">
+    <PageShell>
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-12">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-10">
-            <div className="space-y-3">
-              <h1 className="text-[32px] font-semibold text-zinc-950 tracking-tight leading-tight">
-                Points of Interest
-              </h1>
-              <p className="text-[15px] text-zinc-600 leading-relaxed max-w-2xl">
-                Manage your editorial workflow with a visual pipeline. Drag and drop POIs between stages.
-              </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-[22px] font-semibold text-zinc-950 tracking-tight">Points of Interest</h1>
+            <p className="text-[13px] text-zinc-400 mt-0.5">{stats.total} total · drag cards between columns to update status</p>
+          </div>
+          <button
+            onClick={() => setShowNewPOI(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all"
+          >
+            <Plus className="size-4" />
+            New POI
+          </button>
+        </div>
+
+        {/* Toolbar: stats + guide filter */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-xl p-1">
+            <div className="px-3.5 py-1.5 text-[12px] font-medium text-zinc-500">
+              All <span className="ml-1 text-zinc-400">{stats.total}</span>
             </div>
-            <button className="inline-flex items-center justify-center gap-2.5 px-6 py-3 bg-[#D33333] text-white text-[14px] font-semibold rounded-lg hover:bg-[#b82828] transition-all duration-200 shadow-sm hover:shadow-md">
-              <Plus className="size-5" />
-              New POI
-            </button>
+            <div className="w-px h-4 bg-zinc-200" />
+            {([
+              { dot: "bg-zinc-400",   label: "Idea",           count: stats.idea },
+              { dot: "bg-zinc-900",   label: "In Progress",    count: stats.inProgress },
+              { dot: "bg-orange-400", label: "Under Revision", count: stats.underRevision },
+              { dot: "bg-[#D33333]",  label: "Complete",       count: stats.complete },
+            ] as const).map(({ dot, label, count }) => (
+              <div key={label} className="flex items-center gap-1.5 px-3.5 py-1.5">
+                <span className={`size-1.5 rounded-full ${dot} flex-shrink-0`} />
+                <span className="text-[12px] text-zinc-600">{label}</span>
+                <span className="text-[11px] text-zinc-400 ml-0.5">{count}</span>
+              </div>
+            ))}
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Total */}
-            <div className="bg-white rounded-xl border border-zinc-200 p-6 hover:border-zinc-300 transition-colors" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
-              <div className="space-y-2">
-                <div className="text-[40px] font-light text-zinc-950 tracking-tight leading-none">
-                  {stats.total}
-                </div>
-                <div className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wider">
-                  Total POIs
-                </div>
-              </div>
-            </div>
-
-            {/* Idea */}
-            <div className="bg-white rounded-xl border border-zinc-200 p-6 hover:border-zinc-300 transition-colors" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="size-2 rounded-full bg-zinc-400" />
-                </div>
-                <div className="text-[40px] font-light text-zinc-500 tracking-tight leading-none">
-                  {stats.idea}
-                </div>
-                <div className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wider">
-                  Idea
-                </div>
-              </div>
-            </div>
-
-            {/* In Progress */}
-            <div className="bg-white rounded-xl border border-zinc-300 p-6 hover:border-zinc-400 transition-colors" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="size-2 rounded-full bg-zinc-900" />
-                </div>
-                <div className="text-[40px] font-light text-zinc-900 tracking-tight leading-none">
-                  {stats.inProgress}
-                </div>
-                <div className="text-[12px] font-semibold text-zinc-700 uppercase tracking-wider">
-                  In Progress
-                </div>
-              </div>
-            </div>
-
-            {/* Under Revision */}
-            <div className="bg-white rounded-xl border border-orange-200 p-6 hover:border-orange-300 transition-colors" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="size-2 rounded-full bg-orange-500" />
-                </div>
-                <div className="text-[40px] font-light text-orange-700 tracking-tight leading-none">
-                  {stats.underRevision}
-                </div>
-                <div className="text-[12px] font-semibold text-orange-700 uppercase tracking-wider">
-                  Under Revision
-                </div>
-              </div>
-            </div>
-
-            {/* Complete */}
-            <div className="bg-white rounded-xl border border-[#D33333] p-6 hover:border-[#b82828] transition-colors" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="size-2 rounded-full bg-[#D33333]" />
-                </div>
-                <div className="text-[40px] font-light tracking-tight leading-none" style={{ color: '#D33333' }}>
-                  {stats.complete}
-                </div>
-                <div className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: '#D33333' }}>
-                  Complete
-                </div>
-              </div>
-            </div>
+          <div className="relative">
+            <select
+              value={selectedGuideFilter}
+              onChange={(e) => setSelectedGuideFilter(e.target.value)}
+              className="appearance-none pl-3.5 pr-8 py-2 bg-white border border-zinc-200 rounded-lg text-[12px] font-medium text-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer hover:border-zinc-300 transition-colors"
+              style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}
+            >
+              <option value="all">All POIs</option>
+              <optgroup label="Filter by guide">
+                {mockGuides.map((guide) => {
+                  const count = pois.filter((p) => p.assignedToGuides?.includes(guide.id)).length;
+                  return (
+                    <option key={guide.id} value={guide.id}>{guide.title} ({count})</option>
+                  );
+                })}
+              </optgroup>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
           </div>
         </div>
 
         {/* Kanban Board */}
-        <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0 pb-6">
-          <div className="flex gap-6 min-w-max lg:min-w-0">
+        <div className="pb-6">
+          <div className="flex gap-4">
             {statuses.map((status) => (
               <KanbanColumn
                 key={status}
                 status={status}
-                pois={pois.filter((p) => p.status === status)}
+                pois={filteredPOIs.filter((p) => p.status === status)}
                 onMove={handleMovePOI}
                 onEdit={handleEditWithAI}
                 onOpen={handleOpenPOI}
@@ -501,22 +528,93 @@ function POIsManagerContent() {
             ))}
           </div>
         </div>
-      </div>
 
       {/* AI Assistant Modal */}
       {showAIAssistant && selectedPOI && (
         <AIAssistant
-          guideName={`Sviluppa POI: ${selectedPOI.title}`}
+          guideName={`Develop POI: ${selectedPOI.title}`}
           onClose={() => {
             setShowAIAssistant(false);
             setSelectedPOI(null);
           }}
           onAccept={handleAIProposal}
           documentsContext={[
-            { id: "1", name: "Storia_Museo.pdf", type: "pdf" },
-            { id: "2", name: "Catalogo_Opere.pdf", type: "pdf" },
+            { id: "1", name: "Museum_History.pdf", type: "pdf" },
+            { id: "2", name: "Artwork_Catalog.pdf", type: "pdf" },
           ]}
         />
+      )}
+
+      {/* New POI Modal */}
+      {showNewPOI && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
+              <h2 className="text-[15px] font-semibold text-zinc-950 tracking-tight">New Point of Interest</h2>
+              <button onClick={() => setShowNewPOI(false)} className="size-7 flex items-center justify-center rounded-md hover:bg-zinc-100 transition-colors">
+                <X className="size-4 text-zinc-500" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-[12px] font-medium text-zinc-700 mb-1.5">Title <span className="text-[#D33333]">*</span></label>
+                <input
+                  autoFocus
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreatePOI()}
+                  placeholder="e.g. Egyptian Mummy"
+                  className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-zinc-700 mb-1.5">Description <span className="text-zinc-400 font-normal">(optional)</span></label>
+                <textarea
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  placeholder="Brief description of this point of interest…"
+                  rows={3}
+                  className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-medium text-zinc-700 mb-2">Status</label>
+                <div className="flex gap-2">
+                  {(["idea", "in-progress", "under-revision", "complete"] as POIStatus[]).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setNewStatus(s)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${
+                        newStatus === s
+                          ? "bg-zinc-900 border-zinc-900 text-white"
+                          : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300"
+                      }`}
+                    >
+                      <span className={`size-1.5 rounded-full flex-shrink-0 ${
+                        s === "idea" ? "bg-zinc-400" :
+                        s === "in-progress" ? newStatus === s ? "bg-white" : "bg-zinc-900" :
+                        s === "under-revision" ? "bg-orange-400" : "bg-[#D33333]"
+                      }`} />
+                      {statusConfig[s].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="px-6 pb-6 flex flex-col items-center gap-2">
+              <button
+                onClick={handleCreatePOI}
+                disabled={!newTitle.trim()}
+                className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                Create POI
+              </button>
+              <button onClick={() => setShowNewPOI(false)} className="text-[12px] text-zinc-400 hover:text-zinc-600 transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* POI Editor Modal */}
@@ -532,7 +630,8 @@ function POIsManagerContent() {
           onDevelopWithAI={handleDevelopWithAI}
         />
       )}
-    </div>
+      </div>
+    </PageShell>
   );
 }
 

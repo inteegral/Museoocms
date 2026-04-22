@@ -153,21 +153,6 @@ export function MapEditor() {
 
   return (
     <div className="space-y-6">
-      {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <div className="flex items-start gap-3">
-          <MapPin className="size-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-[14px] text-blue-900 mb-1">
-              Interactive Map Configuration
-            </h3>
-            <p className="text-[13px] text-blue-700 leading-relaxed">
-              Upload floor plans and place POI markers to create an interactive map for visitors. Click on the map to position each point of interest.
-            </p>
-          </div>
-        </div>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Sidebar - Floors & POIs */}
         <div className="lg:col-span-1 space-y-6">
