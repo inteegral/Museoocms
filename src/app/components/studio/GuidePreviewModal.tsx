@@ -462,16 +462,16 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 }}
               />
 
-              {/* Gradient overlay: dark vignette top + heavy dark bottom for text legibility */}
+              {/* Dark overlay — fades out at 75%, leaves bottom clear for white */}
               <div style={{
                 position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, rgba(8,6,16,0.52) 0%, rgba(8,6,16,0.28) 35%, rgba(8,6,16,0.62) 68%, rgba(8,6,16,0.92) 100%)",
+                background: "linear-gradient(to bottom, rgba(8,6,16,0.55) 0%, rgba(8,6,16,0.38) 45%, rgba(8,6,16,0.1) 72%, rgba(8,6,16,0) 75%)",
               }} />
 
-              {/* Subtle color tint — adds warmth/premium feel */}
+              {/* White fade — bottom 25% bleeds to pure white */}
               <div style={{
                 position: "absolute", inset: 0,
-                background: "radial-gradient(ellipse at 70% 30%, rgba(211,51,51,0.08) 0%, transparent 65%)",
+                background: "linear-gradient(to bottom, transparent 75%, rgba(255,255,255,0.7) 88%, rgba(255,255,255,1) 100%)",
               }} />
 
               {/* ── Language selector — absolute top right ── */}
@@ -530,7 +530,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
               <div style={{
                 flex: 1, display: "flex", flexDirection: "column",
                 alignItems: "center", justifyContent: "center",
-                textAlign: "center", padding: "72px 24px 48px",
+                textAlign: "center", padding: "72px 24px 120px",
                 position: "relative", zIndex: 2,
               }}>
                 {/* Museum logo mark */}
@@ -584,29 +584,24 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                   style={{
                     width: "100%", padding: "15px 0",
                     borderRadius: 16,
-                    border: "1.5px solid rgba(255,255,255,0.35)",
-                    background: "rgba(255,255,255,0.08)",
-                    backdropFilter: "blur(12px)",
+                    border: "none",
+                    background: "#D33333",
                     color: "#ffffff", fontSize: 15, fontWeight: 300,
                     cursor: "pointer",
                     fontFamily: "Fraunces, Georgia, serif",
                     letterSpacing: "0.01em",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    transition: "background 0.2s, border-color 0.2s",
+                    transition: "background 0.2s",
+                    boxShadow: "0 4px 20px rgba(211,51,51,0.35)",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.55)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#b92b2b"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#D33333"; }}
                 >
                   Start the Tour
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     <path d="M6.5 2v9M6.5 11l-2.5-2.5M6.5 11l2.5-2.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-              </div>
-
-              {/* Bottom divider */}
-              <div style={{ padding: "0 20px 28px", position: "relative", zIndex: 2 }}>
-                <div style={{ width: "100%", height: 1, background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 30%, #D33333 50%, rgba(255,255,255,0.2) 70%, transparent 100%)" }} />
               </div>
             </div>
 
