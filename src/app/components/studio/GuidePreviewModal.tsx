@@ -193,8 +193,6 @@ function POICard({
           boxShadow: isActive
             ? "0 20px 60px rgba(211,51,51,0.1), 0 4px 16px rgba(0,0,0,0.06)"
             : "0 2px 8px rgba(0,0,0,0.03)",
-          transform: isActive ? "scale(1)" : "scale(0.97)",
-          opacity: isActive ? 1 : 0.72,
         }}
       >
         {/* Image with number badge */}
