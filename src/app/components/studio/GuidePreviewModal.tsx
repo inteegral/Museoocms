@@ -446,9 +446,10 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 flexDirection: "column",
                 position: "relative",
                 overflow: "hidden",
+                background: "#fff",
               }}
             >
-              {/* Background image */}
+              {/* Background image — very low opacity, minimal texture */}
               <img
                 src={mockPOIs[0].imageUrl}
                 alt=""
@@ -459,19 +460,15 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                   objectFit: "cover",
                   objectPosition: "center 20%",
                   transform: "scale(1.04)",
+                  opacity: 0.12,
+                  filter: "saturate(0.4) brightness(1.1)",
                 }}
               />
 
-              {/* Dark overlay — fades out at 75%, leaves bottom clear for white */}
+              {/* White overlay — washes image to near-white */}
               <div style={{
                 position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, rgba(8,6,16,0.55) 0%, rgba(8,6,16,0.38) 45%, rgba(8,6,16,0.1) 72%, rgba(8,6,16,0) 75%)",
-              }} />
-
-              {/* White fade — bottom 25% bleeds to pure white */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, transparent 75%, rgba(255,255,255,0.7) 88%, rgba(255,255,255,1) 100%)",
+                background: "linear-gradient(to bottom, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.88) 70%, rgba(255,255,255,1) 100%)",
               }} />
 
               {/* ── Language selector — absolute top right ── */}
@@ -481,28 +478,26 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "7px 12px", borderRadius: 24,
-                    border: "1px solid rgba(255,255,255,0.45)",
-                    background: showLangMenu ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
-                    backdropFilter: "blur(16px)",
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    background: showLangMenu ? "rgba(0,0,0,0.06)" : "rgba(0,0,0,0.04)",
                     cursor: "pointer", transition: "all 0.2s",
-                    boxShadow: "0 1px 8px rgba(0,0,0,0.25)",
                   }}
                 >
                   <span style={{ fontSize: 14, lineHeight: 1 }}>{activeLang.flag}</span>
-                  <span style={{ fontSize: 11, fontWeight: 500, color: "#fff", fontFamily: "Inter, system-ui, sans-serif", letterSpacing: "0.04em" }}>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: "#3f3f46", fontFamily: "Inter, system-ui, sans-serif", letterSpacing: "0.04em" }}>
                     {activeLang.code.toUpperCase()}
                   </span>
                   <ChevronDown
-                    style={{ width: 10, height: 10, color: "rgba(255,255,255,0.8)", transition: "transform 0.2s", transform: showLangMenu ? "rotate(180deg)" : "rotate(0deg)" }}
+                    style={{ width: 10, height: 10, color: "#71717a", transition: "transform 0.2s", transform: showLangMenu ? "rotate(180deg)" : "rotate(0deg)" }}
                     strokeWidth={2.5}
                   />
                 </button>
                 {showLangMenu && (
                   <div style={{
                     position: "absolute", top: "calc(100% + 6px)", right: 0,
-                    background: "rgba(18,16,28,0.94)", backdropFilter: "blur(20px)",
-                    borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)",
-                    boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+                    background: "#fff", borderRadius: 14,
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
                     overflow: "hidden", zIndex: 20, minWidth: 144,
                   }}>
                     {LANGUAGES.map((lang) => (
@@ -512,13 +507,13 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                         style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 8,
                           padding: "9px 14px",
-                          background: lang.code === selectedLang ? "rgba(211,51,51,0.15)" : "transparent",
+                          background: lang.code === selectedLang ? "rgba(211,51,51,0.06)" : "transparent",
                           border: "none", cursor: "pointer",
-                          borderBottom: "1px solid rgba(255,255,255,0.06)",
+                          borderBottom: "1px solid rgba(0,0,0,0.05)",
                         }}
                       >
                         <span style={{ fontSize: 15 }}>{lang.flag}</span>
-                        <span style={{ fontSize: 12, color: lang.code === selectedLang ? "#D33333" : "rgba(255,255,255,0.8)", fontWeight: lang.code === selectedLang ? 600 : 400, fontFamily: "Inter, system-ui, sans-serif" }}>{lang.name}</span>
+                        <span style={{ fontSize: 12, color: lang.code === selectedLang ? "#D33333" : "#3f3f46", fontWeight: lang.code === selectedLang ? 600 : 400, fontFamily: "Inter, system-ui, sans-serif" }}>{lang.name}</span>
                         {lang.code === selectedLang && <span style={{ marginLeft: "auto", fontSize: 11, color: "#D33333" }}>✓</span>}
                       </button>
                     ))}
@@ -530,24 +525,23 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
               <div style={{
                 flex: 1, display: "flex", flexDirection: "column",
                 alignItems: "center", justifyContent: "center",
-                textAlign: "center", padding: "72px 24px 120px",
+                textAlign: "center", padding: "72px 24px 100px",
                 position: "relative", zIndex: 2,
               }}>
                 {/* Museum logo mark */}
                 <div style={{
                   width: 56, height: 56, borderRadius: 16,
-                  background: "rgba(255,255,255,0.1)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  backdropFilter: "blur(8px)",
+                  background: "rgba(211,51,51,0.07)",
+                  border: "1px solid rgba(211,51,51,0.15)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   marginBottom: 16,
                 }}>
-                  <span style={{ fontSize: 20, fontFamily: "Fraunces, Georgia, serif", fontWeight: 200, color: "#fff", letterSpacing: "-0.02em" }}>M</span>
+                  <span style={{ fontSize: 20, fontFamily: "Fraunces, Georgia, serif", fontWeight: 300, color: "#D33333", letterSpacing: "-0.02em" }}>M</span>
                 </div>
 
                 {/* Museum name */}
                 <p style={{
-                  fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.5)",
+                  fontSize: 9, fontWeight: 600, color: "#a1a1aa",
                   textTransform: "uppercase", letterSpacing: "0.16em",
                   fontFamily: "Inter, system-ui, sans-serif", marginBottom: 20,
                 }}>
@@ -561,9 +555,8 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 <h1 style={{
                   fontFamily: "Fraunces, Georgia, serif",
                   fontWeight: 200, fontSize: 36,
-                  color: "#ffffff", lineHeight: 1.2,
+                  color: "#18181b", lineHeight: 1.2,
                   letterSpacing: "-0.025em", marginBottom: 20,
-                  textShadow: "0 2px 24px rgba(0,0,0,0.4)",
                 }}>
                   {guideName}
                 </h1>
@@ -571,7 +564,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 {/* Stats */}
                 <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 36, justifyContent: "center" }}>
                   {[`${mockPOIs.length} stops`, `~${Math.ceil(mockPOIs.length * 2.5)} min`].map((label) => (
-                    <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: "Inter, system-ui, sans-serif" }}>
+                    <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#71717a", fontFamily: "Inter, system-ui, sans-serif" }}>
                       <span style={{ width: 3, height: 3, borderRadius: "50%", background: "#D33333", display: "inline-block" }} />
                       {label}
                     </span>
@@ -583,8 +576,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                   onClick={scrollToPOIs}
                   style={{
                     width: "100%", padding: "15px 0",
-                    borderRadius: 16,
-                    border: "none",
+                    borderRadius: 16, border: "none",
                     background: "#D33333",
                     color: "#ffffff", fontSize: 15, fontWeight: 300,
                     cursor: "pointer",
@@ -592,7 +584,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                     letterSpacing: "0.01em",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     transition: "background 0.2s",
-                    boxShadow: "0 4px 20px rgba(211,51,51,0.35)",
+                    boxShadow: "0 4px 20px rgba(211,51,51,0.25)",
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = "#b92b2b"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "#D33333"; }}
