@@ -418,24 +418,6 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
         <div className="absolute -left-[3px] top-[240px] w-[3px] h-14 bg-[#222] rounded-l-sm" />
         <div className="absolute -right-[3px] top-[160px] w-[3px] h-20 bg-[#222] rounded-r-sm" />
 
-        {/* Map tab */}
-        <button
-          onClick={() => setShowMap((v) => !v)}
-          className="absolute z-30 flex items-center justify-center transition-all"
-          style={{
-            right: -38, top: "42%",
-            width: 36, height: 56,
-            background: showMap ? "#D33333" : "rgba(255,255,255,0.12)",
-            backdropFilter: "blur(12px)",
-            borderRadius: "0 12px 12px 0",
-            border: showMap ? "1.5px solid #D33333" : "1.5px solid rgba(255,255,255,0.15)",
-            borderLeft: "none",
-            boxShadow: showMap ? "0 4px 16px rgba(211,51,51,0.4)" : "0 2px 8px rgba(0,0,0,0.3)",
-          }}
-        >
-          <MapIcon className="size-4 text-white" strokeWidth={1.8} />
-        </button>
-
         {/* Screen */}
         <div className="absolute inset-[3px] overflow-hidden flex flex-col" style={{ borderRadius: 47, background: "#fff" }}>
 
@@ -660,6 +642,23 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
               </div>
             </div>
           </div>
+
+          {/* Map FAB — inside screen, bottom-right */}
+          <button
+            onClick={() => setShowMap(v => !v)}
+            className="absolute z-30 flex items-center justify-center transition-all"
+            style={{
+              bottom: 32, right: 16,
+              width: 48, height: 48,
+              borderRadius: "50%",
+              background: showMap ? "#D33333" : "rgba(20,18,30,0.82)",
+              backdropFilter: "blur(14px)",
+              border: showMap ? "1.5px solid #D33333" : "1.5px solid rgba(255,255,255,0.18)",
+              boxShadow: showMap ? "0 6px 20px rgba(211,51,51,0.45)" : "0 4px 16px rgba(0,0,0,0.35)",
+            }}
+          >
+            <MapIcon className="size-5 text-white" strokeWidth={1.8} />
+          </button>
 
           {/* Map overlay */}
           {showMap && <PhoneMap userX={userX} userY={userY} onClose={() => setShowMap(false)} />}
