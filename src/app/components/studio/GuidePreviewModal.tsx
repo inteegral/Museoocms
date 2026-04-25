@@ -337,6 +337,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
   const [speed, setSpeed]                   = useState(1);
   const [showLangMenu, setShowLangMenu]     = useState(false);
   const [selectedLang, setSelectedLang]     = useState("en");
+  const [showLangPicker, setShowLangPicker] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrollRef   = useRef<HTMLDivElement>(null);
   const firstPOIRef = useRef<HTMLDivElement>(null);
@@ -673,6 +674,77 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
           50% { transform: scaleY(1); }
         }
       `}</style>
+
+      {/* Language picker — shown on open */}
+      {showLangPicker && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}>
+          <div style={{
+            background: "#fff", borderRadius: 24,
+            width: 300, overflow: "hidden",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+          }}>
+            {/* Header */}
+            <div style={{ padding: "28px 24px 20px", textAlign: "center", borderBottom: "1px solid #f4f4f5" }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: "rgba(211,51,51,0.08)", border: "1px solid rgba(211,51,51,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 14px",
+              }}>
+                <span style={{ fontSize: 18, fontFamily: "Fraunces, Georgia, serif", fontWeight: 300, color: "#D33333" }}>M</span>
+              </div>
+              <p style={{ fontSize: 9, fontWeight: 600, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.14em", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 6 }}>
+                Museo Archeologico Nazionale
+              </p>
+              <p style={{ fontSize: 15, fontWeight: 300, color: "#18181b", fontFamily: "Fraunces, Georgia, serif", letterSpacing: "-0.01em" }}>
+                Choose your language
+              </p>
+            </div>
+
+            {/* Language list */}
+            <div style={{ padding: "8px 12px 12px" }}>
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => { setSelectedLang(lang.code); setShowLangPicker(false); }}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 12,
+                    padding: "11px 12px", borderRadius: 12,
+                    background: lang.code === selectedLang ? "rgba(211,51,51,0.06)" : "transparent",
+                    border: lang.code === selectedLang ? "1px solid rgba(211,51,51,0.18)" : "1px solid transparent",
+                    cursor: "pointer", transition: "all 0.15s", marginBottom: 4,
+                  }}
+                >
+                  <span style={{ fontSize: 22 }}>{lang.flag}</span>
+                  <span style={{ fontSize: 14, fontWeight: 400, color: "#18181b", fontFamily: "Inter, system-ui, sans-serif", flex: 1, textAlign: "left" }}>{lang.name}</span>
+                  {lang.code === selectedLang && (
+                    <span style={{ fontSize: 12, color: "#D33333", fontWeight: 600 }}>✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div style={{ padding: "0 12px 16px" }}>
+              <button
+                onClick={() => setShowLangPicker(false)}
+                style={{
+                  width: "100%", padding: "13px 0", borderRadius: 14,
+                  background: "#D33333", border: "none",
+                  color: "#fff", fontSize: 14, fontWeight: 300,
+                  fontFamily: "Fraunces, Georgia, serif", letterSpacing: "0.01em",
+                  cursor: "pointer", transition: "background 0.2s",
+                  boxShadow: "0 4px 16px rgba(211,51,51,0.25)",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#b92b2b"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#D33333"; }}
+              >
+                Start the Tour
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
