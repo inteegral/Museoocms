@@ -65,11 +65,35 @@ const GUIDE_PERF_SERIES = [
 
 // Top POIs per guide — colors assigned by rank position, not identity
 // Top 5 POIs per guide — always 5 entries
-const POI_BY_GUIDE: Record<string, { key: string; rank: number }[]> = {
-  "all":     [{ key: "Venus", rank: 1 }, { key: "Mosaic", rank: 2 }, { key: "Forum", rank: 3 }, { key: "Amphora", rank: 4 }, { key: "Helmet", rank: 5 }],
-  "guide-1": [{ key: "Venus", rank: 1 }, { key: "Amphora", rank: 2 }, { key: "Apollo", rank: 3 }, { key: "Athena", rank: 4 }, { key: "Bacchus", rank: 5 }],
-  "guide-2": [{ key: "Mosaic", rank: 1 }, { key: "Helmet", rank: 2 }, { key: "Sphinx", rank: 3 }, { key: "Scarab", rank: 4 }, { key: "Papyrus", rank: 5 }],
-  "guide-3": [{ key: "Forum", rank: 1 }, { key: "Arch", rank: 2 }, { key: "Fresco", rank: 3 }, { key: "Column", rank: 4 }, { key: "Coins", rank: 5 }],
+const POI_BY_GUIDE: Record<string, { key: string; rank: number; avgDuration: string; totalListens: number }[]> = {
+  "all":     [
+    { key: "Venus",   rank: 1, avgDuration: "3:12", totalListens: 42 },
+    { key: "Mosaic",  rank: 2, avgDuration: "2:47", totalListens: 38 },
+    { key: "Forum",   rank: 3, avgDuration: "2:15", totalListens: 31 },
+    { key: "Amphora", rank: 4, avgDuration: "1:58", totalListens: 27 },
+    { key: "Helmet",  rank: 5, avgDuration: "1:43", totalListens: 22 },
+  ],
+  "guide-1": [
+    { key: "Venus",   rank: 1, avgDuration: "3:22", totalListens: 28 },
+    { key: "Amphora", rank: 2, avgDuration: "2:51", totalListens: 24 },
+    { key: "Apollo",  rank: 3, avgDuration: "2:10", totalListens: 19 },
+    { key: "Athena",  rank: 4, avgDuration: "1:55", totalListens: 15 },
+    { key: "Bacchus", rank: 5, avgDuration: "1:38", totalListens: 11 },
+  ],
+  "guide-2": [
+    { key: "Mosaic",  rank: 1, avgDuration: "2:58", totalListens: 15 },
+    { key: "Helmet",  rank: 2, avgDuration: "2:33", totalListens: 12 },
+    { key: "Sphinx",  rank: 3, avgDuration: "2:05", totalListens: 9  },
+    { key: "Scarab",  rank: 4, avgDuration: "1:47", totalListens: 7  },
+    { key: "Papyrus", rank: 5, avgDuration: "1:29", totalListens: 5  },
+  ],
+  "guide-3": [
+    { key: "Forum",  rank: 1, avgDuration: "0:00", totalListens: 0 },
+    { key: "Arch",   rank: 2, avgDuration: "0:00", totalListens: 0 },
+    { key: "Fresco", rank: 3, avgDuration: "0:00", totalListens: 0 },
+    { key: "Column", rank: 4, avgDuration: "0:00", totalListens: 0 },
+    { key: "Coins",  rank: 5, avgDuration: "0:00", totalListens: 0 },
+  ],
 };
 
 // Per-guide mock overrides (prototype only — real data would come from API)
@@ -83,6 +107,7 @@ export function StudioDashboard() {
   const [trendRange, setTrendRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
   const [audioGuideRange, setAudioGuideRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
   const [poiRange, setPoiRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
+  const [topPoiRange, setTopPoiRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
   const [selectedGuideId, setSelectedGuideId] = useState<string>("all");
   const navigate = useNavigate();
 
@@ -380,13 +405,30 @@ export function StudioDashboard() {
             <div className="grid grid-cols-2 gap-4">
               {/* Top POI - Half width */}
               <div className="bg-zinc-50 rounded-lg border border-zinc-200 p-4">
-                <div className="mb-3">
-                  <h3 className="text-[12px] font-semibold text-zinc-900 mb-0.5">Top POI</h3>
-                  <p className="text-[10px] text-zinc-500">Most listened</p>
+                <div className="mb-3 flex items-start justify-between">
+                  <div>
+                    <h3 className="text-[12px] font-semibold text-zinc-900 mb-0.5">Top POI</h3>
+                    <p className="text-[10px] text-zinc-500">Most listened</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {(["7D", "30D", "90D", "1Y"] as const).map((range) => (
+                      <button key={range} onClick={() => setTopPoiRange(range)}
+                        className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${topPoiRange === range ? "bg-[#D33333] text-white" : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"}`}>
+                        {range}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Column headers */}
+                <div className="flex items-center gap-2 mb-1.5 px-0.5">
+                  <div className="size-5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0" />
+                  <div className="text-[9px] text-zinc-400 uppercase tracking-wide w-10 text-right">Avg</div>
+                  <div className="text-[9px] text-zinc-400 uppercase tracking-wide w-8 text-right">Tot</div>
                 </div>
                 <div className="space-y-2">
                   {(POI_BY_GUIDE[selectedGuideId] ?? POI_BY_GUIDE["all"]).map((poi, index) => (
-                    <div key={poi.name} className="flex items-center gap-2">
+                    <div key={poi.key} className="flex items-center gap-2">
                       <div
                         className="size-5 rounded flex items-center justify-center text-[10px] font-semibold flex-shrink-0"
                         style={{ backgroundColor: POI_COLOR[index], color: '#fff' }}
@@ -398,9 +440,8 @@ export function StudioDashboard() {
                           {poi.key}
                         </div>
                       </div>
-                      <div className="text-[12px] font-semibold text-zinc-900 tabular-nums">
-                        {poi.rank}
-                      </div>
+                      <div className="text-[11px] tabular-nums text-zinc-600 w-10 text-right">{poi.avgDuration}</div>
+                      <div className="text-[11px] font-semibold tabular-nums text-zinc-900 w-8 text-right">{poi.totalListens}</div>
                     </div>
                   ))}
                 </div>
