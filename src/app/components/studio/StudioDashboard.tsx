@@ -65,34 +65,34 @@ const GUIDE_PERF_SERIES = [
 
 // Top POIs per guide — colors assigned by rank position, not identity
 // Top 5 POIs per guide — always 5 entries
-const POI_BY_GUIDE: Record<string, { key: string; rank: number; avgDuration: string; totalListens: number }[]> = {
+const POI_BY_GUIDE: Record<string, { key: string; rank: number; duration: string; avgDuration: string; totalListens: number }[]> = {
   "all":     [
-    { key: "Venus",   rank: 1, avgDuration: "3:12", totalListens: 42 },
-    { key: "Mosaic",  rank: 2, avgDuration: "2:47", totalListens: 38 },
-    { key: "Forum",   rank: 3, avgDuration: "2:15", totalListens: 31 },
-    { key: "Amphora", rank: 4, avgDuration: "1:58", totalListens: 27 },
-    { key: "Helmet",  rank: 5, avgDuration: "1:43", totalListens: 22 },
+    { key: "Venus",   rank: 1, duration: "3:30", avgDuration: "2:21", totalListens: 42 },
+    { key: "Mosaic",  rank: 2, duration: "3:10", avgDuration: "2:05", totalListens: 38 },
+    { key: "Forum",   rank: 3, duration: "2:45", avgDuration: "1:52", totalListens: 31 },
+    { key: "Amphora", rank: 4, duration: "2:20", avgDuration: "1:38", totalListens: 27 },
+    { key: "Helmet",  rank: 5, duration: "2:05", avgDuration: "1:20", totalListens: 22 },
   ],
   "guide-1": [
-    { key: "Venus",   rank: 1, avgDuration: "3:22", totalListens: 28 },
-    { key: "Amphora", rank: 2, avgDuration: "2:51", totalListens: 24 },
-    { key: "Apollo",  rank: 3, avgDuration: "2:10", totalListens: 19 },
-    { key: "Athena",  rank: 4, avgDuration: "1:55", totalListens: 15 },
-    { key: "Bacchus", rank: 5, avgDuration: "1:38", totalListens: 11 },
+    { key: "Venus",   rank: 1, duration: "3:30", avgDuration: "2:31", totalListens: 28 },
+    { key: "Amphora", rank: 2, duration: "2:20", avgDuration: "1:55", totalListens: 24 },
+    { key: "Apollo",  rank: 3, duration: "2:50", avgDuration: "1:41", totalListens: 19 },
+    { key: "Athena",  rank: 4, duration: "3:05", avgDuration: "1:28", totalListens: 15 },
+    { key: "Bacchus", rank: 5, duration: "2:15", avgDuration: "1:10", totalListens: 11 },
   ],
   "guide-2": [
-    { key: "Mosaic",  rank: 1, avgDuration: "2:58", totalListens: 15 },
-    { key: "Helmet",  rank: 2, avgDuration: "2:33", totalListens: 12 },
-    { key: "Sphinx",  rank: 3, avgDuration: "2:05", totalListens: 9  },
-    { key: "Scarab",  rank: 4, avgDuration: "1:47", totalListens: 7  },
-    { key: "Papyrus", rank: 5, avgDuration: "1:29", totalListens: 5  },
+    { key: "Mosaic",  rank: 1, duration: "3:10", avgDuration: "2:18", totalListens: 15 },
+    { key: "Helmet",  rank: 2, duration: "2:05", avgDuration: "1:50", totalListens: 12 },
+    { key: "Sphinx",  rank: 3, duration: "2:40", avgDuration: "1:35", totalListens: 9  },
+    { key: "Scarab",  rank: 4, duration: "1:55", avgDuration: "1:12", totalListens: 7  },
+    { key: "Papyrus", rank: 5, duration: "2:30", avgDuration: "1:02", totalListens: 5  },
   ],
   "guide-3": [
-    { key: "Forum",  rank: 1, avgDuration: "0:00", totalListens: 0 },
-    { key: "Arch",   rank: 2, avgDuration: "0:00", totalListens: 0 },
-    { key: "Fresco", rank: 3, avgDuration: "0:00", totalListens: 0 },
-    { key: "Column", rank: 4, avgDuration: "0:00", totalListens: 0 },
-    { key: "Coins",  rank: 5, avgDuration: "0:00", totalListens: 0 },
+    { key: "Forum",  rank: 1, duration: "3:15", avgDuration: "0:00", totalListens: 0 },
+    { key: "Arch",   rank: 2, duration: "2:50", avgDuration: "0:00", totalListens: 0 },
+    { key: "Fresco", rank: 3, duration: "2:30", avgDuration: "0:00", totalListens: 0 },
+    { key: "Column", rank: 4, duration: "2:10", avgDuration: "0:00", totalListens: 0 },
+    { key: "Coins",  rank: 5, duration: "1:45", avgDuration: "0:00", totalListens: 0 },
   ],
 };
 
@@ -423,8 +423,9 @@ export function StudioDashboard() {
                 <div className="flex items-center gap-2 mb-1.5 px-0.5">
                   <div className="size-5 flex-shrink-0" />
                   <div className="flex-1 min-w-0" />
+                  <div className="text-[9px] text-zinc-400 uppercase tracking-wide w-10 text-right">Dur</div>
                   <div className="text-[9px] text-zinc-400 uppercase tracking-wide w-10 text-right">Avg</div>
-                  <div className="text-[9px] text-zinc-400 uppercase tracking-wide w-8 text-right">Tot</div>
+                  <div className="text-[9px] text-zinc-400 uppercase tracking-wide w-7 text-right">Tot</div>
                 </div>
                 <div className="space-y-2">
                   {(POI_BY_GUIDE[selectedGuideId] ?? POI_BY_GUIDE["all"]).map((poi, index) => (
@@ -436,12 +437,11 @@ export function StudioDashboard() {
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-medium text-zinc-900 truncate">
-                          {poi.key}
-                        </div>
+                        <div className="text-[11px] font-medium text-zinc-900 truncate">{poi.key}</div>
                       </div>
-                      <div className="text-[11px] tabular-nums text-zinc-600 w-10 text-right">{poi.avgDuration}</div>
-                      <div className="text-[11px] font-semibold tabular-nums text-zinc-900 w-8 text-right">{poi.totalListens}</div>
+                      <div className="text-[11px] tabular-nums text-zinc-500 w-10 text-right">{poi.duration}</div>
+                      <div className="text-[11px] tabular-nums text-zinc-700 font-medium w-10 text-right">{poi.avgDuration}</div>
+                      <div className="text-[11px] font-semibold tabular-nums text-zinc-900 w-7 text-right">{poi.totalListens}</div>
                     </div>
                   ))}
                 </div>
