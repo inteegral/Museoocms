@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { Plus, Sparkles, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen, X } from "lucide-react";
+import { Plus, Sparkles, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -342,15 +342,30 @@ function POIsManagerContent() {
   const [showPOIEditor, setShowPOIEditor] = useState(false);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [selectedGuideFilter, setSelectedGuideFilter] = useState<string>("all");
-  const [showNewPOI, setShowNewPOI] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [newStatus, setNewStatus] = useState<POIStatus>("idea");
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const openNewPOI = () => {
+    const blank: POI = {
+      id: `poi-${Date.now()}`,
+      title: "New Point of Interest",
+      description: "",
+      status: "in-progress",
+      category: "General",
+      scriptValidated: false,
+      translations: [],
+      voices: [],
+      updatedAt: "Just now",
+      isGeolocated: false,
+      assignedToGuides: [],
+    };
+    setPOIs((prev) => [...prev, blank]);
+    setSelectedPOI(blank);
+    setShowPOIEditor(true);
+  };
 
   useEffect(() => {
     if (searchParams.get("new") === "true") {
-      setShowNewPOI(true);
+      openNewPOI();
       setSearchParams({}, { replace: true });
     }
   }, []);
@@ -417,28 +432,6 @@ function POIsManagerContent() {
     }
   };
 
-  const handleCreatePOI = () => {
-    if (!newTitle.trim()) return;
-    const newPOI: POI = {
-      id: `poi-${Date.now()}`,
-      title: newTitle.trim(),
-      description: newDescription.trim(),
-      status: newStatus,
-      category: "General",
-      scriptValidated: false,
-      translations: [],
-      voices: [],
-      updatedAt: "Just now",
-      isGeolocated: false,
-      assignedToGuides: [],
-    };
-    setPOIs([...pois, newPOI]);
-    setShowNewPOI(false);
-    setNewTitle("");
-    setNewDescription("");
-    setNewStatus("idea");
-  };
-
   const statuses: POIStatus[] = ["idea", "in-progress", "under-revision", "complete"];
 
   const filteredPOIs = selectedGuideFilter === "all"
@@ -463,7 +456,7 @@ function POIsManagerContent() {
             <p className="text-[13px] text-zinc-400 mt-0.5">{stats.total} total · drag cards between columns to update status</p>
           </div>
           <button
-            onClick={() => setShowNewPOI(true)}
+            onClick={openNewPOI}
             className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all"
           >
             <Plus className="size-4" />
@@ -543,78 +536,6 @@ function POIsManagerContent() {
             { id: "2", name: "Artwork_Catalog.pdf", type: "pdf" },
           ]}
         />
-      )}
-
-      {/* New POI Modal */}
-      {showNewPOI && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
-              <h2 className="text-[15px] font-semibold text-zinc-950 tracking-tight">New Point of Interest</h2>
-              <button onClick={() => setShowNewPOI(false)} className="size-7 flex items-center justify-center rounded-md hover:bg-zinc-100 transition-colors">
-                <X className="size-4 text-zinc-500" />
-              </button>
-            </div>
-            <div className="px-6 py-5 space-y-4">
-              <div>
-                <label className="block text-[12px] font-medium text-zinc-700 mb-1.5">Title <span className="text-[#D33333]">*</span></label>
-                <input
-                  autoFocus
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCreatePOI()}
-                  placeholder="e.g. Egyptian Mummy"
-                  className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] font-medium text-zinc-700 mb-1.5">Description <span className="text-zinc-400 font-normal">(optional)</span></label>
-                <textarea
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Brief description of this point of interest…"
-                  rows={3}
-                  className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] font-medium text-zinc-700 mb-2">Status</label>
-                <div className="flex gap-2">
-                  {(["idea", "in-progress", "under-revision", "complete"] as POIStatus[]).map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setNewStatus(s)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${
-                        newStatus === s
-                          ? "bg-zinc-900 border-zinc-900 text-white"
-                          : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300"
-                      }`}
-                    >
-                      <span className={`size-1.5 rounded-full flex-shrink-0 ${
-                        s === "idea" ? "bg-zinc-400" :
-                        s === "in-progress" ? newStatus === s ? "bg-white" : "bg-zinc-900" :
-                        s === "under-revision" ? "bg-orange-400" : "bg-[#D33333]"
-                      }`} />
-                      {statusConfig[s].label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="px-6 pb-6 flex flex-col items-center gap-2">
-              <button
-                onClick={handleCreatePOI}
-                disabled={!newTitle.trim()}
-                className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                Create POI
-              </button>
-              <button onClick={() => setShowNewPOI(false)} className="text-[12px] text-zinc-400 hover:text-zinc-600 transition-colors">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* POI Editor Modal */}

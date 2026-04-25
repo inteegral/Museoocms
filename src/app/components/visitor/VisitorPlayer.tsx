@@ -14,6 +14,11 @@ export function VisitorPlayer() {
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+  const poisListRef = useRef<HTMLDivElement>(null);
+
+  const scrollToPOIs = () => {
+    poisListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // Mock data
   const guide = {
@@ -62,88 +67,107 @@ export function VisitorPlayer() {
       {currentPOIIndex === null ? (
         // Guide Overview
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="bg-white border-b border-zinc-200 sticky top-0 z-10">
-            <div className="p-6">
-              <div className="mb-6">
-                <MainLogoVariant className="h-[36px] w-auto mb-4" />
-                <div>
-                  <div className="text-[11px] text-zinc-500 uppercase tracking-wide mb-1.5 font-medium">
-                    {guide.museum.name}
-                  </div>
-                  <h1
-                    className="text-[20px] text-zinc-900 tracking-tight leading-tight"
-                    style={{ fontWeight: 600 }}
-                  >
-                    {guide.title}
-                  </h1>
-                </div>
-              </div>
 
+          {/* Hero */}
+          <div
+            className="relative flex flex-col justify-between min-h-[100svh] px-6 pt-10 pb-10 overflow-hidden"
+            style={{
+              background: "linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+            }}
+          >
+            {/* Top: logo + museo */}
+            <div>
+              <MainLogoVariant className="h-[28px] w-auto opacity-80 invert mb-8" />
+              <p className="text-[11px] text-white/50 uppercase tracking-widest font-medium mb-2">
+                {guide.museum.name}
+              </p>
+            </div>
+
+            {/* Center: titolo + stats */}
+            <div className="flex-1 flex flex-col justify-center py-10">
+              <h1 className="text-[36px] font-bold text-white leading-tight tracking-tight mb-6">
+                {guide.title}
+              </h1>
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="flex items-center gap-1.5 text-[12px] text-white/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
+                  {guide.pois.length} stops
+                </span>
+                <span className="flex items-center gap-1.5 text-[12px] text-white/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
+                  ~{Math.round(guide.pois.length * 2.5)} min
+                </span>
+                <span className="flex items-center gap-1.5 text-[12px] text-white/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/40 inline-block" />
+                  {selectedLang?.flag} {selectedLang?.name}
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom: language selector + CTA */}
+            <div className="space-y-4">
               {/* Language Selector */}
               <div className="relative">
                 <button
                   onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50 rounded-lg hover:bg-zinc-100 transition-all border border-zinc-200"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Globe className="size-4 text-zinc-600" strokeWidth={1.5} />
-                    <span className="text-lg">{selectedLang?.flag}</span>
-                    <span className="text-zinc-900 text-[13px] font-semibold">{selectedLang?.name}</span>
+                    <Globe className="size-4 text-white/50" strokeWidth={1.5} />
+                    <span className="text-base">{selectedLang?.flag}</span>
+                    <span className="text-white text-[13px] font-medium">{selectedLang?.name}</span>
                   </div>
                   <ChevronDown
-                    className={`size-4 text-zinc-600 transition-transform ${
-                      showLanguageSelector ? "rotate-180" : ""
-                    }`}
+                    className={`size-4 text-white/40 transition-transform ${showLanguageSelector ? "rotate-180" : ""}`}
                     strokeWidth={1.5}
                   />
                 </button>
-
                 {showLanguageSelector && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-zinc-200 shadow-lg overflow-hidden z-20">
+                  <div className="absolute bottom-full left-0 right-0 mb-1 bg-zinc-900 rounded-xl border border-white/10 shadow-2xl overflow-hidden z-20">
                     {guide.availableLanguages.map((code) => {
                       const lang = languages.find((l) => l.code === code);
                       return (
                         <button
                           key={code}
-                          onClick={() => {
-                            setSelectedLanguage(code);
-                            setShowLanguageSelector(false);
-                          }}
-                          className={`
-                            w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-zinc-50 transition-colors
-                            ${code === selectedLanguage ? "bg-zinc-50" : ""}
-                          `}
+                          onClick={() => { setSelectedLanguage(code); setShowLanguageSelector(false); }}
+                          className={`w-full flex items-center gap-2.5 px-4 py-3 hover:bg-white/5 transition-colors ${code === selectedLanguage ? "bg-white/5" : ""}`}
                         >
                           <span className="text-base">{lang?.flag}</span>
-                          <span className="text-zinc-900 text-[13px] font-medium">{lang?.name}</span>
-                          {code === selectedLanguage && (
-                            <span className="ml-auto text-zinc-600 text-[12px]">✓</span>
-                          )}
+                          <span className="text-white text-[13px] font-medium">{lang?.name}</span>
+                          {code === selectedLanguage && <span className="ml-auto text-white/40 text-[12px]">✓</span>}
                         </button>
                       );
                     })}
                   </div>
                 )}
               </div>
+
+              {/* CTA button */}
+              <button
+                onClick={scrollToPOIs}
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl text-[15px] font-semibold transition-all active:scale-[0.98]"
+                style={{ backgroundColor: '#D33333', color: 'white' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#b92b2b')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#D33333')}
+              >
+                Start the Tour
+                <ChevronDown className="size-4" strokeWidth={2.5} />
+              </button>
             </div>
           </div>
 
           {/* POI List */}
-          <div className="p-6 space-y-3">
+          <div ref={poisListRef} className="p-6 space-y-3 scroll-mt-0">
             <h2 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-4">
-              {guide.pois.length} fermate
+              {guide.pois.length} stops
             </h2>
             {guide.pois.map((poi, index) => (
               <button
                 key={poi.id}
                 onClick={() => handleSelectPOI(index)}
                 className="group w-full flex items-center gap-4 p-4 bg-zinc-50 rounded-lg border border-zinc-200 hover:shadow-md transition-all active:scale-[0.99]"
-                style={{
-                  ['--hover-border-color' as string]: '#D33333',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#D33333'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = ''}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#D33333')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '')}
               >
                 <div
                   className="size-10 text-white rounded-md flex items-center justify-center text-[14px] font-semibold flex-shrink-0"
@@ -172,7 +196,7 @@ export function VisitorPlayer() {
             <div className="flex justify-center mb-3">
               <MainLogoVariant className="h-[24px] w-auto opacity-20" />
             </div>
-            <p className="text-[11px] text-zinc-400">Tocca una fermata per iniziare</p>
+            <p className="text-[11px] text-zinc-400">Tap a stop to begin</p>
           </div>
         </div>
       ) : (

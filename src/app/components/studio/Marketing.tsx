@@ -19,6 +19,9 @@ import {
 import { useState } from "react";
 import { PageShell } from "./PageShell";
 import { GuidePreviewModal } from "./GuidePreviewModal";
+import { LandingPagePreviewModal } from "./LandingPagePreviewModal";
+import { RedemptionPagePreviewModal } from "./RedemptionPagePreviewModal";
+import { RedemptionPageEditModal } from "./RedemptionPageEditModal";
 
 interface LandingPage {
   id: string;
@@ -125,6 +128,10 @@ export function Marketing() {
   const [showCreateAsset, setShowCreateAsset] = useState(false);
   const [copiedText, setCopiedText] = useState("");
   const [previewGuide, setPreviewGuide] = useState<string | null>(null);
+  const [previewLandingPage, setPreviewLandingPage] = useState<LandingPage | null>(null);
+  const [showRedemptionPreview, setShowRedemptionPreview] = useState(false);
+  const [showRedemptionEdit, setShowRedemptionEdit] = useState(false);
+  const [redemptionContent, setRedemptionContent] = useState({ title: selectedGuide, description: "Enter the code from your ticket to access the audio guide.", buttonText: "Access guide →" });
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -144,6 +151,9 @@ export function Marketing() {
   const filteredLanding = selectedGuide === "all" ? landingPages : landingPages.filter(p => p.guideName === selectedGuide);
   const filteredQR      = selectedGuide === "all" ? qrCodes      : qrCodes.filter(q => q.guideName === selectedGuide);
   const filteredAssets  = selectedGuide === "all" ? assets        : assets.filter(a => a.guideName === selectedGuide);
+  const isPaid          = selectedGuide !== "all" && getAccess(selectedGuide) === "paid";
+  const redemptionSlug  = selectedGuide !== "all" ? selectedGuide.toLowerCase().replace(/ /g, "-") : "";
+  const redemptionUrl   = `museodarte.app/${redemptionSlug}`;
 
   const guideMarketing = (name: string) => {
     const lp  = landingPages.find(p => p.guideName === name);
@@ -307,72 +317,124 @@ export function Marketing() {
             {/* LANDING PAGE */}
             {activeTool === "landing" && (
               <>
-                <div className="flex items-center justify-between mb-5">
-                  <p className="text-[13px] text-zinc-500">{filteredLanding.length} {filteredLanding.length === 1 ? "page" : "pages"}</p>
-                  <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
-                    <Plus className="size-4" />Create Landing Page
-                  </button>
-                </div>
-                {filteredLanding.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="size-12 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4"><Globe className="size-6 text-zinc-400" /></div>
-                    <p className="text-[14px] font-semibold text-zinc-900 mb-1">No landing page yet</p>
-                    <p className="text-[13px] text-zinc-500 mb-6">Create a landing page to promote this guide</p>
-                    <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
-                      <Plus className="size-4" />Create Landing Page
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filteredLanding.map((page) => (
-                      <div key={page.id} className="group bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md hover:border-zinc-300 transition-all" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.06)" }}>
+                {isPaid ? (
+                  /* ── PAID: Redemption page card ── */
+                  <>
+                    <div className="flex items-center justify-between mb-5">
+                      <p className="text-[13px] text-zinc-500">1 redemption page</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <div className="group bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md hover:border-zinc-300 transition-all" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.06)" }}>
                         <div className="relative h-40 bg-zinc-100">
-                          <img src={page.thumbnail} alt={page.guideName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <img
+                            src={mockLandingPages.find(p => p.guideName === selectedGuide)?.thumbnail ?? "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=400"}
+                            alt={selectedGuide}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                          <span className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold ${page.status === "published" ? "bg-emerald-500 text-white" : "bg-zinc-700/80 text-white"}`}>
-                            {page.status === "published" && <span className="size-1.5 rounded-full bg-white animate-pulse" />}
-                            {page.status === "published" ? "Live" : "Draft"}
+                          <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-500 text-white">
+                            Paid access
                           </span>
                         </div>
                         <div className="p-5">
                           <div className="flex items-center gap-1.5 mb-4">
-                            <span className="text-[12px] text-zinc-500 truncate">{page.url}</span>
-                            <button onClick={() => handleCopy(page.url, `url-${page.id}`)} className="text-zinc-400 hover:text-zinc-700 transition-colors flex-shrink-0">
-                              {copiedText === `url-${page.id}` ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                            <span className="text-[12px] text-zinc-500 truncate">{redemptionUrl}</span>
+                            <button onClick={() => handleCopy(redemptionUrl, "redemption-base")} className="text-zinc-400 hover:text-zinc-700 transition-colors flex-shrink-0">
+                              {copiedText === "redemption-base" ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                             </button>
                           </div>
                           <div className="flex items-center gap-6 mb-4 pb-4 border-b border-zinc-100">
                             <div>
-                              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Views</p>
-                              <p className="text-[18px] font-light text-zinc-900">{page.views.toLocaleString()}</p>
+                              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Redeemed</p>
+                              <p className="text-[18px] font-light text-zinc-900">{filteredQR.reduce((s, q) => s + q.scans, 0).toLocaleString()}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Scans</p>
-                              <p className="text-[18px] font-light text-zinc-900">{page.scans.toLocaleString()}</p>
+                              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Page visits</p>
+                              <p className="text-[18px] font-light text-zinc-900">{filteredLanding.reduce((s, p) => s + p.views, 0).toLocaleString()}</p>
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <button className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
+                            <button onClick={() => setShowRedemptionPreview(true)} className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
                               <Eye className="size-3.5 inline mr-1.5" />Preview
                             </button>
-                            <button className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
+                            <button onClick={() => setShowRedemptionEdit(true)} className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
                               <Edit className="size-3.5 inline mr-1.5" />Edit
-                            </button>
-                            <button className="px-3 py-1.5 bg-white border border-zinc-200 text-zinc-500 hover:text-red-600 hover:border-red-200 text-[12px] rounded-lg transition-all">
-                              <Trash2 className="size-3.5" />
                             </button>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  </>
+                ) : (
+                  /* ── FREE: Landing page builder ── */
+                  <>
+                    <div className="flex items-center justify-between mb-5">
+                      <p className="text-[13px] text-zinc-500">{filteredLanding.length} {filteredLanding.length === 1 ? "page" : "pages"}</p>
+                      <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+                        <Plus className="size-4" />Create Landing Page
+                      </button>
+                    </div>
+                    {filteredLanding.length === 0 ? (
+                      <div className="text-center py-16">
+                        <div className="size-12 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4"><Globe className="size-6 text-zinc-400" /></div>
+                        <p className="text-[14px] font-semibold text-zinc-900 mb-1">No landing page yet</p>
+                        <p className="text-[13px] text-zinc-500 mb-6">Create a landing page to promote this guide</p>
+                        <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+                          <Plus className="size-4" />Create Landing Page
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {filteredLanding.map((page) => (
+                          <div key={page.id} className="group bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md hover:border-zinc-300 transition-all" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.06)" }}>
+                            <div className="relative h-40 bg-zinc-100">
+                              <img src={page.thumbnail} alt={page.guideName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                              <span className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold ${page.status === "published" ? "bg-emerald-500 text-white" : "bg-zinc-700/80 text-white"}`}>
+                                {page.status === "published" && <span className="size-1.5 rounded-full bg-white animate-pulse" />}
+                                {page.status === "published" ? "Live" : "Draft"}
+                              </span>
+                            </div>
+                            <div className="p-5">
+                              <div className="flex items-center gap-1.5 mb-4">
+                                <span className="text-[12px] text-zinc-500 truncate">{page.url}</span>
+                                <button onClick={() => handleCopy(page.url, `url-${page.id}`)} className="text-zinc-400 hover:text-zinc-700 transition-colors flex-shrink-0">
+                                  {copiedText === `url-${page.id}` ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-6 mb-4 pb-4 border-b border-zinc-100">
+                                <div>
+                                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Views</p>
+                                  <p className="text-[18px] font-light text-zinc-900">{page.views.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Scans</p>
+                                  <p className="text-[18px] font-light text-zinc-900">{page.scans.toLocaleString()}</p>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => setPreviewLandingPage(page)} className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
+                                  <Eye className="size-3.5 inline mr-1.5" />Preview
+                                </button>
+                                <button className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
+                                  <Edit className="size-3.5 inline mr-1.5" />Edit
+                                </button>
+                                <button className="px-3 py-1.5 bg-white border border-zinc-200 text-zinc-500 hover:text-red-600 hover:border-red-200 text-[12px] rounded-lg transition-all">
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
 
             {/* QR CODES */}
             {activeTool === "qr" && (() => {
-              const isPaid = getAccess(selectedGuide) === "paid";
               if (isPaid) {
                 return (
                   <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
@@ -555,57 +617,120 @@ export function Marketing() {
             {/* DISTRIBUTION */}
             {activeTool === "distribution" && (
               <div className="space-y-8">
+
+                {/* Embed Widgets */}
                 <div>
-                  <h2 className="text-[14px] font-semibold text-zinc-900 mb-4">Embed Widgets</h2>
+                  <h2 className="text-[14px] font-semibold text-zinc-900 mb-1">Embed Widgets</h2>
+                  <p className="text-[12px] text-zinc-400 mb-4">Paste on the museum website — no app required</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {[
-                      { icon: Code, title: "Audio Player", desc: "Embed an audio player on your website", code: '<iframe src="https://audio.guide/embed/..."></iframe>', copyKey: "embed-player" },
-                      { icon: QrCode, title: "QR Widget",   desc: "Display a QR code lightbox on your homepage",   code: '<script src="https://audio.guide/widget.js"></script>',  copyKey: "embed-qr" },
-                    ].map(({ icon: Icon, title, desc, code, copyKey }) => (
-                      <div key={copyKey} className="p-5 bg-white border border-zinc-200 rounded-xl" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
+                    {isPaid ? (
+                      /* Paid widgets */
+                      <>
+                        {[
+                          {
+                            icon: ExternalLink,
+                            title: "Buy Access Button",
+                            desc: '"Buy access" button that opens the purchase flow',
+                            code: `<a href="https://${redemptionUrl}/buy" class="museoo-btn" data-guide="${redemptionSlug}">Get audio guide</a>\n<script src="https://museoo.app/widget.js"></script>`,
+                            copyKey: "embed-buy",
+                          },
+                          {
+                            icon: Code,
+                            title: "Code Input Widget",
+                            desc: "Embeddable code redemption form — ideal on the purchase confirmation page",
+                            code: `<div id="museoo-redeem" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/redeem.js"></script>`,
+                            copyKey: "embed-redeem",
+                          },
+                        ].map(({ icon: Icon, title, desc, code, copyKey }) => (
+                          <div key={copyKey} className="p-5 bg-white border border-zinc-200 rounded-xl" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
+                            <div className="flex items-center gap-2.5 mb-2">
+                              <Icon className="size-4 text-zinc-400" strokeWidth={1.5} />
+                              <h3 className="text-[13px] font-semibold text-zinc-900">{title}</h3>
+                            </div>
+                            <p className="text-[12px] text-zinc-500 mb-3">{desc}</p>
+                            <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg mb-3 font-mono text-[11px] text-zinc-600 overflow-x-auto whitespace-pre">{code}</div>
+                            <button onClick={() => handleCopy(code, copyKey)} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                              {copiedText === copyKey ? <><Check className="size-3.5" />Copiato!</> : <><Copy className="size-3.5" />Copia codice</>}
+                            </button>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      /* Free widgets */
+                      <div className="p-5 bg-white border border-zinc-200 rounded-xl" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
                         <div className="flex items-center gap-2.5 mb-2">
-                          <Icon className="size-4 text-zinc-400" strokeWidth={1.5} />
-                          <h3 className="text-[13px] font-semibold text-zinc-900">{title}</h3>
+                          <QrCode className="size-4 text-zinc-400" strokeWidth={1.5} />
+                          <h3 className="text-[13px] font-semibold text-zinc-900">QR Widget</h3>
                         </div>
-                        <p className="text-[12px] text-zinc-500 mb-3">{desc}</p>
-                        <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg mb-3 font-mono text-[11px] text-zinc-600 overflow-x-auto">{code}</div>
-                        <button onClick={() => handleCopy(code, copyKey)} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
-                          {copiedText === copyKey ? <><Check className="size-3.5" />Copied!</> : <><Copy className="size-3.5" />Copy Code</>}
+                        <p className="text-[12px] text-zinc-500 mb-3">Display a QR code lightbox on your homepage</p>
+                        <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg mb-3 font-mono text-[11px] text-zinc-600 overflow-x-auto whitespace-pre">{`<div id="museoo-qr" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/widget.js"></script>`}</div>
+                        <button onClick={() => handleCopy(`<div id="museoo-qr" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/widget.js"></script>`, "embed-qr")} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                          {copiedText === "embed-qr" ? <><Check className="size-3.5" />Copied!</> : <><Copy className="size-3.5" />Copy Code</>}
                         </button>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 
+                {/* Smart Link */}
                 <div>
-                  <h2 className="text-[14px] font-semibold text-zinc-900 mb-4">Smart Link</h2>
+                  <h2 className="text-[14px] font-semibold text-zinc-900 mb-1">Smart Link</h2>
+                  <p className="text-[12px] text-zinc-400 mb-4">
+                    {isPaid ? "Redemption page URL — include in confirmation emails and digital tickets" : "Direct link to the guide — use in emails, social, newsletters"}
+                  </p>
                   <div className="p-5 bg-white border border-zinc-200 rounded-xl" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
                     <div className="space-y-2">
-                      {[
-                        { label: "Long",  value: `https://audioguides.app/museo/${selectedGuide.toLowerCase().replace(/ /g, "-")}`, key: "long" },
-                        { label: "Short", value: `https://audio.guide/${getAbbr(selectedGuide).toLowerCase()}`, key: "short" },
-                      ].map(({ label, value, key }) => (
-                        <div key={key} className="flex items-center gap-3">
-                          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest w-10">{label}</span>
-                          <code className={`flex-1 px-3 py-2 border rounded text-[11px] overflow-x-auto ${key === "short" ? "bg-blue-50 border-blue-200 text-blue-700 font-semibold" : "bg-zinc-50 border-zinc-200 text-zinc-600"}`}>{value}</code>
-                          {key === "short" && (
-                            <button onClick={() => handleCopy(value, "short")} className="p-2 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all">
-                              {copiedText === "short" ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5 text-zinc-500" />}
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                      {isPaid ? (
+                        <>
+                          {[
+                            { label: "Base",    value: `https://${redemptionUrl}`,             key: "paid-base" },
+                            { label: "With code", value: `https://${redemptionUrl}?code=XXXXX`, key: "paid-code" },
+                          ].map(({ label, value, key }) => (
+                            <div key={key} className="flex items-center gap-3">
+                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest w-20 flex-shrink-0">{label}</span>
+                              <code className={`flex-1 px-3 py-2 border rounded text-[11px] overflow-x-auto font-mono ${key === "paid-code" ? "bg-amber-50 border-amber-200 text-amber-700 font-semibold" : "bg-zinc-50 border-zinc-200 text-zinc-600"}`}>{value}</code>
+                              <button onClick={() => handleCopy(value, key)} className="p-2 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex-shrink-0">
+                                {copiedText === key ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5 text-zinc-500" />}
+                              </button>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          {[
+                            { label: "Long",  value: `https://museoo.app/guide/${redemptionSlug}`, key: "long" },
+                            { label: "Short", value: `https://audio.guide/${getAbbr(selectedGuide).toLowerCase()}`, key: "short" },
+                          ].map(({ label, value, key }) => (
+                            <div key={key} className="flex items-center gap-3">
+                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest w-10">{label}</span>
+                              <code className={`flex-1 px-3 py-2 border rounded text-[11px] overflow-x-auto font-mono ${key === "short" ? "bg-blue-50 border-blue-200 text-blue-700 font-semibold" : "bg-zinc-50 border-zinc-200 text-zinc-600"}`}>{value}</code>
+                              {key === "short" && (
+                                <button onClick={() => handleCopy(value, "short")} className="p-2 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all">
+                                  {copiedText === "short" ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5 text-zinc-500" />}
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
+                {/* Channel Performance */}
                 <div>
                   <h2 className="text-[14px] font-semibold text-zinc-900 mb-4">Channel Performance</h2>
                   <div className="flex items-center gap-6 mb-5 px-0.5">
-                    {[
-                      { label: "QR Scans",   value: filteredQR.reduce((s, q) => s + q.scans, 0).toLocaleString() },
-                      { label: "Page Views", value: filteredLanding.reduce((s, p) => s + p.views, 0).toLocaleString() },
-                    ].map(({ label, value }) => (
+                    {(isPaid
+                      ? [
+                          { label: "Codes redeemed", value: filteredQR.reduce((s, q) => s + q.scans, 0).toLocaleString() },
+                          { label: "Redemption page", value: filteredLanding.reduce((s, p) => s + p.views, 0).toLocaleString() },
+                        ]
+                      : [
+                          { label: "QR Scans",   value: filteredQR.reduce((s, q) => s + q.scans, 0).toLocaleString() },
+                          { label: "Page Views", value: filteredLanding.reduce((s, p) => s + p.views, 0).toLocaleString() },
+                        ]
+                    ).map(({ label, value }) => (
                       <div key={label}>
                         <span className="text-[22px] font-light text-zinc-900">{value}</span>
                         <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">{label}</span>
@@ -623,6 +748,26 @@ export function Marketing() {
       {/* Modals */}
       {previewGuide && (
         <GuidePreviewModal guideName={previewGuide} onClose={() => setPreviewGuide(null)} />
+      )}
+      {previewLandingPage && (
+        <LandingPagePreviewModal page={previewLandingPage} onClose={() => setPreviewLandingPage(null)} />
+      )}
+      {showRedemptionPreview && (
+        <RedemptionPagePreviewModal
+          guideName={selectedGuide}
+          redemptionUrl={redemptionUrl}
+          thumbnail={mockLandingPages.find(p => p.guideName === selectedGuide)?.thumbnail ?? "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400"}
+          content={redemptionContent}
+          onClose={() => setShowRedemptionPreview(false)}
+        />
+      )}
+      {showRedemptionEdit && (
+        <RedemptionPageEditModal
+          guideName={selectedGuide}
+          initial={redemptionContent}
+          onSave={setRedemptionContent}
+          onClose={() => setShowRedemptionEdit(false)}
+        />
       )}
 
       {showCreateLanding && (

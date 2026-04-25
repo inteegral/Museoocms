@@ -2,10 +2,11 @@ import { Outlet, Link, useLocation } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
   Languages, Mic, Megaphone, DollarSign, MessageSquare,
-  FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight,
+  FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { useState } from "react";
+import { GuidePreviewModal } from "./GuidePreviewModal";
 
 type Badge =
   | { type: "count"; value: number }
@@ -205,9 +206,18 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+const allGuideNames = [
+  "Renaissance Masterpieces",
+  "Ancient Egypt Collection",
+  "Modern Art Gallery",
+  "Sculpture Garden Tour",
+];
+
 export function StudioLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [visitorPickerOpen, setVisitorPickerOpen] = useState(false);
+  const [visitorGuide, setVisitorGuide] = useState<string | null>(null);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -239,6 +249,14 @@ export function StudioLayout() {
           </div>
 
           <SidebarNav />
+
+          {/* Visitor Mode */}
+          <div className="px-3 py-3">
+            <button onClick={() => setVisitorPickerOpen(true)} className="w-full flex items-center gap-2.5 px-3 py-2 bg-zinc-900 hover:bg-zinc-700 text-white rounded-lg text-[13px] font-semibold transition-colors">
+              <Smartphone className="size-4 flex-shrink-0" strokeWidth={1.5} />
+              <span>Visitor Mode</span>
+            </button>
+          </div>
 
           {/* Bottom */}
           <div className="px-2 py-3 border-t border-zinc-100 space-y-0.5">
@@ -341,6 +359,42 @@ export function StudioLayout() {
       <main className="lg:pl-[220px] pt-14 pb-20 lg:pt-0 lg:pb-0 bg-white min-h-screen">
         <Outlet />
       </main>
+
+      {/* Visitor Mode — guide picker */}
+      {visitorPickerOpen && (
+        <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setVisitorPickerOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+              <div>
+                <h2 className="text-[14px] font-semibold text-zinc-900">Visitor Mode</h2>
+                <p className="text-[11px] text-zinc-400 mt-0.5">Select a guide to preview</p>
+              </div>
+              <button onClick={() => setVisitorPickerOpen(false)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="p-2">
+              {allGuideNames.map((name) => (
+                <button
+                  key={name}
+                  onClick={() => { setVisitorGuide(name); setVisitorPickerOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-50 transition-colors text-left"
+                >
+                  <div className="size-7 rounded-md bg-zinc-100 text-zinc-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                    {name.slice(0, 3).toUpperCase()}
+                  </div>
+                  <span className="text-[13px] text-zinc-800 font-medium">{name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Visitor Mode — guide preview */}
+      {visitorGuide && (
+        <GuidePreviewModal guideName={visitorGuide} onClose={() => setVisitorGuide(null)} />
+      )}
     </div>
   );
 }
