@@ -632,10 +632,9 @@ export function MapEditor() {
                             {marker.lat!=null&&<div className="absolute -top-1 -right-1 size-3.5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center z-10"><LocateFixed className="size-2 text-white"/></div>}
                             <button
                               draggable={false}
-                              onMouseDown={e=>e.stopPropagation()}
-                              onClick={e=>{e.stopPropagation();removeMarker(marker.id);}}
-                              className="absolute -top-2 -left-2 size-4 bg-white rounded-full border border-zinc-200 shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:border-red-300 transition-all z-20">
-                              <X className="size-2.5 text-zinc-400 hover:text-red-500"/>
+                              onPointerDown={e=>{e.stopPropagation();e.preventDefault();removeMarker(marker.id);}}
+                              className="absolute bottom-0 left-full ml-1 size-5 bg-white rounded-full border border-zinc-200 shadow flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:border-red-300 transition-all z-20">
+                              <X className="size-3 text-zinc-400"/>
                             </button>
                             <div className="size-8 bg-[#D33333] rounded-full border-[3px] border-white shadow-lg flex items-center justify-center hover:scale-110 transition-transform"><MapPin className="size-3.5 text-white" fill="white"/></div>
                             <div className="w-px h-2 bg-[#D33333]"/>
