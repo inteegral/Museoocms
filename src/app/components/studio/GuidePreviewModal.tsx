@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Play, Pause, Map as MapIcon, ChevronLeft, MapPin, RotateCcw, RotateCw, Globe, ChevronDown } from "lucide-react";
+import { X, Play, Pause, Map as MapIcon, ChevronLeft, MapPin, RotateCcw, RotateCw, ChevronDown } from "lucide-react";
 import { mockPOIs } from "../../data/mockData";
 
 interface GuidePreviewModalProps {
@@ -479,19 +479,22 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 <button
                   onClick={() => setShowLangMenu(v => !v)}
                   style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "5px 10px", borderRadius: 20,
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    background: showLangMenu ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.08)",
-                    backdropFilter: "blur(8px)",
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "7px 12px", borderRadius: 24,
+                    border: "1px solid rgba(255,255,255,0.45)",
+                    background: showLangMenu ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.14)",
+                    backdropFilter: "blur(16px)",
                     cursor: "pointer", transition: "all 0.2s",
+                    boxShadow: "0 1px 8px rgba(0,0,0,0.25)",
                   }}
                 >
-                  <span style={{ fontSize: 13 }}>{activeLang.flag}</span>
-                  <Globe style={{ width: 11, height: 11, color: "rgba(255,255,255,0.7)" }} strokeWidth={1.8} />
+                  <span style={{ fontSize: 14, lineHeight: 1 }}>{activeLang.flag}</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: "#fff", fontFamily: "Inter, system-ui, sans-serif", letterSpacing: "0.04em" }}>
+                    {activeLang.code.toUpperCase()}
+                  </span>
                   <ChevronDown
-                    style={{ width: 10, height: 10, color: "rgba(255,255,255,0.7)", transition: "transform 0.2s", transform: showLangMenu ? "rotate(180deg)" : "rotate(0deg)" }}
-                    strokeWidth={2}
+                    style={{ width: 10, height: 10, color: "rgba(255,255,255,0.8)", transition: "transform 0.2s", transform: showLangMenu ? "rotate(180deg)" : "rotate(0deg)" }}
+                    strokeWidth={2.5}
                   />
                 </button>
                 {showLangMenu && (
