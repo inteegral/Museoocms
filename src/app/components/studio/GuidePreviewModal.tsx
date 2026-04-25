@@ -474,108 +474,117 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 background: "radial-gradient(ellipse at 70% 30%, rgba(211,51,51,0.08) 0%, transparent 65%)",
               }} />
 
-              {/* Red accent bar — left */}
-              <div style={{ position: "absolute", left: 0, top: 56, width: 3, height: 72, background: "#D33333", borderRadius: "0 2px 2px 0", zIndex: 2 }} />
+              {/* ── Language selector — absolute top right ── */}
+              <div style={{ position: "absolute", top: 18, right: 18, zIndex: 10 }}>
+                <button
+                  onClick={() => setShowLangMenu(v => !v)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "5px 10px", borderRadius: 20,
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    background: showLangMenu ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.08)",
+                    backdropFilter: "blur(8px)",
+                    cursor: "pointer", transition: "all 0.2s",
+                  }}
+                >
+                  <span style={{ fontSize: 13 }}>{activeLang.flag}</span>
+                  <Globe style={{ width: 11, height: 11, color: "rgba(255,255,255,0.7)" }} strokeWidth={1.8} />
+                  <ChevronDown
+                    style={{ width: 10, height: 10, color: "rgba(255,255,255,0.7)", transition: "transform 0.2s", transform: showLangMenu ? "rotate(180deg)" : "rotate(0deg)" }}
+                    strokeWidth={2}
+                  />
+                </button>
+                {showLangMenu && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 6px)", right: 0,
+                    background: "rgba(18,16,28,0.94)", backdropFilter: "blur(20px)",
+                    borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)",
+                    boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+                    overflow: "hidden", zIndex: 20, minWidth: 144,
+                  }}>
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => { setSelectedLang(lang.code); setShowLangMenu(false); }}
+                        style={{
+                          width: "100%", display: "flex", alignItems: "center", gap: 8,
+                          padding: "9px 14px",
+                          background: lang.code === selectedLang ? "rgba(211,51,51,0.15)" : "transparent",
+                          border: "none", cursor: "pointer",
+                          borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <span style={{ fontSize: 15 }}>{lang.flag}</span>
+                        <span style={{ fontSize: 12, color: lang.code === selectedLang ? "#D33333" : "rgba(255,255,255,0.8)", fontWeight: lang.code === selectedLang ? 600 : 400, fontFamily: "Inter, system-ui, sans-serif" }}>{lang.name}</span>
+                        {lang.code === selectedLang && <span style={{ marginLeft: "auto", fontSize: 11, color: "#D33333" }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              {/* ── Top bar: museum name + language selector ── */}
-              <div style={{ padding: "18px 18px 0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 10 }}>
-                <p style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.14em", fontFamily: "Inter, system-ui, sans-serif" }}>
+              {/* ── Centered hero content ── */}
+              <div style={{
+                flex: 1, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                textAlign: "center", padding: "72px 24px 48px",
+                position: "relative", zIndex: 2,
+              }}>
+                {/* Museum logo mark */}
+                <div style={{
+                  width: 56, height: 56, borderRadius: 16,
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  backdropFilter: "blur(8px)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 16,
+                }}>
+                  <span style={{ fontSize: 20, fontFamily: "Fraunces, Georgia, serif", fontWeight: 200, color: "#fff", letterSpacing: "-0.02em" }}>M</span>
+                </div>
+
+                {/* Museum name */}
+                <p style={{
+                  fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.5)",
+                  textTransform: "uppercase", letterSpacing: "0.16em",
+                  fontFamily: "Inter, system-ui, sans-serif", marginBottom: 20,
+                }}>
                   Museo Archeologico Nazionale
                 </p>
 
-                {/* Language hamburger */}
-                <div style={{ position: "relative" }}>
-                  <button
-                    onClick={() => setShowLangMenu(v => !v)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "5px 10px", borderRadius: 20,
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      background: showLangMenu ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.08)",
-                      backdropFilter: "blur(8px)",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <span style={{ fontSize: 13 }}>{activeLang.flag}</span>
-                    <Globe style={{ width: 11, height: 11, color: "rgba(255,255,255,0.7)" }} strokeWidth={1.8} />
-                    <ChevronDown
-                      style={{ width: 10, height: 10, color: "rgba(255,255,255,0.7)", transition: "transform 0.2s", transform: showLangMenu ? "rotate(180deg)" : "rotate(0deg)" }}
-                      strokeWidth={2}
-                    />
-                  </button>
+                {/* Decorative line */}
+                <div style={{ width: 28, height: 1.5, background: "#D33333", borderRadius: 1, marginBottom: 24 }} />
 
-                  {showLangMenu && (
-                    <div style={{
-                      position: "absolute", top: "calc(100% + 6px)", right: 0,
-                      background: "rgba(18,16,28,0.94)",
-                      backdropFilter: "blur(20px)",
-                      borderRadius: 14,
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
-                      overflow: "hidden", zIndex: 20, minWidth: 144,
-                    }}>
-                      {LANGUAGES.map((lang) => (
-                        <button
-                          key={lang.code}
-                          onClick={() => { setSelectedLang(lang.code); setShowLangMenu(false); }}
-                          style={{
-                            width: "100%", display: "flex", alignItems: "center", gap: 8,
-                            padding: "9px 14px",
-                            background: lang.code === selectedLang ? "rgba(211,51,51,0.15)" : "transparent",
-                            border: "none", cursor: "pointer",
-                            borderBottom: "1px solid rgba(255,255,255,0.06)",
-                          }}
-                        >
-                          <span style={{ fontSize: 15 }}>{lang.flag}</span>
-                          <span style={{ fontSize: 12, color: lang.code === selectedLang ? "#D33333" : "rgba(255,255,255,0.8)", fontWeight: lang.code === selectedLang ? 600 : 400, fontFamily: "Inter, system-ui, sans-serif" }}>{lang.name}</span>
-                          {lang.code === selectedLang && (
-                            <span style={{ marginLeft: "auto", fontSize: 11, color: "#D33333" }}>✓</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* ── Center: title + stats ── */}
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 20px", position: "relative", zIndex: 2 }}>
+                {/* Guide title */}
                 <h1 style={{
                   fontFamily: "Fraunces, Georgia, serif",
-                  fontWeight: 200,
-                  fontSize: 38,
-                  color: "#ffffff",
-                  lineHeight: 1.15,
-                  letterSpacing: "-0.025em",
-                  marginBottom: 18,
+                  fontWeight: 200, fontSize: 36,
+                  color: "#ffffff", lineHeight: 1.2,
+                  letterSpacing: "-0.025em", marginBottom: 20,
                   textShadow: "0 2px 24px rgba(0,0,0,0.4)",
                 }}>
                   {guideName}
                 </h1>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+
+                {/* Stats */}
+                <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 36, justifyContent: "center" }}>
                   {[`${mockPOIs.length} stops`, `~${Math.ceil(mockPOIs.length * 2.5)} min`].map((label) => (
-                    <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.55)", fontFamily: "Inter, system-ui, sans-serif" }}>
+                    <span key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: "Inter, system-ui, sans-serif" }}>
                       <span style={{ width: 3, height: 3, borderRadius: "50%", background: "#D33333", display: "inline-block" }} />
                       {label}
                     </span>
                   ))}
                 </div>
-              </div>
 
-              {/* ── CTA zone ── */}
-              <div style={{ padding: "0 20px 36px", display: "flex", flexDirection: "column", alignItems: "center", gap: 20, position: "relative", zIndex: 2 }}>
+                {/* CTA button */}
                 <button
                   onClick={scrollToPOIs}
                   style={{
-                    width: "100%", padding: "16px 0",
+                    width: "100%", padding: "15px 0",
                     borderRadius: 16,
                     border: "1.5px solid rgba(255,255,255,0.35)",
                     background: "rgba(255,255,255,0.08)",
                     backdropFilter: "blur(12px)",
-                    color: "#ffffff",
-                    fontSize: 15,
-                    fontWeight: 300,
+                    color: "#ffffff", fontSize: 15, fontWeight: 300,
                     cursor: "pointer",
                     fontFamily: "Fraunces, Georgia, serif",
                     letterSpacing: "0.01em",
@@ -590,7 +599,10 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                     <path d="M6.5 2v9M6.5 11l-2.5-2.5M6.5 11l2.5-2.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                {/* Bottom divider */}
+              </div>
+
+              {/* Bottom divider */}
+              <div style={{ padding: "0 20px 28px", position: "relative", zIndex: 2 }}>
                 <div style={{ width: "100%", height: 1, background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 30%, #D33333 50%, rgba(255,255,255,0.2) 70%, transparent 100%)" }} />
               </div>
             </div>
