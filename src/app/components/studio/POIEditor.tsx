@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Clock, FileText, Mic, Globe, BookOpen, CheckCircle2, AlertCircle, CircleDashed, Accessibility } from "lucide-react";
+import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Clock, FileText, Mic, Globe, BookOpen, CheckCircle2, AlertCircle, CircleDashed } from "lucide-react";
 import { mockGuides, mockPOIs } from "../../data/mockData";
 
 type POIStatus = "idea" | "in-progress" | "under-revision" | "complete";
@@ -18,9 +18,6 @@ interface POI {
   updatedAt: string;
   isGeolocated?: boolean;
   assignedToGuides?: string[];
-  wheelchair?: boolean;
-  easyReadText?: string;
-  pictogram?: string;
 }
 
 interface POIEditorProps {
@@ -107,7 +104,7 @@ function MediaPicker({ current, onSelect, onClose }: {
 
 export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: POIEditorProps) {
   const [formData, setFormData] = useState(poi);
-  const [activeTab, setActiveTab] = useState<"details" | "audio-script" | "location" | "accessibility">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "audio-script" | "location">("details");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
@@ -227,10 +224,9 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
               {/* Tab bar */}
               <div className="px-6 border-b border-zinc-100 flex gap-5 flex-shrink-0">
                 {[
-                  { id: "details",       label: "Details",       icon: FileText },
-                  { id: "audio-script",  label: "Audio Script",  icon: Mic },
-                  { id: "location",      label: "Location",      icon: MapPin },
-                  { id: "accessibility", label: "Accessibility", icon: Accessibility },
+                  { id: "details",      label: "Details",      icon: FileText },
+                  { id: "audio-script", label: "Audio Script", icon: Mic },
+                  { id: "location",     label: "Location",     icon: MapPin },
                 ].map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -347,62 +343,6 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
                   </div>
                 )}
 
-                {activeTab === "accessibility" && (
-                  <div className="space-y-5 max-w-lg">
-                    {/* Wheelchair accessible */}
-                    <div className="flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <Accessibility className="size-4 text-zinc-500" />
-                        <div>
-                          <p className="text-[13px] font-semibold text-zinc-900">Wheelchair Accessible</p>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">This POI is accessible by wheelchair</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFormData({ ...formData, wheelchair: !formData.wheelchair })}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${formData.wheelchair ? "bg-blue-500" : "bg-zinc-200"}`}
-                      >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${formData.wheelchair ? "translate-x-6" : "translate-x-1"}`} />
-                      </button>
-                    </div>
-
-                    {/* Easy Read text */}
-                    <div>
-                      <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Easy Read Text</label>
-                      <p className="text-[11px] text-zinc-400 mb-2">Short sentences. Simple words. One idea at a time. Useful for visitors with cognitive disabilities or those who prefer plain language.</p>
-                      <textarea
-                        value={formData.easyReadText || ""}
-                        onChange={e => setFormData({ ...formData, easyReadText: e.target.value })}
-                        rows={5}
-                        className="w-full px-3.5 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-none"
-                        placeholder="This is a famous statue. It shows a goddess. She is over 2,000 years old."
-                      />
-                    </div>
-
-                    {/* Pictogram */}
-                    <div>
-                      <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Pictogram</label>
-                      <p className="text-[11px] text-zinc-400 mb-2">An emoji that represents this POI. Shown in the visitor's accessibility info panel.</p>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="text"
-                          value={formData.pictogram || ""}
-                          onChange={e => setFormData({ ...formData, pictogram: e.target.value })}
-                          className="w-full px-3.5 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
-                          placeholder="e.g. 🏛️  🏺  ⚔️  🎨  🎵"
-                        />
-                        {formData.pictogram && (
-                          <span className="text-[32px] flex-shrink-0">{formData.pictogram}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                      <p className="text-[11px] font-semibold text-blue-700 mb-1">Guide-level wheelchair settings</p>
-                      <p className="text-[11px] text-blue-600 leading-relaxed">Wheelchair route and alternative path options are configured in the Guide settings for each tour.</p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Footer */}

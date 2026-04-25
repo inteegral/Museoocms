@@ -17,9 +17,6 @@ export const mockPOIs = [
     body: "Welcome to the Venus de Milo, one of the most iconic sculptures of ancient Greek art. This marble statue dates from the Hellenistic period, around 130–100 BC, and represents Aphrodite, the Greek goddess of love and beauty...",
     imageUrl: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800&q=80",
     orderIndex: 0,
-    wheelchair: true,
-    easyReadText: "This is a famous marble statue. It shows a woman called Aphrodite. She is the Greek goddess of love. The statue is over 2,000 years old. It was found on a Greek island.",
-    pictogram: "🏛️",
   },
   {
     id: "poi-2",
@@ -27,9 +24,6 @@ export const mockPOIs = [
     body: "This black-figure Attic amphora is a masterpiece of Greek pottery from the 6th century BC. The depicted scenes illustrate episodes from Greek mythology, with particular attention to anatomical detail and narrative composition...",
     imageUrl: "https://images.unsplash.com/photo-1582561833988-4b3c1b3a3e7e?w=800&q=80",
     orderIndex: 1,
-    wheelchair: false,
-    easyReadText: "This is a large painted pot from ancient Greece. It is called an amphora. The black paintings tell stories from myths. It is about 2,500 years old.",
-    pictogram: "🏺",
   },
   {
     id: "poi-3",
@@ -37,9 +31,6 @@ export const mockPOIs = [
     body: "Admire this extraordinary Roman mosaic from the 3rd century AD, discovered during the 1987 excavations. The polychrome tesserae form scenes of everyday life, offering a privileged window into Roman society...",
     imageUrl: "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?w=800&q=80",
     orderIndex: 2,
-    wheelchair: true,
-    easyReadText: "This is a picture made from tiny pieces of stone. It is called a mosaic. The Romans made it about 1,700 years ago. It shows scenes of daily life.",
-    pictogram: "🎨",
   },
   {
     id: "poi-4",
@@ -47,9 +38,6 @@ export const mockPOIs = [
     body: "This Corinthian bronze helmet dates from the 5th century BC and is a perfect example of Greek warrior armour. Its distinctive shape fully protected the head, leaving only small openings for the eyes and mouth...",
     imageUrl: "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=800&q=80",
     orderIndex: 3,
-    wheelchair: false,
-    easyReadText: "This is a helmet made of bronze. A Greek soldier wore it in battle. It covered the whole head. Only small holes were left for the eyes and mouth. It is about 2,500 years old.",
-    pictogram: "⚔️",
   },
   {
     id: "poi-5",
@@ -57,9 +45,6 @@ export const mockPOIs = [
     body: "The statue of Apollo, god of music and poetry, is a sublime example of classical Greek sculpture. Its perfect proportions and serene expression embody the ancient ideal of beauty...",
     imageUrl: "https://images.unsplash.com/photo-1515169974336-64e1e4dbfe7d?w=800&q=80",
     orderIndex: 4,
-    wheelchair: true,
-    easyReadText: "This is a statue of Apollo. He is the god of music in Greek stories. The statue shows a young man with a peaceful face. Ancient Greek artists made it to show perfect beauty.",
-    pictogram: "🎵",
   },
 ];
 
@@ -74,8 +59,6 @@ export const mockGuides = [
     languages: ["it", "en"],
     createdAt: "15 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800&q=80",
-    wheelchairRoute: true,
-    alternativeRoute: "Accessible route via north entrance, elevator to all floors",
   },
   {
     id: "guide-2",
@@ -87,8 +70,6 @@ export const mockGuides = [
     languages: ["it"],
     createdAt: "20 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?w=800&q=80",
-    wheelchairRoute: true,
-    alternativeRoute: "Lift access available at south entrance",
   },
   {
     id: "guide-3",
@@ -100,8 +81,6 @@ export const mockGuides = [
     languages: ["it"],
     createdAt: "22 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=800&q=80",
-    wheelchairRoute: false,
-    alternativeRoute: "",
   },
 ];
 

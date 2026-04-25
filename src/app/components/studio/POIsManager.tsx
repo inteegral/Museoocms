@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { Plus, Sparkles, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen, Accessibility } from "lucide-react";
+import { Plus, Sparkles, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -24,9 +24,6 @@ interface POI {
   updatedAt: string;
   isGeolocated?: boolean;
   assignedToGuides?: string[];
-  wheelchair?: boolean;
-  easyReadText?: string;
-  pictogram?: string;
 }
 
 const mockPOIs: POI[] = [
@@ -44,9 +41,6 @@ const mockPOIs: POI[] = [
     updatedAt: "2 hours ago",
     isGeolocated: true,
     assignedToGuides: ["guide-1", "guide-2"],
-    wheelchair: true,
-    easyReadText: "Welcome to the museum. This is the main entrance. The building is very old. Our guide will tell you its history.",
-    pictogram: "🏛️",
   },
   {
     id: "2",
@@ -62,9 +56,6 @@ const mockPOIs: POI[] = [
     updatedAt: "1 day ago",
     isGeolocated: true,
     assignedToGuides: ["guide-1"],
-    wheelchair: true,
-    easyReadText: "This room has important Renaissance paintings. These are some of the most famous artworks in the museum. They were made about 500 years ago.",
-    pictogram: "🖼️",
   },
   {
     id: "3",
@@ -205,13 +196,6 @@ function POIBadges({ poi }: { poi: POI }) {
         {guideCount > 0 ? guideCount : "—"}
       </span>
 
-      {/* Accessibility */}
-      {poi.wheelchair && (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-blue-50 border-blue-200 text-blue-700">
-          <Accessibility className="size-3" />
-          Accessible
-        </span>
-      )}
     </div>
   );
 }
@@ -374,9 +358,6 @@ function POIsManagerContent() {
       updatedAt: "Just now",
       isGeolocated: false,
       assignedToGuides: [],
-      wheelchair: false,
-      easyReadText: "",
-      pictogram: "",
     };
     setPOIs((prev) => [...prev, blank]);
     setSelectedPOI(blank);

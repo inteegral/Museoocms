@@ -170,7 +170,6 @@ function PhoneMap({ userX, userY, onClose, onSelectPOI }: { userX: number; userY
 function POICard({
   poi, index, total, isActive, isPlaying, progress, elapsed, totalSeconds, speed,
   onSelect, onTogglePlay, onSkipBack, onSkipForward, onSpeedChange,
-  highContrast, easyRead, onShowInfo,
 }: {
   poi: typeof mockPOIs[0];
   index: number; total: number; isActive: boolean; isPlaying: boolean;
@@ -178,9 +177,6 @@ function POICard({
   onSelect: () => void; onTogglePlay: () => void;
   onSkipBack: () => void; onSkipForward: () => void;
   onSpeedChange: () => void;
-  highContrast: boolean;
-  easyRead: boolean;
-  onShowInfo: () => void;
 }) {
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const num = String(index + 1).padStart(2, "0");
@@ -193,7 +189,7 @@ function POICard({
         style={{
           borderRadius: 20,
           background: "#fff",
-          border: isActive ? "1.5px solid rgba(211,51,51,0.25)" : highContrast ? "1.5px solid #d4d4d4" : "1.5px solid #F0F0F0",
+          border: isActive ? "1.5px solid rgba(211,51,51,0.25)" : "1.5px solid #F0F0F0",
           boxShadow: isActive
             ? "0 20px 60px rgba(211,51,51,0.1), 0 4px 16px rgba(0,0,0,0.06)"
             : "0 2px 8px rgba(0,0,0,0.03)",
@@ -284,24 +280,24 @@ function POICard({
 
           {/* Title inactive */}
           {!isActive && (
-            <h3 style={{ fontSize: 14, fontWeight: 300, color: highContrast ? "#000" : "#1f2937", lineHeight: 1.3, marginBottom: 4, fontFamily: "Fraunces, Georgia, serif" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 300, color: "#1f2937", lineHeight: 1.3, marginBottom: 4, fontFamily: "Fraunces, Georgia, serif" }}>
               {poi.title}
             </h3>
           )}
 
           {/* Description */}
           <p style={{
-            fontSize: easyRead ? 12 : 11,
-            color: isActive ? (highContrast ? "#374151" : "#6b7280") : (highContrast ? "#4b5563" : "#9ca3af"),
+            fontSize: 11,
+            color: isActive ? "#6b7280" : "#9ca3af",
             lineHeight: 1.6,
             display: "-webkit-box",
-            WebkitLineClamp: isActive || easyRead ? 2 : 1,
+            WebkitLineClamp: isActive ? 2 : 1,
             WebkitBoxOrient: "vertical" as const,
             overflow: "hidden",
             marginBottom: isActive ? 18 : 0,
             fontFamily: "Inter, system-ui, sans-serif",
           }}>
-            {(easyRead && poi.easyReadText) ? poi.easyReadText : (poi.body ?? "")}
+            {poi.body ?? ""}
           </p>
 
           {/* Active player */}
@@ -330,18 +326,7 @@ function POICard({
                 <button onClick={onSkipForward} style={{ width: 40, height: 40, borderRadius: "50%", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
                   <RotateCw strokeWidth={1.8} style={{ width: 20, height: 20, color: "#6b7280" }} />
                 </button>
-                <button
-                  onClick={onShowInfo}
-                  style={{
-                    width: 38, height: 30, borderRadius: 8,
-                    background: "rgba(107,114,128,0.08)",
-                    border: "1px solid rgba(107,114,128,0.15)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", fontFamily: "Inter, system-ui, sans-serif", lineHeight: 1 }}>i</span>
-                </button>
+                <div style={{ width: 38 }} />
               </div>
             </div>
           )}
@@ -349,24 +334,7 @@ function POICard({
           {/* Inactive footer */}
           {!isActive && (
             <div className="flex items-center justify-between" style={{ marginTop: 6 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onShowInfo(); }}
-                  style={{
-                    width: 22, height: 22, borderRadius: "50%",
-                    background: "rgba(107,114,128,0.08)",
-                    border: "1px solid rgba(107,114,128,0.18)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", fontFamily: "Inter, system-ui, sans-serif", lineHeight: 1 }}>i</span>
-                </button>
-                {poi.wheelchair && (
-                  <span style={{ fontSize: 12 }} title="Wheelchair accessible">♿</span>
-                )}
-              </div>
-              <span style={{ fontSize: 10, color: highContrast ? "#6b7280" : "#C0C0C0", letterSpacing: "0.04em", fontFamily: "Inter, system-ui, sans-serif" }}>2 MIN 30 SEC</span>
+              <span style={{ fontSize: 10, color: "#C0C0C0", letterSpacing: "0.04em", fontFamily: "Inter, system-ui, sans-serif" }}>2 MIN 30 SEC</span>
               <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(211,51,51,0.07)", border: "1px solid rgba(211,51,51,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Play style={{ width: 10, height: 10, color: "#D33333", marginLeft: 1.5 }} fill="#D33333" />
               </div>
@@ -393,15 +361,10 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
   const scrollRef   = useRef<HTMLDivElement>(null);
   const firstPOIRef = useRef<HTMLDivElement>(null);
   const poiRefs     = useRef<(HTMLDivElement | null)[]>([]);
-  const [highContrast, setHighContrast] = useState(false);
-  const [easyRead, setEasyRead]         = useState(false);
-  const [showInfoPOI, setShowInfoPOI]   = useState<number | null>(null);
 
   const totalSeconds = 150;
   const elapsed      = Math.floor((progress / 100) * totalSeconds);
   const activeLang   = LANGUAGES.find(l => l.code === selectedLang)!;
-
-  const infoData = showInfoPOI !== null ? mockPOIs[showInfoPOI] : null;
 
   const scrollToPOIs = () => {
     if (firstPOIRef.current && scrollRef.current) {
@@ -532,7 +495,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                   objectFit: "cover",
                   objectPosition: "center 20%",
                   transform: "scale(1.04)",
-                  opacity: highContrast ? 0 : 0.12,
+                  opacity: 0.12,
                   filter: "saturate(0.4) brightness(1.1)",
                 }}
               />
@@ -540,7 +503,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
               {/* White overlay — washes image to near-white */}
               <div style={{
                 position: "absolute", inset: 0,
-                background: highContrast ? "#fff" : "linear-gradient(to bottom, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.88) 70%, rgba(255,255,255,1) 100%)",
+                background: "linear-gradient(to bottom, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.88) 70%, rgba(255,255,255,1) 100%)",
               }} />
 
               {/* ── Language selector — absolute top right ── */}
@@ -704,9 +667,6 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                     onSkipBack={skipBack}
                     onSkipForward={skipForward}
                     onSpeedChange={cycleSpeed}
-                    highContrast={highContrast}
-                    easyRead={easyRead}
-                    onShowInfo={() => setShowInfoPOI(i)}
                   />
                 </div>
               ))}
@@ -719,36 +679,6 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 <p style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic", fontFamily: "Fraunces, Georgia, serif" }}>End of guide</p>
               </div>
             </div>
-          </div>
-
-          {/* Accessibility toolbar — above Map FAB */}
-          <div className="absolute z-30 flex flex-col items-center gap-2" style={{ bottom: 92, right: 16 }}>
-            <button
-              onClick={() => setHighContrast(v => !v)}
-              className="flex items-center justify-center transition-all"
-              title="High contrast"
-              style={{
-                width: 40, height: 40, borderRadius: "50%",
-                background: highContrast ? "#18181b" : "rgba(255,255,255,0.92)",
-                border: highContrast ? "1.5px solid #18181b" : "1.5px solid rgba(0,0,0,0.14)",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
-              }}
-            >
-              <span style={{ fontSize: 15, color: highContrast ? "#fff" : "#374151" }}>◑</span>
-            </button>
-            <button
-              onClick={() => setEasyRead(v => !v)}
-              className="flex items-center justify-center transition-all"
-              title="Easy Read"
-              style={{
-                width: 40, height: 40, borderRadius: "50%",
-                background: easyRead ? "#3b82f6" : "rgba(255,255,255,0.92)",
-                border: easyRead ? "1.5px solid #3b82f6" : "1.5px solid rgba(0,0,0,0.14)",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.18)",
-              }}
-            >
-              <span style={{ fontSize: 11, fontWeight: 700, color: easyRead ? "#fff" : "#374151", fontFamily: "Inter, system-ui, sans-serif" }}>Aa</span>
-            </button>
           </div>
 
           {/* Map FAB — inside screen, bottom-right */}
@@ -771,55 +701,6 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
           {/* Map overlay */}
           {showMap && <PhoneMap userX={userX} userY={userY} onClose={() => setShowMap(false)} onSelectPOI={selectPOIFromMap} />}
 
-          {/* Info drawer — transcript + accessibility info */}
-          {infoData && (
-            <>
-              <div
-                className="absolute inset-0 z-[34]"
-                style={{ background: "rgba(0,0,0,0.25)" }}
-                onClick={() => setShowInfoPOI(null)}
-              />
-              <div
-                className="absolute bottom-0 left-0 right-0 z-[35]"
-                style={{
-                  background: "#fff", borderRadius: "20px 20px 0 0",
-                  padding: "8px 20px 56px",
-                  maxHeight: "72%", overflowY: "auto",
-                  boxShadow: "0 -4px 30px rgba(0,0,0,0.18)",
-                }}
-              >
-                <div style={{ width: 36, height: 3, background: "#E5E5E5", borderRadius: 2, margin: "10px auto 18px" }} />
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {infoData.pictogram && <span style={{ fontSize: 24 }}>{infoData.pictogram}</span>}
-                    <h3 style={{ fontSize: 15, fontWeight: 300, fontFamily: "Fraunces, Georgia, serif", color: "#18181b", margin: 0 }}>{infoData.title}</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowInfoPOI(null)}
-                    style={{ width: 28, height: 28, borderRadius: "50%", background: "#f4f4f5", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-                  >
-                    <X style={{ width: 13, height: 13, color: "#71717a" }} />
-                  </button>
-                </div>
-                {infoData.wheelchair && (
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.18)", borderRadius: 8, marginBottom: 14 }}>
-                    <span style={{ fontSize: 13 }}>♿</span>
-                    <span style={{ fontSize: 11, color: "#3b82f6", fontWeight: 600, fontFamily: "Inter, system-ui, sans-serif" }}>Wheelchair accessible</span>
-                  </div>
-                )}
-                {infoData.easyReadText && (
-                  <div style={{ marginBottom: 16, padding: "12px 14px", background: "#eff6ff", borderRadius: 12, border: "1px solid rgba(59,130,246,0.12)" }}>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "Inter, system-ui, sans-serif", margin: "0 0 6px 0" }}>Easy Read</p>
-                    <p style={{ fontSize: 13, color: "#1e40af", lineHeight: 1.75, fontFamily: "Inter, system-ui, sans-serif", margin: 0 }}>{infoData.easyReadText}</p>
-                  </div>
-                )}
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 600, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "Inter, system-ui, sans-serif", margin: "0 0 6px 0" }}>Transcript</p>
-                  <p style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.8, fontFamily: "Inter, system-ui, sans-serif", margin: 0 }}>{infoData.body}</p>
-                </div>
-              </div>
-            </>
-          )}
         </div>
       </div>
 
