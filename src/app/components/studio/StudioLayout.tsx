@@ -61,18 +61,18 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    label: "Growth",
-    items: [
-      { key: "marketing", path: "/marketing", icon: Megaphone, label: "Marketing" },
-      { key: "monetization", path: "/monetization", icon: DollarSign, label: "Monetization" },
-    ],
-  },
-  {
     label: "Engagement",
     items: [
       { key: "reviews", path: "/reviews", icon: MessageSquare, label: "Reviews", badge: { type: "dot", color: "#22c55e" } },
       { key: "surveys", path: "/surveys", icon: ClipboardList, label: "Surveys" },
       { key: "hunt", path: "/hunt", icon: Trophy, label: "Hunt" },
+    ],
+  },
+  {
+    label: "Growth",
+    items: [
+      { key: "marketing", path: "/marketing", icon: Megaphone, label: "Marketing" },
+      { key: "monetization", path: "/monetization", icon: DollarSign, label: "Monetization" },
     ],
   },
 ];

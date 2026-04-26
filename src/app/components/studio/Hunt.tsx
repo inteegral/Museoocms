@@ -114,11 +114,12 @@ function StatusBadge({ status }: { status: "active" | "draft" }) {
 
 // ── Question card (editor) ─────────────────────────────────────────────────────
 function QuestionCard({
-  q, index, onChange,
+  q, index, onChange, allPOIs,
 }: {
   q: HuntQuestion;
   index: number;
   onChange: (updated: HuntQuestion) => void;
+  allPOIs: typeof mockPOIs;
 }) {
   return (
     <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
@@ -131,7 +132,18 @@ function QuestionCard({
         >
           {String(index + 1).padStart(2, "0")}
         </div>
-        <span className="text-[13px] font-medium text-zinc-800">{q.poiTitle}</span>
+        <select
+          value={q.poiId}
+          onChange={(e) => {
+            const p = allPOIs.find(p => p.id === e.target.value);
+            if (p) onChange({ ...q, poiId: p.id, poiTitle: p.title });
+          }}
+          className="flex-1 text-[13px] font-medium text-zinc-800 bg-transparent border-none focus:outline-none cursor-pointer min-w-0"
+        >
+          {allPOIs.map(p => (
+            <option key={p.id} value={p.id}>{p.title}</option>
+          ))}
+        </select>
       </div>
 
       <div className="p-5 space-y-4">
@@ -241,7 +253,8 @@ function HuntEditor({
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-8 py-10">
+    <PageShell>
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button
@@ -250,12 +263,15 @@ function HuntEditor({
         >
           <ChevronLeft className="size-4 text-zinc-600" />
         </button>
-        <div className="flex-1">
-          <h1 className="text-[22px] font-semibold text-zinc-900 tracking-tight">
-            {isNew ? "New Hunt" : "Edit Hunt"}
-          </h1>
+        <div className="flex-1 min-w-0">
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Hunt title…"
+            className="w-full text-[22px] font-semibold text-zinc-900 tracking-tight bg-transparent border-none focus:outline-none placeholder:text-zinc-300"
+          />
           <p className="text-[13px] text-zinc-400 mt-0.5">
-            {isNew ? "Create a quiz tied to an audio guide" : `Editing · ${hunt?.title}`}
+            {isNew ? "Create a quiz tied to an audio guide" : "Edit hunt"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -373,7 +389,7 @@ function HuntEditor({
 
           {questions.map((q, i) => (
             <div key={q.id} className="relative group">
-              <QuestionCard q={q} index={i} onChange={updated => updateQ(i, updated)} />
+              <QuestionCard q={q} index={i} onChange={updated => updateQ(i, updated)} allPOIs={mockPOIs} />
               {questions.length > 1 && (
                 <button
                   type="button"
@@ -388,6 +404,7 @@ function HuntEditor({
         </div>
       </div>
     </div>
+    </PageShell>
   );
 }
 
@@ -432,6 +449,7 @@ export function Hunt() {
 
   return (
     <PageShell>
+      <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex items-center gap-3">
@@ -586,6 +604,7 @@ export function Hunt() {
           </div>
         </div>
       )}
+      </div>
     </PageShell>
   );
 }
