@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
   Languages, Mic, Megaphone, DollarSign, MessageSquare,
-  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone,
+  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { useState } from "react";
@@ -79,6 +79,7 @@ const navSections: NavSection[] = [
 
 const bottomItems = [
   { path: "/documents", icon: FileText, label: "Knowledge Base" },
+  { path: "/team", icon: Users, label: "Team" },
   { path: "/settings", icon: Settings, label: "Settings" },
 ];
 
