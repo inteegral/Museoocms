@@ -56,8 +56,8 @@ const navSections: NavSection[] = [
   {
     label: "Production",
     items: [
-      { key: "voice-talent", path: "/voice-talent", icon: Mic, label: "Voice Talent" },
       { key: "translations", path: "/translations", icon: Languages, label: "Translations", badge: { type: "count", value: 12 } },
+      { key: "voice-talent", path: "/voice-talent", icon: Mic, label: "Voice Talent" },
     ],
   },
   {
@@ -65,7 +65,7 @@ const navSections: NavSection[] = [
     items: [
       { key: "reviews", path: "/reviews", icon: MessageSquare, label: "Reviews", badge: { type: "dot", color: "#22c55e" } },
       { key: "surveys", path: "/surveys", icon: ClipboardList, label: "Surveys" },
-      { key: "hunt", path: "/hunt", icon: Trophy, label: "Hunt" },
+      { key: "hunt", path: "/hunt", icon: Trophy, label: "Gamification" },
     ],
   },
   {

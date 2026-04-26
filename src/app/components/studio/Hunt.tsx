@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Trophy, Plus, ChevronLeft, Trash2, Edit3,
-  Zap, Users, ToggleLeft, ToggleRight, Award,
+  Zap, Users, Award,
   CheckCircle2, Circle, GripVertical,
 } from "lucide-react";
 import { mockGuides, mockPOIs } from "../../data/mockData";
@@ -83,6 +83,31 @@ const INITIAL_HUNTS: Hunt[] = [
     createdAt: "20 Mar 2026",
   },
 ];
+
+// ── Toggle pill ───────────────────────────────────────────────────────────────
+function TogglePill({ active, onChange }: { active: boolean; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      style={{
+        position: "relative", width: 44, height: 24, borderRadius: 12,
+        background: active ? "#D33333" : "#e4e4e7",
+        border: "none", cursor: "pointer", padding: 0,
+        transition: "background 0.2s ease", flexShrink: 0,
+      }}
+    >
+      <div style={{
+        position: "absolute", top: 4,
+        left: active ? 24 : 4,
+        width: 16, height: 16, borderRadius: "50%",
+        background: "white",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
+        transition: "left 0.2s ease",
+      }} />
+    </button>
+  );
+}
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
@@ -322,18 +347,12 @@ function HuntEditor({
 
             <div>
               <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Status</label>
-              <button
-                type="button"
-                onClick={() => setStatus(s => s === "active" ? "draft" : "active")}
-                className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg border border-zinc-200 hover:border-zinc-300 transition-colors"
-              >
-                {status === "active"
-                  ? <ToggleRight className="size-5" style={{ color: "#D33333" }} />
-                  : <ToggleLeft className="size-5 text-zinc-400" />}
-                <span className="text-[13px] text-zinc-700 font-medium">
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-zinc-200">
+                <span className="text-[13px] font-medium" style={{ color: status === "active" ? "#D33333" : "#71717a" }}>
                   {status === "active" ? "Active" : "Draft"}
                 </span>
-              </button>
+                <TogglePill active={status === "active"} onChange={() => setStatus(s => s === "active" ? "draft" : "active")} />
+              </div>
             </div>
           </div>
 
@@ -545,15 +564,7 @@ export function Hunt() {
 
               {/* Actions */}
               <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleToggleStatus(h.id)}
-                  title={h.status === "active" ? "Deactivate" : "Activate"}
-                  className="size-8 flex items-center justify-center rounded-lg border border-zinc-200 hover:border-zinc-300 bg-white transition-colors"
-                >
-                  {h.status === "active"
-                    ? <ToggleRight className="size-4" style={{ color: "#D33333" }} />
-                    : <ToggleLeft className="size-4 text-zinc-400" />}
-                </button>
+                <TogglePill active={h.status === "active"} onChange={() => handleToggleStatus(h.id)} />
                 <button
                   onClick={() => setEditing(h)}
                   className="size-8 flex items-center justify-center rounded-lg border border-zinc-200 hover:border-zinc-300 bg-white transition-colors"
