@@ -364,25 +364,12 @@ export function MediaLibrary() {
                   </button>
 
                   {/* Image */}
-                  <div className="aspect-square bg-zinc-100 overflow-hidden relative">
+                  <div className="aspect-square bg-zinc-100 overflow-hidden">
                     <img
                       src={item.url}
                       alt={item.filename}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                    {item.usedIn.length > 0 && (
-                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 flex items-center gap-1"
-                        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)" }}
-                      >
-                        <MapPin className="size-3 text-white/80 flex-shrink-0" strokeWidth={1.5} />
-                        <span className="text-white text-[10px] font-medium truncate leading-none">
-                          {item.usedIn[0].name}
-                        </span>
-                        {item.usedIn.length > 1 && (
-                          <span className="text-white/70 text-[10px] flex-shrink-0">+{item.usedIn.length - 1}</span>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* Info */}
@@ -390,21 +377,36 @@ export function MediaLibrary() {
                     <div className="font-semibold text-[12px] text-zinc-950 mb-1.5 truncate">
                       {item.filename}
                     </div>
-                    {item.usedIn.length > 0 ? (
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <MapPin className="size-3 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
-                        <span className="text-[10px] text-zinc-600 font-medium truncate">
-                          {item.usedIn[0].name}
+                    <div className="relative inline-block group/badge">
+                      {item.usedIn.length > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default">
+                          <span className="size-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                          Used
                         </span>
-                        {item.usedIn.length > 1 && (
-                          <span className="text-[10px] text-zinc-400 flex-shrink-0">
-                            +{item.usedIn.length - 1}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-[10px] text-zinc-300">Not used</span>
-                    )}
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-400 cursor-default">
+                          <span className="size-1.5 rounded-full bg-zinc-300 flex-shrink-0" />
+                          Not used
+                        </span>
+                      )}
+                      {/* Tooltip */}
+                      {item.usedIn.length > 0 && (
+                        <div className="absolute bottom-full left-0 mb-1.5 hidden group-hover/badge:block z-20 pointer-events-none">
+                          <div className="bg-zinc-900 rounded-lg px-3 py-2 shadow-xl w-max max-w-[180px]">
+                            {item.usedIn.map((poi) => (
+                              <div key={poi.id} className="flex items-center gap-1.5 py-0.5">
+                                <MapPin className="size-3 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                                <span className="text-[11px] text-white font-medium">{poi.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {/* Arrow */}
+                          <div className="w-2 h-1.5 ml-3 overflow-hidden">
+                            <div className="w-2 h-2 bg-zinc-900 rotate-45 -translate-y-1" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
