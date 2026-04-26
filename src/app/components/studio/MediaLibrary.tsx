@@ -364,12 +364,25 @@ export function MediaLibrary() {
                   </button>
 
                   {/* Image */}
-                  <div className="aspect-square bg-zinc-100 overflow-hidden">
+                  <div className="aspect-square bg-zinc-100 overflow-hidden relative">
                     <img
                       src={item.url}
                       alt={item.filename}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+                    {item.usedIn.length > 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 flex items-center gap-1"
+                        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)" }}
+                      >
+                        <MapPin className="size-3 text-white/80 flex-shrink-0" strokeWidth={1.5} />
+                        <span className="text-white text-[10px] font-medium truncate leading-none">
+                          {item.usedIn[0].name}
+                        </span>
+                        {item.usedIn.length > 1 && (
+                          <span className="text-white/70 text-[10px] flex-shrink-0">+{item.usedIn.length - 1}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
