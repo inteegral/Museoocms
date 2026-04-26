@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
   Languages, Mic, Megaphone, DollarSign, MessageSquare,
-  Trophy, ClipboardList, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users,
+  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
@@ -54,6 +54,7 @@ const navSections: NavSection[] = [
     label: "Media",
     items: [
       { key: "media", path: "/media", icon: FolderOpen, label: "Media Library" },
+      { key: "documents", path: "/documents", icon: FileText, label: "Knowledge Base" },
     ],
   },
   {
