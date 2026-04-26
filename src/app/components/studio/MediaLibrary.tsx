@@ -1,20 +1,26 @@
-import { 
-  Upload, 
-  Search, 
-  X, 
-  MoreVertical, 
-  Trash2, 
-  Copy, 
+import {
+  Upload,
+  Search,
+  X,
+  MoreVertical,
+  Trash2,
+  Copy,
   Download,
   Image as ImageIcon,
   Grid3x3,
   List,
   Filter,
   Check,
-  ExternalLink
+  ExternalLink,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { PageShell } from "./PageShell";
+interface POIRef {
+  id: string;
+  name: string;
+}
+
 interface MediaItem {
   id: string;
   url: string;
@@ -22,7 +28,7 @@ interface MediaItem {
   size: number; // in KB
   dimensions: { width: number; height: number };
   uploadedAt: string;
-  usedIn: string[]; // Guide IDs that use this image
+  usedIn: POIRef[];
   tags?: string[];
 }
 
@@ -34,7 +40,10 @@ const mockMediaItems: MediaItem[] = [
     size: 245,
     dimensions: { width: 1920, height: 1080 },
     uploadedAt: "2 hours ago",
-    usedIn: ["guide-1", "guide-2"],
+    usedIn: [
+      { id: "poi-1", name: "Museum Entrance Hall" },
+      { id: "poi-7", name: "North Wing Lobby" },
+    ],
     tags: ["architecture", "entrance"],
   },
   {
@@ -44,7 +53,9 @@ const mockMediaItems: MediaItem[] = [
     size: 312,
     dimensions: { width: 2048, height: 1536 },
     uploadedAt: "1 day ago",
-    usedIn: ["guide-1"],
+    usedIn: [
+      { id: "poi-2", name: "Renaissance Gallery" },
+    ],
     tags: ["art", "renaissance"],
   },
   {
@@ -54,7 +65,9 @@ const mockMediaItems: MediaItem[] = [
     size: 189,
     dimensions: { width: 1600, height: 1200 },
     uploadedAt: "3 days ago",
-    usedIn: ["guide-3"],
+    usedIn: [
+      { id: "poi-5", name: "Flemish Masters Room" },
+    ],
     tags: ["art", "baroque"],
   },
   {
@@ -74,7 +87,9 @@ const mockMediaItems: MediaItem[] = [
     size: 421,
     dimensions: { width: 2400, height: 1600 },
     uploadedAt: "1 week ago",
-    usedIn: ["guide-2"],
+    usedIn: [
+      { id: "poi-6", name: "Roman Sculpture Garden" },
+    ],
     tags: ["outdoor", "garden"],
   },
   {
@@ -94,7 +109,10 @@ const mockMediaItems: MediaItem[] = [
     size: 298,
     dimensions: { width: 2048, height: 1365 },
     uploadedAt: "2 weeks ago",
-    usedIn: ["guide-1", "guide-3"],
+    usedIn: [
+      { id: "poi-3", name: "Egyptian Collection" },
+      { id: "poi-8", name: "Temporary Exhibition" },
+    ],
     tags: ["interior", "exhibition"],
   },
   {
@@ -356,19 +374,24 @@ export function MediaLibrary() {
 
                   {/* Info */}
                   <div className="p-3">
-                    <div className="font-semibold text-[13px] text-zinc-950 mb-1 truncate">
+                    <div className="font-semibold text-[12px] text-zinc-950 mb-1.5 truncate">
                       {item.filename}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-zinc-500 font-medium">
-                        {formatFileSize(item.size)}
-                      </span>
-                      {item.usedIn.length > 0 && (
-                        <span className="text-[11px] px-2 py-0.5 rounded font-semibold" style={{ backgroundColor: '#FEE2E2', color: '#D33333' }}>
-                          Used
+                    {item.usedIn.length > 0 ? (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <MapPin className="size-3 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                        <span className="text-[10px] text-zinc-600 font-medium truncate">
+                          {item.usedIn[0].name}
                         </span>
-                      )}
-                    </div>
+                        {item.usedIn.length > 1 && (
+                          <span className="text-[10px] text-zinc-400 flex-shrink-0">
+                            +{item.usedIn.length - 1}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-zinc-300">Not used</span>
+                    )}
                   </div>
                 </div>
               );
@@ -451,11 +474,16 @@ export function MediaLibrary() {
                       </td>
                       <td className="px-6 py-4">
                         {item.usedIn.length > 0 ? (
-                          <span className="inline-flex items-center px-2 py-1 text-[12px] font-semibold rounded" style={{ backgroundColor: '#FEE2E2', color: '#D33333' }}>
-                            {item.usedIn.length} guide{item.usedIn.length > 1 ? 's' : ''}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            {item.usedIn.map((poi) => (
+                              <span key={poi.id} className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600">
+                                <MapPin className="size-3 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                                {poi.name}
+                              </span>
+                            ))}
+                          </div>
                         ) : (
-                          <span className="text-[13px] text-zinc-400">—</span>
+                          <span className="text-[12px] text-zinc-300">Not used</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -558,13 +586,20 @@ export function MediaLibrary() {
                         <span className="text-zinc-600">Uploaded</span>
                         <span className="font-medium text-zinc-900">{selectedImage.uploadedAt}</span>
                       </div>
-                      <div className="flex justify-between py-2 border-b border-zinc-100">
-                        <span className="text-zinc-600">Used In</span>
-                        <span className="font-medium text-zinc-900">
-                          {selectedImage.usedIn.length > 0
-                            ? `${selectedImage.usedIn.length} guide${selectedImage.usedIn.length > 1 ? 's' : ''}`
-                            : "Not used"}
-                        </span>
+                      <div className="py-2 border-b border-zinc-100">
+                        <span className="text-zinc-600 text-[14px]">Used In</span>
+                        {selectedImage.usedIn.length > 0 ? (
+                          <div className="mt-2 flex flex-col gap-1.5">
+                            {selectedImage.usedIn.map((poi) => (
+                              <span key={poi.id} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-800">
+                                <MapPin className="size-3.5 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                                {poi.name}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[13px] text-zinc-400 mt-1">Not used in any POI</p>
+                        )}
                       </div>
                     </div>
                   </div>
