@@ -22,7 +22,7 @@ export const mockPOIs = [
     id: "poi-2",
     title: "Attic Amphora",
     body: "This black-figure Attic amphora is a masterpiece of Greek pottery from the 6th century BC. The depicted scenes illustrate episodes from Greek mythology, with particular attention to anatomical detail and narrative composition...",
-    imageUrl: "https://images.unsplash.com/photo-1582561833988-4b3c1b3a3e7e?w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-uaUeba2TIJs?w=800&q=80",
     orderIndex: 1,
   },
   {
@@ -43,7 +43,7 @@ export const mockPOIs = [
     id: "poi-5",
     title: "Apollo Statue",
     body: "The statue of Apollo, god of music and poetry, is a sublime example of classical Greek sculpture. Its perfect proportions and serene expression embody the ancient ideal of beauty...",
-    imageUrl: "https://images.unsplash.com/photo-1515169974336-64e1e4dbfe7d?w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-hjC9MNmh7Q4?w=800&q=80",
     orderIndex: 4,
   },
 ];

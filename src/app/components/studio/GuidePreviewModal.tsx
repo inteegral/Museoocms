@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Play, Pause, Map as MapIcon, ChevronLeft, MapPin, RotateCcw, RotateCw, ChevronDown } from "lucide-react";
+import { X, Play, Pause, Map as MapIcon, ChevronLeft, MapPin, RotateCcw, RotateCw, Sparkles, Send, ArrowDown } from "lucide-react";
 import { mockPOIs } from "../../data/mockData";
 
 interface GuidePreviewModalProps {
@@ -96,6 +96,7 @@ function FloorPlan() {
 function PhoneMap({ userX, userY, onClose, onSelectPOI }: { userX: number; userY: number; onClose: () => void; onSelectPOI: (index: number) => void }) {
   const nearest = POI_FLOOR.find((p) => Math.hypot(p.x - userX, p.y - userY) < 8);
   const nearestIdx = nearest ? POI_FLOOR.indexOf(nearest) : -1;
+  const [hoveredPOI, setHoveredPOI] = useState<number | null>(null);
   return (
     <div className="absolute inset-0 z-20 flex flex-col" style={{ top: 48 }}>
       <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0 z-10 bg-white" style={{ borderBottom: "1px solid #F0F0F0" }}>
@@ -115,6 +116,8 @@ function PhoneMap({ userX, userY, onClose, onSelectPOI }: { userX: number; userY
           <button
             key={poi.id}
             onClick={() => onSelectPOI(i)}
+            onMouseEnter={() => setHoveredPOI(i)}
+            onMouseLeave={() => setHoveredPOI(null)}
             className="absolute"
             style={{
               left: `${poi.x}%`, top: `${poi.y}%`,
@@ -130,15 +133,51 @@ function PhoneMap({ userX, userY, onClose, onSelectPOI }: { userX: number; userY
               }}>
                 <span style={{
                   fontFamily: "Fraunces, Georgia, serif",
-                  fontWeight: 300, fontSize: 14,
+                  fontWeight: 300, fontSize: 13,
                   color: "white", lineHeight: 1,
-                }}>{i + 1}</span>
+                  letterSpacing: "-0.01em",
+                }}>{String(i + 1).padStart(2, "0")}</span>
               </div>
               <div style={{ width: 2, height: 6, background: "#D33333" }} />
               <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#D33333" }} />
             </div>
           </button>
         ))}
+
+        {/* POI hover tooltip */}
+        {hoveredPOI !== null && (() => {
+          const p = POI_FLOOR[hoveredPOI];
+          const below = p.y < 35;
+          return (
+            <div
+              style={{
+                position: "absolute",
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                transform: below
+                  ? "translate(-50%, 14px)"
+                  : "translate(-50%, calc(-100% - 58px))",
+                zIndex: 16,
+                pointerEvents: "none",
+              }}
+            >
+              <div style={{
+                background: "rgba(255,255,255,0.97)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(0,0,0,0.07)",
+                borderRadius: 8,
+                padding: "5px 10px",
+                boxShadow: "0 4px 18px rgba(0,0,0,0.11)",
+                whiteSpace: "nowrap",
+              }}>
+                <p style={{ fontSize: 11, fontWeight: 400, color: "#18181b", fontFamily: "Fraunces, Georgia, serif", margin: 0, letterSpacing: "-0.01em" }}>
+                  {p.name}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
         <div className="absolute" style={{ left: `${userX}%`, top: `${userY}%`, transform: "translate(-50%, -50%)", zIndex: 10 }}>
           <div className="absolute rounded-full" style={{ width: 36, height: 36, top: -18, left: -18, background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)" }} />
           <div className="size-4 rounded-full bg-blue-500 border-2 border-white shadow-lg" />
@@ -169,20 +208,20 @@ function PhoneMap({ userX, userY, onClose, onSelectPOI }: { userX: number; userY
 // behind cards without affecting their horizontal layout.
 function POICard({
   poi, index, total, isActive, isPlaying, progress, elapsed, totalSeconds, speed,
-  onSelect, onTogglePlay, onSkipBack, onSkipForward, onSpeedChange,
+  onSelect, onTogglePlay, onSkipBack, onSkipForward, onSpeedChange, onAskRAG,
 }: {
   poi: typeof mockPOIs[0];
   index: number; total: number; isActive: boolean; isPlaying: boolean;
   progress: number; elapsed: number; totalSeconds: number; speed: number;
   onSelect: () => void; onTogglePlay: () => void;
   onSkipBack: () => void; onSkipForward: () => void;
-  onSpeedChange: () => void;
+  onSpeedChange: () => void; onAskRAG: () => void;
 }) {
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const num = String(index + 1).padStart(2, "0");
 
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div>
       <button
         onClick={onSelect}
         className="w-full text-left overflow-hidden transition-all duration-500"
@@ -206,15 +245,13 @@ function POICard({
                 alt={poi.title}
                 className="w-full h-full object-cover"
                 style={{
-                  transition: "transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.4s ease",
+                  transition: "transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.6s ease",
                   transform: isActive ? "scale(1.05)" : "scale(1)",
-                  filter: isActive ? "none" : "grayscale(30%) brightness(0.95)",
+                  filter: isActive ? "saturate(0.22) brightness(1.0)" : "saturate(0.14) brightness(0.96)",
                 }}
               />
             : <div className="w-full h-full" style={{ background: "#F0EDE8" }} />
           }
-          {/* Gradient */}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 45%, rgba(0,0,0,0) 70%)" }} />
 
           {/* Stop number badge — minimal circle, top left of image */}
           <div style={{
@@ -333,9 +370,30 @@ function POICard({
           {!isActive && (
             <div className="flex items-center justify-between" style={{ marginTop: 6 }}>
               <span style={{ fontSize: 10, color: "#C0C0C0", letterSpacing: "0.04em", fontFamily: "Inter, system-ui, sans-serif" }}>2 MIN 30 SEC</span>
-              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(211,51,51,0.07)", border: "1px solid rgba(211,51,51,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Play style={{ width: 10, height: 10, color: "#D33333", marginLeft: 1.5 }} fill="#D33333" />
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button
+                  onClick={e => { e.stopPropagation(); onAskRAG(); }}
+                  style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(211,51,51,0.05)", border: "1px solid rgba(211,51,51,0.1)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                >
+                  <Sparkles style={{ width: 10, height: 10, color: "#D33333" }} strokeWidth={1.5} />
+                </button>
+                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(211,51,51,0.07)", border: "1px solid rgba(211,51,51,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Play style={{ width: 10, height: 10, color: "#D33333", marginLeft: 1.5 }} fill="#D33333" />
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* Active RAG pill */}
+          {isActive && (
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
+              <button
+                onClick={e => { e.stopPropagation(); onAskRAG(); }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 16px", borderRadius: 99, background: "rgba(211,51,51,0.06)", border: "1px solid rgba(211,51,51,0.14)", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                <Sparkles style={{ width: 10, height: 10, color: "#D33333" }} strokeWidth={1.5} />
+                <span style={{ fontSize: 9, fontWeight: 700, color: "#D33333", letterSpacing: "0.1em", fontFamily: "Inter, system-ui, sans-serif", textTransform: "uppercase" }}>Ask about this work</span>
+              </button>
             </div>
           )}
         </div>
@@ -355,6 +413,14 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
   const [showLangMenu, setShowLangMenu]     = useState(false);
   const [selectedLang, setSelectedLang]     = useState("en");
   const [showLangPicker, setShowLangPicker] = useState(true);
+  const [reviewRating, setReviewRating]     = useState(0);
+  const [reviewHover, setReviewHover]       = useState(0);
+  const [reviewComment, setReviewComment]   = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [ragPOI, setRagPOI]                 = useState<{ title: string; index: number } | null>(null);
+  const [ragInput, setRagInput]             = useState("");
+  const [ragMessages, setRagMessages]       = useState<{ role: "user" | "ai"; text: string }[]>([]);
+  const ragScrollRef                        = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrollRef   = useRef<HTMLDivElement>(null);
   const firstPOIRef = useRef<HTMLDivElement>(null);
@@ -410,6 +476,25 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
     const t = setInterval(() => setUserStep((s) => (s + 1) % USER_PATH.length), 2000);
     return () => clearInterval(t);
   }, [showMap]);
+
+  const sendRagMessage = () => {
+    if (!ragInput.trim() || !ragPOI) return;
+    const userText = ragInput.trim();
+    setRagMessages(prev => [...prev, { role: "user", text: userText }]);
+    setRagInput("");
+    setTimeout(() => {
+      setRagMessages(prev => [...prev, {
+        role: "ai",
+        text: `Regarding "${ragPOI.title}": ${userText.toLowerCase().includes("chi") || userText.toLowerCase().includes("who")
+          ? `This work was created during one of the most significant periods in art history. The artist employed techniques that were revolutionary for the era, combining traditional craftsmanship with a bold new vision that continues to captivate audiences today.`
+          : userText.toLowerCase().includes("tecnic") || userText.toLowerCase().includes("technique") || userText.toLowerCase().includes("stile")
+          ? `The artistic technique visible here reflects a mastery of form, light, and proportion. The artist worked with extraordinary precision — each detail was deliberate, designed to guide the viewer's eye and evoke an emotional response.`
+          : `This is one of the most studied works in our collection. Scholars continue to uncover new interpretations, and visitors from around the world come specifically to experience it in person. Is there a specific aspect you'd like to explore further?`
+        }`,
+      }]);
+      setTimeout(() => { ragScrollRef.current?.scrollTo({ top: 9999, behavior: "smooth" }); }, 50);
+    }, 750);
+  };
 
   const selectPOI = (i: number) => {
     setActivePOIIndex(i);
@@ -468,6 +553,64 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
           {/* Scrollable content */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
 
+            {/* ── Sticky language pill ── */}
+            <div style={{ position: "sticky", top: 0, height: 0, overflow: "visible", zIndex: 30, pointerEvents: "none" }}>
+              <div style={{ position: "absolute", top: 14, right: 14, pointerEvents: "all" }}>
+                <button
+                  onClick={() => setShowLangMenu(v => !v)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "7px 12px",
+                    borderRadius: 99,
+                    background: "rgba(255,255,255,0.84)",
+                    backdropFilter: "blur(20px)",
+                    WebkitBackdropFilter: "blur(20px)",
+                    border: "1px solid rgba(255,255,255,0.55)",
+                    boxShadow: "0 2px 18px rgba(0,0,0,0.09), inset 0 1px 0 rgba(255,255,255,0.9)",
+                    cursor: "pointer",
+                    transition: "box-shadow 0.2s ease",
+                  }}
+                >
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "#18181b", letterSpacing: "0.1em", fontFamily: "Inter, system-ui, sans-serif" }}>
+                    {activeLang.code.toUpperCase()}
+                  </span>
+                </button>
+                {showLangMenu && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 8px)", right: 0,
+                    background: "rgba(255,255,255,0.96)",
+                    backdropFilter: "blur(24px)",
+                    WebkitBackdropFilter: "blur(24px)",
+                    borderRadius: 16,
+                    border: "1px solid rgba(0,0,0,0.06)",
+                    boxShadow: "0 16px 48px rgba(0,0,0,0.13)",
+                    overflow: "hidden", zIndex: 40, minWidth: 152,
+                  }}>
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => { setSelectedLang(lang.code); setShowLangMenu(false); }}
+                        style={{
+                          width: "100%", display: "flex", alignItems: "center", gap: 10,
+                          padding: "10px 14px",
+                          background: lang.code === selectedLang ? "rgba(211,51,51,0.05)" : "transparent",
+                          border: "none", cursor: "pointer", transition: "background 0.15s",
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>{lang.flag}</span>
+                        <span style={{ fontSize: 12, color: lang.code === selectedLang ? "#D33333" : "#3f3f46", fontWeight: lang.code === selectedLang ? 600 : 400, fontFamily: "Inter, system-ui, sans-serif", flex: 1, textAlign: "left" }}>
+                          {lang.name}
+                        </span>
+                        {lang.code === selectedLang && (
+                          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#D33333", flexShrink: 0 }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* ═══════════════════════════════════
                 HERO CANVAS — fills the first screen
                 Status bar ~46px, phone inner ~784px → 738px remaining
@@ -493,7 +636,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                   objectFit: "cover",
                   objectPosition: "center 20%",
                   transform: "scale(1.04)",
-                  opacity: 0.12,
+                  opacity: 0.78,
                   filter: "saturate(0.4) brightness(1.1)",
                 }}
               />
@@ -504,55 +647,6 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 background: "linear-gradient(to bottom, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.88) 70%, rgba(255,255,255,1) 100%)",
               }} />
 
-              {/* ── Language selector — absolute top right ── */}
-              <div style={{ position: "absolute", top: 18, right: 18, zIndex: 10 }}>
-                <button
-                  onClick={() => setShowLangMenu(v => !v)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    padding: "7px 12px", borderRadius: 24,
-                    border: "1px solid rgba(0,0,0,0.1)",
-                    background: showLangMenu ? "rgba(0,0,0,0.06)" : "rgba(0,0,0,0.04)",
-                    cursor: "pointer", transition: "all 0.2s",
-                  }}
-                >
-                  <span style={{ fontSize: 14, lineHeight: 1 }}>{activeLang.flag}</span>
-                  <span style={{ fontSize: 11, fontWeight: 500, color: "#3f3f46", fontFamily: "Inter, system-ui, sans-serif", letterSpacing: "0.04em" }}>
-                    {activeLang.code.toUpperCase()}
-                  </span>
-                  <ChevronDown
-                    style={{ width: 10, height: 10, color: "#71717a", transition: "transform 0.2s", transform: showLangMenu ? "rotate(180deg)" : "rotate(0deg)" }}
-                    strokeWidth={2.5}
-                  />
-                </button>
-                {showLangMenu && (
-                  <div style={{
-                    position: "absolute", top: "calc(100% + 6px)", right: 0,
-                    background: "#fff", borderRadius: 14,
-                    border: "1px solid rgba(0,0,0,0.08)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                    overflow: "hidden", zIndex: 20, minWidth: 144,
-                  }}>
-                    {LANGUAGES.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => { setSelectedLang(lang.code); setShowLangMenu(false); }}
-                        style={{
-                          width: "100%", display: "flex", alignItems: "center", gap: 8,
-                          padding: "9px 14px",
-                          background: lang.code === selectedLang ? "rgba(211,51,51,0.06)" : "transparent",
-                          border: "none", cursor: "pointer",
-                          borderBottom: "1px solid rgba(0,0,0,0.05)",
-                        }}
-                      >
-                        <span style={{ fontSize: 15 }}>{lang.flag}</span>
-                        <span style={{ fontSize: 12, color: lang.code === selectedLang ? "#D33333" : "#3f3f46", fontWeight: lang.code === selectedLang ? 600 : 400, fontFamily: "Inter, system-ui, sans-serif" }}>{lang.name}</span>
-                        {lang.code === selectedLang && <span style={{ marginLeft: "auto", fontSize: 11, color: "#D33333" }}>✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               {/* ── Centered hero content ── */}
               <div style={{
@@ -636,18 +730,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 ═══════════════════════════════════ */}
             <div ref={firstPOIRef} style={{ position: "relative", padding: "24px 18px 40px" }}>
 
-              {/* Vertical connecting line (z-index 0, hidden behind cards) */}
-              <div style={{
-                position: "absolute",
-                left: 53,
-                top: 58,            /* starts at center of first badge */
-                bottom: 80,
-                width: 1,
-                background: "linear-gradient(to bottom, rgba(211,51,51,0.2) 0%, rgba(211,51,51,0.04) 100%)",
-                zIndex: 0,
-              }} />
 
-              {/* Cards — full width, line is hidden behind them */}
               {mockPOIs.map((poi, i) => (
                 <div key={poi.id} ref={el => { poiRefs.current[i] = el; }}>
                   <POICard
@@ -665,7 +748,22 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                     onSkipBack={skipBack}
                     onSkipForward={skipForward}
                     onSpeedChange={cycleSpeed}
+                    onAskRAG={() => { setRagPOI({ title: poi.title, index: i }); setRagMessages([]); }}
                   />
+                  {i < mockPOIs.length - 1 && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 80 }}>
+                      <div style={{ width: 1, flex: 1, background: "rgba(0,0,0,0.07)" }} />
+                      <button
+                        onClick={() => setShowMap(true)}
+                        style={{ width: 26, height: 26, borderRadius: "50%", background: "transparent", border: "1px solid rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.25s ease" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(211,51,51,0.35)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(211,51,51,0.04)"; (e.currentTarget.firstElementChild as SVGElement).style.color = "#D33333"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.1)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget.firstElementChild as SVGElement).style.color = "rgba(0,0,0,0.25)"; }}
+                      >
+                        <ArrowDown style={{ width: 11, height: 11, color: "rgba(0,0,0,0.25)", transition: "color 0.25s ease" }} strokeWidth={1.4} />
+                      </button>
+                      <div style={{ width: 1, flex: 1, background: "rgba(0,0,0,0.07)" }} />
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -676,6 +774,117 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 </div>
                 <p style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic", fontFamily: "Fraunces, Georgia, serif" }}>End of guide</p>
               </div>
+
+              {/* Connector to review */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 40 }}>
+                <div style={{ width: 1, flex: 1, background: "rgba(0,0,0,0.07)" }} />
+              </div>
+
+              {/* ── Review card ── */}
+              {!reviewSubmitted ? (
+                <div style={{ borderRadius: 20, background: "#fff", border: "1.5px solid #F0F0F0", overflow: "hidden", marginBottom: 8, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+                  <div style={{ height: 2, background: "linear-gradient(90deg, #D33333 0%, rgba(211,51,51,0.3) 100%)" }} />
+                  <div style={{ padding: "20px 18px 22px" }}>
+
+                    {/* Header */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16 }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 11, background: "rgba(211,51,51,0.07)", border: "1px solid rgba(211,51,51,0.13)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ fontSize: 16, color: "#D33333", lineHeight: 1 }}>★</span>
+                      </div>
+                      <div>
+                        <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontWeight: 300, fontSize: 17, color: "#18181b", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.2 }}>
+                          How was your experience?
+                        </h3>
+                        <p style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "Inter, system-ui, sans-serif", margin: "3px 0 0", lineHeight: 1 }}>
+                          Your feedback helps us improve
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Stars */}
+                    <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: reviewHover || reviewRating ? 10 : 20 }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          onClick={() => setReviewRating(star)}
+                          onMouseEnter={() => setReviewHover(star)}
+                          onMouseLeave={() => setReviewHover(0)}
+                          style={{
+                            background: "none", border: "none", cursor: "pointer", padding: 2,
+                            fontSize: 30, lineHeight: 1,
+                            color: star <= (reviewHover || reviewRating) ? "#D33333" : "#E8E4DF",
+                            transition: "transform 0.15s ease, color 0.15s ease",
+                            transform: star <= (reviewHover || reviewRating) ? "scale(1.18)" : "scale(1)",
+                          }}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Rating label */}
+                    {(reviewHover || reviewRating) > 0 && (
+                      <p style={{ fontSize: 10, color: "#D33333", textAlign: "center", fontFamily: "Inter, system-ui, sans-serif", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>
+                        {["", "Poor", "Fair", "Good", "Very good", "Excellent"][reviewHover || reviewRating]}
+                      </p>
+                    )}
+
+                    {/* Comment textarea */}
+                    {reviewRating > 0 && (
+                      <textarea
+                        value={reviewComment}
+                        onChange={e => setReviewComment(e.target.value)}
+                        placeholder="Tell us about your visit… (optional)"
+                        rows={3}
+                        style={{
+                          width: "100%", padding: "10px 12px",
+                          border: "1px solid #F0EDE8", borderRadius: 12,
+                          background: "#FAFAF9", fontSize: 12,
+                          color: "#3f3f46", fontFamily: "Inter, system-ui, sans-serif",
+                          resize: "none", outline: "none", marginBottom: 14,
+                          lineHeight: 1.6, boxSizing: "border-box",
+                        }}
+                      />
+                    )}
+
+                    {/* Submit */}
+                    {reviewRating > 0 && (
+                      <button
+                        onClick={() => setReviewSubmitted(true)}
+                        style={{
+                          width: "100%", padding: "13px 0", borderRadius: 14, border: "none",
+                          background: "#D33333", color: "#fff", fontSize: 14, fontWeight: 300,
+                          fontFamily: "Fraunces, Georgia, serif", letterSpacing: "0.01em",
+                          cursor: "pointer", boxShadow: "0 4px 18px rgba(211,51,51,0.22)",
+                          transition: "background 0.2s",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#b92b2b"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#D33333"; }}
+                      >
+                        Submit Review
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Thank-you state */
+                <div style={{ borderRadius: 20, background: "#fff", border: "1.5px solid #F0F0F0", padding: "30px 18px", textAlign: "center", marginBottom: 8, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(211,51,51,0.07)", border: "1px solid rgba(211,51,51,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                    <span style={{ fontSize: 20, color: "#D33333" }}>✓</span>
+                  </div>
+                  <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontWeight: 300, fontSize: 19, color: "#18181b", letterSpacing: "-0.02em", marginBottom: 8 }}>
+                    Thank you
+                  </h3>
+                  <p style={{ fontSize: 11, color: "#a1a1aa", fontFamily: "Inter, system-ui, sans-serif", lineHeight: 1.6, margin: 0 }}>
+                    Your feedback has been received.<br />We appreciate your time.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", gap: 3, marginTop: 14 }}>
+                    {Array.from({ length: reviewRating }).map((_, i) => (
+                      <span key={i} style={{ fontSize: 14, color: "#D33333" }}>★</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -698,6 +907,78 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
 
           {/* Map overlay */}
           {showMap && <PhoneMap userX={userX} userY={userY} onClose={() => setShowMap(false)} onSelectPOI={selectPOIFromMap} />}
+
+          {/* ── RAG drawer ── */}
+          {ragPOI && (
+            <div
+              style={{ position: "absolute", inset: 0, zIndex: 45, background: "rgba(0,0,0,0.32)", backdropFilter: "blur(4px)", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}
+              onClick={e => { if (e.target === e.currentTarget) { setRagPOI(null); setRagMessages([]); } }}
+            >
+              <div style={{ background: "#fff", borderRadius: "22px 22px 0 0", maxHeight: "72%", display: "flex", flexDirection: "column" }}>
+
+                {/* Handle */}
+                <div style={{ display: "flex", justifyContent: "center", paddingTop: 10, paddingBottom: 4, flexShrink: 0 }}>
+                  <div style={{ width: 34, height: 4, borderRadius: 2, background: "#E4E4E7" }} />
+                </div>
+
+                {/* Header */}
+                <div style={{ padding: "8px 18px 12px", borderBottom: "1px solid #F4F4F5", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                  <div>
+                    <p style={{ fontSize: 8, fontWeight: 700, color: "#D33333", textTransform: "uppercase", letterSpacing: "0.14em", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 2 }}>Ask about</p>
+                    <p style={{ fontSize: 14, fontWeight: 300, color: "#18181b", fontFamily: "Fraunces, Georgia, serif", letterSpacing: "-0.01em", margin: 0 }}>{ragPOI.title}</p>
+                  </div>
+                  <button onClick={() => { setRagPOI(null); setRagMessages([]); }} style={{ width: 28, height: 28, borderRadius: "50%", background: "#F4F4F5", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                    <X style={{ width: 13, height: 13, color: "#71717a" }} />
+                  </button>
+                </div>
+
+                {/* Messages */}
+                <div ref={ragScrollRef} style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10, scrollbarWidth: "none" }}>
+                  {ragMessages.length === 0 && (
+                    <div style={{ textAlign: "center", paddingTop: 12 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(211,51,51,0.07)", border: "1px solid rgba(211,51,51,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
+                        <Sparkles style={{ width: 14, height: 14, color: "#D33333" }} strokeWidth={1.5} />
+                      </div>
+                      <p style={{ fontSize: 11, color: "#a1a1aa", fontFamily: "Inter, system-ui, sans-serif", lineHeight: 1.6, marginBottom: 14 }}>
+                        Ask anything about this work — history, technique, symbolism…
+                      </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                        {["Who created it?", "Artistic technique", "Historical context"].map(s => (
+                          <button key={s} onClick={() => setRagInput(s)} style={{ padding: "5px 12px", borderRadius: 99, border: "1px solid rgba(211,51,51,0.18)", background: "rgba(211,51,51,0.04)", fontSize: 10, color: "#D33333", fontFamily: "Inter, system-ui, sans-serif", cursor: "pointer", fontWeight: 500 }}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {ragMessages.map((msg, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                      <div style={{ maxWidth: "82%", padding: "9px 13px", borderRadius: msg.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: msg.role === "user" ? "#D33333" : "#F4F4F5", fontSize: 12, color: msg.role === "user" ? "#fff" : "#3f3f46", fontFamily: "Inter, system-ui, sans-serif", lineHeight: 1.55 }}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Input */}
+                <div style={{ padding: "10px 14px 18px", borderTop: "1px solid #F4F4F5", display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                  <input
+                    value={ragInput}
+                    onChange={e => setRagInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") sendRagMessage(); }}
+                    placeholder={`Ask about ${ragPOI.title}…`}
+                    style={{ flex: 1, padding: "9px 14px", borderRadius: 99, border: "1px solid #E4E4E7", background: "#FAFAFA", fontSize: 12, outline: "none", fontFamily: "Inter, system-ui, sans-serif", color: "#18181b" }}
+                  />
+                  <button
+                    onClick={sendRagMessage}
+                    style={{ width: 34, height: 34, borderRadius: "50%", background: ragInput.trim() ? "#D33333" : "#E4E4E7", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: ragInput.trim() ? "pointer" : "default", transition: "background 0.2s", flexShrink: 0 }}
+                  >
+                    <Send style={{ width: 13, height: 13, color: ragInput.trim() ? "#fff" : "#a1a1aa", marginLeft: 1 }} strokeWidth={2} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

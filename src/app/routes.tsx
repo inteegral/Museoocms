@@ -13,6 +13,8 @@ import { Map } from "./components/studio/Map";
 import { Translations } from "./components/studio/Translations";
 import { VoiceTalent } from "./components/studio/VoiceTalent";
 import { Reviews } from "./components/studio/Reviews";
+import { Surveys } from "./components/studio/Surveys";
+import { Hunt } from "./components/studio/Hunt";
 import { Marketing } from "./components/studio/Marketing";
 import { Monetization } from "./components/studio/Monetization";
 import { VisitorPlayer } from "./components/visitor/VisitorPlayer";
@@ -37,6 +39,8 @@ export const router = createBrowserRouter([
       { path: "media/images", Component: MediaLibrary },
       { path: "voice-talent", Component: VoiceTalent },
       { path: "reviews", Component: Reviews },
+      { path: "surveys", Component: Surveys },
+      { path: "hunt", Component: Hunt },
       { path: "marketing", Component: Marketing },
       { path: "monetization", Component: Monetization },
       { path: "settings", Component: Settings },

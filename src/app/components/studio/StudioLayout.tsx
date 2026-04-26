@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
   Languages, Mic, Megaphone, DollarSign, MessageSquare,
-  FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone,
+  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { useState } from "react";
@@ -65,7 +65,14 @@ const navSections: NavSection[] = [
     items: [
       { key: "marketing", path: "/marketing", icon: Megaphone, label: "Marketing" },
       { key: "monetization", path: "/monetization", icon: DollarSign, label: "Monetization" },
+    ],
+  },
+  {
+    label: "Engagement",
+    items: [
       { key: "reviews", path: "/reviews", icon: MessageSquare, label: "Reviews", badge: { type: "dot", color: "#22c55e" } },
+      { key: "surveys", path: "/surveys", icon: ClipboardList, label: "Surveys" },
+      { key: "hunt", path: "/hunt", icon: Trophy, label: "Hunt" },
     ],
   },
 ];
