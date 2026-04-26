@@ -22,6 +22,10 @@ import { Profile } from "./components/studio/Profile";
 import { VisitorPlayer } from "./components/visitor/VisitorPlayer";
 import { TenantOnboarding } from "./components/onboarding/TenantOnboarding";
 import { UserOnboarding } from "./components/onboarding/UserOnboarding";
+import { SuperAdminLayout } from "./components/superadmin/SuperAdminLayout";
+import { SuperAdminDashboard } from "./components/superadmin/SuperAdminDashboard";
+import { SuperAdminTenants } from "./components/superadmin/SuperAdminTenants";
+import { SuperAdminTenantDetail } from "./components/superadmin/SuperAdminTenantDetail";
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +57,15 @@ export const router = createBrowserRouter([
   {
     path: "/visitor/:museumSlug/:guideId",
     Component: VisitorPlayer,
+  },
+  {
+    path: "/superadmin",
+    Component: SuperAdminLayout,
+    children: [
+      { index: true, Component: SuperAdminDashboard },
+      { path: "tenants", Component: SuperAdminTenants },
+      { path: "tenants/:id", Component: SuperAdminTenantDetail },
+    ],
   },
   {
     path: "/onboarding",

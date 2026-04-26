@@ -307,6 +307,15 @@ export function StudioLayout() {
               <LogOut className="size-4 flex-shrink-0" strokeWidth={1.5} />
               <span>Log out</span>
             </button>
+            <Link
+              to="/superadmin"
+              className="flex items-center gap-2.5 px-2 py-1.5 text-zinc-300 hover:text-zinc-500 hover:bg-zinc-50 rounded-md transition-colors text-[11px]"
+            >
+              <span className="size-4 flex-shrink-0 flex items-center justify-center">
+                <span className="size-1.5 rounded-full bg-zinc-300" />
+              </span>
+              <span>SuperAdmin</span>
+            </Link>
           </div>
         </div>
       </aside>
