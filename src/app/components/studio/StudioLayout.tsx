@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
   Languages, Mic, Megaphone, DollarSign, MessageSquare,
-  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users,
+  Trophy, ClipboardList, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
@@ -81,7 +81,6 @@ const navSections: NavSection[] = [
 ];
 
 const bottomItems = [
-  { path: "/documents", icon: FileText, label: "Knowledge Base" },
   { path: "/team", icon: Users, label: "Team" },
   { path: "/settings", icon: Settings, label: "Settings" },
 ];
@@ -269,19 +268,6 @@ export function StudioLayout() {
             </button>
           </div>
 
-          {/* Current user card */}
-          <div className="px-3 pb-2">
-            <Link to="/profile" className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-50 transition-colors group">
-              <div className="size-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[9px] flex-shrink-0">
-                {currentUser.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium text-zinc-800 truncate leading-tight">{currentUser.name}</p>
-                <p className="text-[10px] text-zinc-400 truncate">{currentUser.email}</p>
-              </div>
-            </Link>
-          </div>
-
           {/* Bottom */}
           <div className="px-2 py-3 border-t border-zinc-100 space-y-0.5">
             {bottomItems.map((item) => {
@@ -317,6 +303,20 @@ export function StudioLayout() {
               <span>SuperAdmin</span>
             </Link>
           </div>
+
+          {/* User card — pinned footer */}
+          <Link
+            to="/profile"
+            className="flex items-center gap-3 px-4 py-3 border-t border-zinc-100 hover:bg-zinc-50 transition-colors"
+          >
+            <div className="size-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[10px] flex-shrink-0">
+              {currentUser.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-semibold text-zinc-800 truncate leading-tight">{currentUser.name}</p>
+              <p className="text-[10px] text-zinc-400 truncate">{currentUser.email}</p>
+            </div>
+          </Link>
         </div>
       </aside>
 
