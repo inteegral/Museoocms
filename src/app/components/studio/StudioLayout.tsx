@@ -5,8 +5,11 @@ import {
   Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
+import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
 import { useState } from "react";
 import { GuidePreviewModal } from "./GuidePreviewModal";
+
+const currentUser = teamMembers.find((m) => m.id === CURRENT_USER_ID)!;
 
 type Badge =
   | { type: "count"; value: number }
@@ -264,6 +267,19 @@ export function StudioLayout() {
               <Smartphone className="size-4 flex-shrink-0" strokeWidth={1.5} />
               <span>Visitor Mode</span>
             </button>
+          </div>
+
+          {/* Current user card */}
+          <div className="px-3 pb-2">
+            <Link to="/profile" className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-50 transition-colors group">
+              <div className="size-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[9px] flex-shrink-0">
+                {currentUser.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-medium text-zinc-800 truncate leading-tight">{currentUser.name}</p>
+                <p className="text-[10px] text-zinc-400 truncate">{currentUser.email}</p>
+              </div>
+            </Link>
           </div>
 
           {/* Bottom */}

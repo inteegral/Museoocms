@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Plus, GripVertical, X, Globe, Sparkles, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList } from "lucide-react";
+import { ArrowLeft, Plus, GripVertical, X, Globe, Sparkles, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2 } from "lucide-react";
 import { mockGuides, mockPOIs, languages, mockSurveys } from "../../data/mockData";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { AIAssistant } from "./AIAssistant";
 import { POIEditor } from "./POIEditor";
 import { PageShell } from "./PageShell";
+import { getMemberByGuideId, teamMembers, type TeamMember } from "../../data/teamData";
 
 interface POI {
   id: string;
@@ -111,6 +112,11 @@ function GuideEditorContent() {
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
   const [creatingPOI, setCreatingPOI] = useState(false);
   const [linkedSurveyId, setLinkedSurveyId] = useState<string>("");
+  const [responsible, setResponsible] = useState<TeamMember | undefined>(() =>
+    id ? getMemberByGuideId(id) : undefined
+  );
+  const [responsiblePickerOpen, setResponsiblePickerOpen] = useState(false);
+  const assignableMembers = teamMembers.filter((m) => m.status === "active");
 
   const movePOI = (dragIndex: number, hoverIndex: number) => {
     const newPOIs = [...selectedPOIs];
@@ -460,6 +466,81 @@ function GuideEditorContent() {
                   {status === 'published' ? 'Update Guide' : 'Publish Guide'}
                 </button>
               </div>
+            </div>
+
+            {/* Responsible */}
+            <div className="p-5 border-b border-zinc-200">
+              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Responsible</p>
+              {responsible ? (
+                <div className="group/resp">
+                  <div className="flex items-start gap-2.5">
+                    {/* Avatar */}
+                    <div className="size-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center font-semibold text-[11px] flex-shrink-0">
+                      {responsible.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-zinc-800 leading-tight">{responsible.name}</p>
+                      <p className="text-[11px] text-zinc-400">{responsible.email}</p>
+                      {responsible.bio && (
+                        <p className="text-[11px] text-zinc-400 italic mt-1 leading-snug">{responsible.bio}</p>
+                      )}
+                    </div>
+                  </div>
+                  <button onClick={() => setResponsiblePickerOpen(true)}
+                    className="mt-2 text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors underline underline-offset-2"
+                  >
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setResponsiblePickerOpen(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2 border border-dashed border-zinc-200 rounded-lg text-[12px] text-zinc-400 hover:border-zinc-300 hover:text-zinc-600 hover:bg-zinc-50 transition-all"
+                >
+                  <UserCircle2 className="size-4" strokeWidth={1.5} />
+                  Assign responsible
+                </button>
+              )}
+
+              {/* Picker dropdown */}
+              {responsiblePickerOpen && (
+                <div className="fixed inset-0 bg-zinc-950/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                  onClick={() => setResponsiblePickerOpen(false)}
+                >
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-100">
+                      <p className="text-[13px] font-semibold text-zinc-900">Assign responsible</p>
+                      <button onClick={() => setResponsiblePickerOpen(false)} className="text-zinc-400 hover:text-zinc-700">
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                    <div className="p-2 max-h-64 overflow-y-auto">
+                      {assignableMembers.map((m) => (
+                        <button key={m.id}
+                          onClick={() => { setResponsible(m); setResponsiblePickerOpen(false); }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${responsible?.id === m.id ? "bg-violet-50" : "hover:bg-zinc-50"}`}
+                        >
+                          <div className="size-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center font-semibold text-[10px] flex-shrink-0">
+                            {m.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-medium text-zinc-800">{m.name}</p>
+                            {m.bio && <p className="text-[11px] text-zinc-400 truncate italic">{m.bio}</p>}
+                          </div>
+                          {responsible?.id === m.id && <CheckCircle2 className="size-4 text-violet-500 flex-shrink-0" />}
+                        </button>
+                      ))}
+                      <div className="h-px bg-zinc-100 my-1" />
+                      <button onClick={() => { setResponsible(undefined); setResponsiblePickerOpen(false); }}
+                        className="w-full px-3 py-2 text-[12px] text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 rounded-lg text-left transition-colors"
+                      >
+                        Remove assignment
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Metadata */}

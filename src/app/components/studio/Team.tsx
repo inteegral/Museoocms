@@ -5,86 +5,11 @@ import {
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockGuides } from "../../data/mockData";
+import { teamMembers as SOURCE, type TeamMember, type Role } from "../../data/teamData";
 
-type Role = "owner" | "admin" | "curator" | "viewer";
-type MemberStatus = "active" | "pending";
+type FilterRole = Role | "all";
 
-interface GuideAssignment {
-  id: string;
-  title: string;
-}
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  status: MemberStatus;
-  joinedAt: string;
-  assignments: GuideAssignment[];
-}
-
-const allGuides: GuideAssignment[] = mockGuides.map((g) => ({
-  id: g.id,
-  title: g.title,
-}));
-
-const INITIAL_MEMBERS: TeamMember[] = [
-  {
-    id: "m1",
-    name: "Marco Rossi",
-    email: "marco.rossi@museum.it",
-    role: "owner",
-    status: "active",
-    joinedAt: "Jan 2024",
-    assignments: [],
-  },
-  {
-    id: "m2",
-    name: "Anna Ferretti",
-    email: "anna.ferretti@museum.it",
-    role: "admin",
-    status: "active",
-    joinedAt: "Mar 2024",
-    assignments: [],
-  },
-  {
-    id: "m3",
-    name: "Luca Bianchi",
-    email: "luca.bianchi@museum.it",
-    role: "curator",
-    status: "active",
-    joinedAt: "Apr 2024",
-    assignments: [allGuides[0], allGuides[1]],
-  },
-  {
-    id: "m4",
-    name: "Sofia Chen",
-    email: "sofia.chen@museum.it",
-    role: "curator",
-    status: "active",
-    joinedAt: "Jun 2024",
-    assignments: [allGuides[2]],
-  },
-  {
-    id: "m5",
-    name: "Thomas Weber",
-    email: "thomas.weber@museum.it",
-    role: "viewer",
-    status: "active",
-    joinedAt: "Sep 2024",
-    assignments: [],
-  },
-  {
-    id: "m6",
-    name: "",
-    email: "giulia.moretti@partner.it",
-    role: "curator",
-    status: "pending",
-    joinedAt: "",
-    assignments: [],
-  },
-];
+const allGuides = mockGuides.map((g) => ({ id: g.id, title: g.title }));
 
 const ROLE_META: Record<Role, { label: string; color: string; bg: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number }> }> = {
   owner: { label: "Owner", color: "text-zinc-900", bg: "bg-zinc-900", icon: Crown },
@@ -129,11 +54,7 @@ function Avatar({ name, size = 32 }: { name: string; size?: number }) {
 
 // ── Assign Guides Modal ──────────────────────────────────────────────────────
 
-function AssignModal({
-  member,
-  onSave,
-  onClose,
-}: {
+function AssignModal({ member, onSave, onClose }: {
   member: TeamMember;
   onSave: (ids: string[]) => void;
   onClose: () => void;
@@ -151,14 +72,8 @@ function AssignModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
           <div>
             <h2 className="text-[14px] font-semibold text-zinc-900">Assign Audio Guides</h2>
@@ -172,36 +87,21 @@ function AssignModal({
           {allGuides.map((g) => {
             const active = selected.has(g.id);
             return (
-              <button
-                key={g.id}
-                onClick={() => toggle(g.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-                  active ? "bg-violet-50" : "hover:bg-zinc-50"
-                }`}
+              <button key={g.id} onClick={() => toggle(g.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${active ? "bg-violet-50" : "hover:bg-zinc-50"}`}
               >
-                <div className={`size-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
-                  active ? "bg-violet-600" : "border border-zinc-200"
-                }`}>
+                <div className={`size-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${active ? "bg-violet-600" : "border border-zinc-200"}`}>
                   {active && <Check className="size-3 text-white" strokeWidth={2.5} />}
                 </div>
                 <Headphones className={`size-4 flex-shrink-0 ${active ? "text-violet-500" : "text-zinc-300"}`} strokeWidth={1.5} />
-                <span className={`text-[13px] font-medium flex-1 ${active ? "text-violet-800" : "text-zinc-700"}`}>
-                  {g.title}
-                </span>
+                <span className={`text-[13px] font-medium flex-1 ${active ? "text-violet-800" : "text-zinc-700"}`}>{g.title}</span>
               </button>
             );
           })}
         </div>
         <div className="px-4 py-3 border-t border-zinc-100 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-[13px] text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={() => onSave([...selected])}
-            className="px-4 py-2 text-[13px] font-semibold bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
-          >
-            Save
-          </button>
+          <button onClick={onClose} className="px-4 py-2 text-[13px] text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors">Cancel</button>
+          <button onClick={() => onSave([...selected])} className="px-4 py-2 text-[13px] font-semibold bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors">Save</button>
         </div>
       </div>
     </div>
@@ -210,10 +110,7 @@ function AssignModal({
 
 // ── Invite Modal ─────────────────────────────────────────────────────────────
 
-function InviteModal({
-  onInvite,
-  onClose,
-}: {
+function InviteModal({ onInvite, onClose }: {
   onInvite: (email: string, role: Role, guideIds: string[]) => void;
   onClose: () => void;
 }) {
@@ -232,60 +129,34 @@ function InviteModal({
   const canSubmit = email.trim().includes("@");
 
   return (
-    <div
-      className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
           <h2 className="text-[14px] font-semibold text-zinc-900">Invite team member</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors">
-            <X className="size-4" />
-          </button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors"><X className="size-4" /></button>
         </div>
 
         <div className="px-5 py-4 space-y-4">
-          {/* Email */}
           <div>
-            <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
-              Email
-            </label>
+            <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">Email</label>
             <div className="flex items-center gap-2 border border-zinc-200 rounded-lg px-3 py-2 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100 transition-all">
               <Mail className="size-4 text-zinc-300 flex-shrink-0" />
-              <input
-                type="email"
-                placeholder="colleague@museum.it"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 text-[13px] text-zinc-800 bg-transparent border-none focus:outline-none placeholder:text-zinc-300"
-              />
+              <input type="email" placeholder="colleague@museum.it" value={email} onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 text-[13px] text-zinc-800 bg-transparent border-none focus:outline-none placeholder:text-zinc-300" />
             </div>
           </div>
 
-          {/* Role */}
           <div>
-            <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
-              Role
-            </label>
-            <div className="grid grid-cols-2 gap-1.5">
+            <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">Role</label>
+            <div className="grid grid-cols-3 gap-1.5">
               {(["admin", "curator", "viewer"] as Role[]).map((r) => {
                 const meta = ROLE_META[r];
                 const Icon = meta.icon;
                 return (
-                  <button
-                    key={r}
-                    onClick={() => setRole(r)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[12px] font-medium transition-all ${
-                      role === r
-                        ? "border-violet-300 bg-violet-50 text-violet-700"
-                        : "border-zinc-200 text-zinc-500 hover:bg-zinc-50"
-                    }`}
+                  <button key={r} onClick={() => setRole(r)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-medium transition-all ${role === r ? "border-violet-300 bg-violet-50 text-violet-700" : "border-zinc-200 text-zinc-500 hover:bg-zinc-50"}`}
                   >
-                    <Icon className="size-3.5" strokeWidth={1.5} />
-                    {meta.label}
+                    <Icon className="size-3.5" strokeWidth={1.5} />{meta.label}
                   </button>
                 );
               })}
@@ -297,33 +168,20 @@ function InviteModal({
             </p>
           </div>
 
-          {/* Guide assignment (curators only) */}
           {role === "curator" && (
             <div>
-              <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
-                Assign guides
-              </label>
+              <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">Assign guides</label>
               <div className="space-y-1">
                 {allGuides.map((g) => {
                   const active = selectedGuides.has(g.id);
                   return (
-                    <button
-                      key={g.id}
-                      onClick={() => toggleGuide(g.id)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all text-left ${
-                        active
-                          ? "border-violet-200 bg-violet-50"
-                          : "border-transparent hover:bg-zinc-50"
-                      }`}
+                    <button key={g.id} onClick={() => toggleGuide(g.id)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all text-left ${active ? "border-violet-200 bg-violet-50" : "border-transparent hover:bg-zinc-50"}`}
                     >
-                      <div className={`size-4 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
-                        active ? "bg-violet-600" : "border border-zinc-200"
-                      }`}>
+                      <div className={`size-4 rounded flex items-center justify-center flex-shrink-0 transition-colors ${active ? "bg-violet-600" : "border border-zinc-200"}`}>
                         {active && <Check className="size-2.5 text-white" strokeWidth={2.5} />}
                       </div>
-                      <span className={`text-[12px] font-medium flex-1 ${active ? "text-violet-800" : "text-zinc-600"}`}>
-                        {g.title}
-                      </span>
+                      <span className={`text-[12px] font-medium flex-1 ${active ? "text-violet-800" : "text-zinc-600"}`}>{g.title}</span>
                     </button>
                   );
                 })}
@@ -333,12 +191,8 @@ function InviteModal({
         </div>
 
         <div className="px-5 py-3 border-t border-zinc-100 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-[13px] text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors">
-            Cancel
-          </button>
-          <button
-            disabled={!canSubmit}
-            onClick={() => canSubmit && onInvite(email.trim(), role, [...selectedGuides])}
+          <button onClick={onClose} className="px-4 py-2 text-[13px] text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors">Cancel</button>
+          <button disabled={!canSubmit} onClick={() => canSubmit && onInvite(email.trim(), role, [...selectedGuides])}
             className="px-4 py-2 text-[13px] font-semibold bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Send invite
@@ -351,10 +205,10 @@ function InviteModal({
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
-type FilterRole = Role | "all";
-
 export function Team() {
-  const [members, setMembers] = useState<TeamMember[]>(INITIAL_MEMBERS);
+  const [members, setMembers] = useState<TeamMember[]>(() =>
+    SOURCE.map((m) => ({ ...m, assignments: [...m.assignments] }))
+  );
   const [filter, setFilter] = useState<FilterRole>("all");
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<TeamMember | null>(null);
@@ -376,6 +230,7 @@ export function Team() {
       role,
       status: "pending",
       joinedAt: "",
+      bio: "",
       assignments: allGuides.filter((g) => guideIds.includes(g.id)),
     };
     setMembers((prev) => [...prev, newMember]);
@@ -384,11 +239,7 @@ export function Team() {
 
   const handleSaveAssignments = (memberId: string, guideIds: string[]) => {
     setMembers((prev) =>
-      prev.map((m) =>
-        m.id === memberId
-          ? { ...m, assignments: allGuides.filter((g) => guideIds.includes(g.id)) }
-          : m
-      )
+      prev.map((m) => m.id === memberId ? { ...m, assignments: allGuides.filter((g) => guideIds.includes(g.id)) } : m)
     );
     setAssignTarget(null);
   };
@@ -400,11 +251,7 @@ export function Team() {
 
   const handleChangeRole = (memberId: string, role: Role) => {
     setMembers((prev) =>
-      prev.map((m) =>
-        m.id === memberId
-          ? { ...m, role, assignments: role === "curator" ? m.assignments : [] }
-          : m
-      )
+      prev.map((m) => m.id === memberId ? { ...m, role, assignments: role === "curator" ? m.assignments : [] } : m)
     );
     setMenuOpen(null);
   };
@@ -431,8 +278,7 @@ export function Team() {
               <p className="text-[13px] text-zinc-400 mt-0.5">Manage members and guide assignments</p>
             </div>
           </div>
-          <button
-            onClick={() => setInviteOpen(true)}
+          <button onClick={() => setInviteOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-700 text-white text-[13px] font-semibold rounded-lg transition-colors"
           >
             <UserPlus className="size-4" strokeWidth={1.5} />
@@ -457,21 +303,11 @@ export function Team() {
         {/* Filter tabs */}
         <div className="flex items-center gap-1 mb-4">
           {filterTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
-                filter === tab.key
-                  ? "bg-zinc-900 text-white"
-                  : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
-              }`}
+            <button key={tab.key} onClick={() => setFilter(tab.key)}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${filter === tab.key ? "bg-zinc-900 text-white" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"}`}
             >
               {tab.label}
-              {tab.count > 0 && (
-                <span className={`ml-1.5 text-[10px] ${filter === tab.key ? "text-zinc-400" : "text-zinc-400"}`}>
-                  {tab.count}
-                </span>
-              )}
+              {tab.count > 0 && <span className="ml-1.5 text-[10px] opacity-60">{tab.count}</span>}
             </button>
           ))}
         </div>
@@ -484,18 +320,13 @@ export function Team() {
             const isMenuOpen = menuOpen === member.id;
 
             return (
-              <div
-                key={member.id}
-                className={`flex items-center gap-4 px-5 py-4 ${
-                  i < displayed.length - 1 ? "border-b border-zinc-50" : ""
-                } ${isPending ? "bg-amber-50/40" : "hover:bg-zinc-50/60"} transition-colors`}
+              <div key={member.id}
+                className={`flex items-start gap-4 px-5 py-4 ${i < displayed.length - 1 ? "border-b border-zinc-50" : ""} ${isPending ? "bg-amber-50/40" : "hover:bg-zinc-50/60"} transition-colors`}
               >
                 {/* Avatar */}
-                <div className="relative flex-shrink-0">
+                <div className="relative flex-shrink-0 mt-0.5">
                   <Avatar name={member.name} size={36} />
-                  {isPending && (
-                    <div className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-amber-400 border-2 border-white" />
-                  )}
+                  {isPending && <div className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-amber-400 border-2 border-white" />}
                 </div>
 
                 {/* Info */}
@@ -506,19 +337,21 @@ export function Team() {
                     </span>
                     <RoleBadge role={member.role} />
                     {isPending && (
-                      <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full">
-                        Invite sent
-                      </span>
+                      <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full">Invite sent</span>
                     )}
                   </div>
                   <p className="text-[12px] text-zinc-400 mt-0.5 truncate">{member.email}</p>
+
+                  {/* Bio */}
+                  {member.bio && (
+                    <p className="text-[11px] text-zinc-400 italic mt-1 leading-snug line-clamp-1">{member.bio}</p>
+                  )}
+
+                  {/* Guide assignments */}
                   {isCurator && member.assignments.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
                       {member.assignments.map((g) => (
-                        <span
-                          key={g.id}
-                          className="inline-flex items-center gap-1 text-[10px] font-medium text-violet-700 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full"
-                        >
+                        <span key={g.id} className="inline-flex items-center gap-1 text-[10px] font-medium text-violet-700 bg-violet-50 border border-violet-100 px-2 py-0.5 rounded-full">
                           <Headphones className="size-2.5" strokeWidth={1.5} />
                           {g.title}
                         </span>
@@ -532,16 +365,13 @@ export function Team() {
 
                 {/* Joined */}
                 {member.joinedAt && (
-                  <span className="text-[11px] text-zinc-300 flex-shrink-0 hidden sm:block">
-                    Since {member.joinedAt}
-                  </span>
+                  <span className="text-[11px] text-zinc-300 flex-shrink-0 hidden sm:block pt-0.5">{member.joinedAt}</span>
                 )}
 
-                {/* Assign button (curators) */}
+                {/* Assign button */}
                 {isCurator && !isPending && (
-                  <button
-                    onClick={() => setAssignTarget(member)}
-                    className="flex-shrink-0 px-3 py-1.5 text-[12px] font-medium text-violet-600 border border-violet-200 rounded-lg hover:bg-violet-50 transition-colors"
+                  <button onClick={() => setAssignTarget(member)}
+                    className="flex-shrink-0 px-3 py-1.5 text-[12px] font-medium text-violet-600 border border-violet-200 rounded-lg hover:bg-violet-50 transition-colors mt-0.5"
                   >
                     Manage guides
                   </button>
@@ -549,9 +379,8 @@ export function Team() {
 
                 {/* Context menu */}
                 {member.role !== "owner" && (
-                  <div className="relative flex-shrink-0">
-                    <button
-                      onClick={() => setMenuOpen(isMenuOpen ? null : member.id)}
+                  <div className="relative flex-shrink-0 mt-0.5">
+                    <button onClick={() => setMenuOpen(isMenuOpen ? null : member.id)}
                       className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-md transition-colors"
                     >
                       <MoreHorizontal className="size-4" />
@@ -562,14 +391,8 @@ export function Team() {
                           const meta = ROLE_META[r];
                           const Icon = meta.icon;
                           return (
-                            <button
-                              key={r}
-                              onClick={() => handleChangeRole(member.id, r)}
-                              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] transition-colors ${
-                                member.role === r
-                                  ? "text-zinc-900 font-semibold bg-zinc-50"
-                                  : "text-zinc-600 hover:bg-zinc-50"
-                              }`}
+                            <button key={r} onClick={() => handleChangeRole(member.id, r)}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] transition-colors ${member.role === r ? "text-zinc-900 font-semibold bg-zinc-50" : "text-zinc-600 hover:bg-zinc-50"}`}
                             >
                               <Icon className="size-3.5" strokeWidth={1.5} />
                               {meta.label}
@@ -578,8 +401,7 @@ export function Team() {
                           );
                         })}
                         <div className="h-px bg-zinc-100 my-1" />
-                        <button
-                          onClick={() => handleRemove(member.id)}
+                        <button onClick={() => handleRemove(member.id)}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-red-600 hover:bg-red-50 transition-colors"
                         >
                           <Trash2 className="size-3.5" strokeWidth={1.5} />
@@ -628,25 +450,13 @@ export function Team() {
         </div>
       </div>
 
-      {/* Modals */}
       {assignTarget && (
-        <AssignModal
-          member={assignTarget}
-          onSave={(ids) => handleSaveAssignments(assignTarget.id, ids)}
-          onClose={() => setAssignTarget(null)}
-        />
+        <AssignModal member={assignTarget} onSave={(ids) => handleSaveAssignments(assignTarget.id, ids)} onClose={() => setAssignTarget(null)} />
       )}
       {inviteOpen && (
-        <InviteModal
-          onInvite={handleInvite}
-          onClose={() => setInviteOpen(false)}
-        />
+        <InviteModal onInvite={handleInvite} onClose={() => setInviteOpen(false)} />
       )}
-
-      {/* Close menu on outside click */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
-      )}
+      {menuOpen && <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />}
     </PageShell>
   );
 }
