@@ -26,6 +26,8 @@ import { SuperAdminLayout } from "./components/superadmin/SuperAdminLayout";
 import { SuperAdminDashboard } from "./components/superadmin/SuperAdminDashboard";
 import { SuperAdminTenants } from "./components/superadmin/SuperAdminTenants";
 import { SuperAdminTenantDetail } from "./components/superadmin/SuperAdminTenantDetail";
+import { SuperAdminPlans } from "./components/superadmin/SuperAdminPlans";
+import { SuperAdminBilling } from "./components/superadmin/SuperAdminBilling";
 
 export const router = createBrowserRouter([
   {
@@ -65,6 +67,8 @@ export const router = createBrowserRouter([
       { index: true, Component: SuperAdminDashboard },
       { path: "tenants", Component: SuperAdminTenants },
       { path: "tenants/:id", Component: SuperAdminTenantDetail },
+      { path: "plans", Component: SuperAdminPlans },
+      { path: "billing", Component: SuperAdminBilling },
     ],
   },
   {

@@ -1,9 +1,11 @@
 import { Outlet, Link, useLocation } from "react-router";
-import { LayoutDashboard, Building2, LogOut, ChevronRight, Shield } from "lucide-react";
+import { LayoutDashboard, Building2, LogOut, Shield, Layers, CreditCard } from "lucide-react";
 
 const navItems = [
   { path: "/superadmin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { path: "/superadmin/tenants", label: "Organizations", icon: Building2, exact: false },
+  { path: "/superadmin/plans", label: "Plans & Features", icon: Layers, exact: false },
+  { path: "/superadmin/billing", label: "Billing", icon: CreditCard, exact: false },
 ];
 
 export function SuperAdminLayout() {
