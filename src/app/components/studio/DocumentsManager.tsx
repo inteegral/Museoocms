@@ -1,16 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  FileText,
-  Upload,
-  Send,
-  Lightbulb,
-  BookOpen,
-  X,
-  Sparkles,
-  Tag,
-  MapPin,
-  Check,
-  Search,
+  FileText, Upload, Send, Lightbulb, BookOpen,
+  X, Sparkles, Tag, MapPin, Check, Search, Plus,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockPOIs, mockGuides } from "../../data/mockData";
@@ -28,7 +19,6 @@ type ChatMessage = {
   role: "user" | "ai";
   text: string;
   source?: string;
-  saved?: boolean;
 };
 
 type Idea = {
@@ -101,7 +91,6 @@ const AI_RESPONSES: { trigger: string; text: string; source: string }[] = [
   },
 ];
 
-// Mock mapping: which guide each POI belongs to
 const POI_GUIDE_MAP: Record<string, string> = {
   "poi-1": "guide-1",
   "poi-2": "guide-1",
@@ -134,109 +123,91 @@ function PoiPickerModal({
 }) {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
-
-  const filtered = mockPOIs.filter((p) =>
-    p.title.toLowerCase().includes(search.toLowerCase())
-  );
-
+  const filtered = mockPOIs.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()));
   const selectedPoi = mockPOIs.find((p) => p.id === selected);
 
   return (
-    <div
-      className="fixed inset-0 bg-zinc-950/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
-        style={{ maxHeight: 520 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
+    <div className="fixed inset-0 bg-zinc-950/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col" style={{ maxHeight: 520 }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
           <div>
             <h2 className="text-[14px] font-semibold text-zinc-900">Use in a POI</h2>
             <p className="text-[11px] text-zinc-400 mt-0.5">Choose which POI to send this idea to</p>
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors">
-            <X className="size-4" />
-          </button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors"><X className="size-4" /></button>
         </div>
-
-        {/* Search */}
         <div className="px-4 py-3 border-b border-zinc-100">
           <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 focus-within:border-zinc-400 transition-colors">
             <Search className="size-3.5 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
-            <input
-              autoFocus
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search POIs…"
-              className="flex-1 bg-transparent outline-none text-[13px] text-zinc-800 placeholder-zinc-400"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="text-zinc-400 hover:text-zinc-600">
-                <X className="size-3" />
-              </button>
-            )}
+            <input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search POIs…" className="flex-1 bg-transparent outline-none text-[13px] text-zinc-800 placeholder-zinc-400" />
+            {search && <button onClick={() => setSearch("")} className="text-zinc-400 hover:text-zinc-600"><X className="size-3" /></button>}
           </div>
         </div>
-
-        {/* POI list */}
         <div className="flex-1 overflow-y-auto py-1.5">
-          {filtered.length === 0 && (
-            <div className="text-center py-8 text-[12px] text-zinc-400">No POIs match "{search}"</div>
-          )}
+          {filtered.length === 0 && <div className="text-center py-8 text-[12px] text-zinc-400">No POIs match "{search}"</div>}
           {filtered.map((poi) => {
-            const guideId = POI_GUIDE_MAP[poi.id];
-            const guide = mockGuides.find((g) => g.id === guideId);
+            const guide = mockGuides.find((g) => g.id === POI_GUIDE_MAP[poi.id]);
             const isSelected = selected === poi.id;
             return (
-              <button
-                key={poi.id}
-                onClick={() => setSelected(poi.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                  isSelected ? "bg-blue-50" : "hover:bg-zinc-50"
-                }`}
-              >
-                <div className={`size-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                  isSelected ? "bg-blue-100 text-blue-600" : "bg-zinc-100 text-zinc-500"
-                }`}>
+              <button key={poi.id} onClick={() => setSelected(poi.id)} className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${isSelected ? "bg-blue-50" : "hover:bg-zinc-50"}`}>
+                <div className={`size-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-blue-100 text-blue-600" : "bg-zinc-100 text-zinc-500"}`}>
                   <MapPin className="size-4" strokeWidth={1.5} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-[13px] font-medium truncate ${isSelected ? "text-blue-700" : "text-zinc-800"}`}>
-                    {poi.title}
-                  </p>
-                  {guide && (
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">{guide.title}</p>
-                  )}
+                  <p className={`text-[13px] font-medium truncate ${isSelected ? "text-blue-700" : "text-zinc-800"}`}>{poi.title}</p>
+                  {guide && <p className="text-[11px] text-zinc-400 truncate mt-0.5">{guide.title}</p>}
                 </div>
                 {isSelected && <Check className="size-4 text-blue-500 flex-shrink-0" strokeWidth={2.5} />}
               </button>
             );
           })}
         </div>
-
-        {/* Footer */}
         <div className="px-4 py-3 border-t border-zinc-100 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-zinc-400 truncate">
-            {selectedPoi ? `Selected: ${selectedPoi.title}` : "No POI selected"}
-          </p>
+          <p className="text-[11px] text-zinc-400 truncate">{selectedPoi ? `Selected: ${selectedPoi.title}` : "No POI selected"}</p>
           <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={onClose}
-              className="px-3 py-1.5 rounded-lg text-[12px] text-zinc-500 hover:bg-zinc-100 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              disabled={!selected}
-              onClick={() => selectedPoi && onConfirm(selectedPoi.id, selectedPoi.title)}
-              className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-30 transition-colors"
-            >
-              Apply to POI
-            </button>
+            <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] text-zinc-500 hover:bg-zinc-100 transition-colors">Cancel</button>
+            <button disabled={!selected} onClick={() => selectedPoi && onConfirm(selectedPoi.id, selectedPoi.title)} className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-30 transition-colors">Apply to POI</button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SaveIdeaModal({
+  defaultTitle,
+  onSave,
+  onClose,
+}: {
+  defaultTitle: string;
+  onSave: (title: string) => void;
+  onClose: () => void;
+}) {
+  const [title, setTitle] = useState(defaultTitle);
+  return (
+    <div className="fixed inset-0 bg-zinc-950/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+          <div className="flex items-center gap-2">
+            <Lightbulb className="size-4 text-amber-500" strokeWidth={1.5} />
+            <h2 className="text-[14px] font-semibold text-zinc-900">Save as idea</h2>
+          </div>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors"><X className="size-4" /></button>
+        </div>
+        <div className="px-5 py-4">
+          <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest block mb-2">Title</label>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && title.trim() && onSave(title.trim())}
+            placeholder="Give this idea a name…"
+            className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-[13px] text-zinc-800 placeholder-zinc-400 outline-none focus:border-zinc-400 transition-colors"
+          />
+        </div>
+        <div className="px-5 pb-4 flex gap-2 justify-end">
+          <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] text-zinc-500 hover:bg-zinc-100 transition-colors">Cancel</button>
+          <button disabled={!title.trim()} onClick={() => title.trim() && onSave(title.trim())} className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-30 transition-colors">Save idea</button>
         </div>
       </div>
     </div>
@@ -247,12 +218,17 @@ function IdeaCard({
   idea,
   onDelete,
   onUseInPoi,
+  onAddTag,
+  onRemoveTag,
 }: {
   idea: Idea;
   onDelete: () => void;
   onUseInPoi: (poiId: string, poiTitle: string) => void;
+  onAddTag: (tag: string) => void;
+  onRemoveTag: (tag: string) => void;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [tagInput, setTagInput] = useState("");
 
   return (
     <div className="bg-zinc-50 rounded-xl border border-zinc-200 p-3 relative">
@@ -264,20 +240,41 @@ function IdeaCard({
       </div>
       <p className="text-[11px] text-zinc-400 leading-relaxed mb-2 italic">"{idea.excerpt}"</p>
       {idea.source && (
-        <div className="flex items-center gap-1 mb-2">
+        <div className="flex items-center gap-1 mb-2.5">
           <BookOpen className="size-2.5 text-zinc-300 flex-shrink-0" strokeWidth={1.5} />
           <span className="text-[10px] text-zinc-400 truncate">{idea.source}</span>
         </div>
       )}
-      <div className="flex flex-wrap gap-1 mb-2.5">
+
+      {/* Tags */}
+      <div className="flex flex-wrap gap-1 mb-2">
         {idea.tags.map((t) => (
-          <span key={t} className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white border border-zinc-200 text-zinc-500">
+          <span key={t} className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white border border-zinc-200 text-zinc-500 group">
             <Tag className="size-2" strokeWidth={1.5} />
             {t}
+            <button onClick={() => onRemoveTag(t)} className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 hover:text-red-400">
+              <X className="size-2" />
+            </button>
           </span>
         ))}
+        <div className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-dashed border-zinc-300 text-zinc-400 hover:border-zinc-400 transition-colors">
+          <Plus className="size-2.5" strokeWidth={2} />
+          <input
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && tagInput.trim()) {
+                onAddTag(tagInput.trim());
+                setTagInput("");
+              }
+            }}
+            placeholder="tag"
+            className="bg-transparent outline-none w-10 placeholder-zinc-400"
+          />
+        </div>
       </div>
 
+      {/* Use in POI */}
       {idea.usedInPoi ? (
         <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
           <Check className="size-3" strokeWidth={2.5} />
@@ -285,19 +282,13 @@ function IdeaCard({
         </div>
       ) : (
         <>
-          <button
-            onClick={() => setPickerOpen(true)}
-            className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors font-medium"
-          >
+          <button onClick={() => setPickerOpen(true)} className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors font-medium">
             <MapPin className="size-3" strokeWidth={1.5} />
             Use in a POI
           </button>
           {pickerOpen && (
             <PoiPickerModal
-              onConfirm={(poiId, poiTitle) => {
-                onUseInPoi(poiId, poiTitle);
-                setPickerOpen(false);
-              }}
+              onConfirm={(poiId, poiTitle) => { onUseInPoi(poiId, poiTitle); setPickerOpen(false); }}
               onClose={() => setPickerOpen(false)}
             />
           )}
@@ -315,62 +306,80 @@ export function DocumentsManager() {
   const [thinking, setThinking] = useState(false);
   const [ideas, setIdeas] = useState<Idea[]>(INITIAL_IDEAS);
   const [ideasOpen, setIdeasOpen] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [saveTitle, setSaveTitle] = useState("");
+  const [selectionTooltip, setSelectionTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [pendingSave, setPendingSave] = useState<{ text: string; source?: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
 
+  // Dismiss selection tooltip on scroll or outside click
+  useEffect(() => {
+    const dismiss = () => setSelectionTooltip(null);
+    window.addEventListener("mousedown", dismiss);
+    return () => window.removeEventListener("mousedown", dismiss);
+  }, []);
+
+  function handleMessagesMouseUp(e: React.MouseEvent) {
+    e.stopPropagation(); // prevent window mousedown from firing immediately
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+      setSelectionTooltip(null);
+      return;
+    }
+    const text = sel.toString().trim();
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    setSelectionTooltip({ text, x: rect.left + rect.width / 2, y: rect.top });
+  }
+
   function sendMessage() {
     const text = input.trim();
     if (!text || thinking) return;
     setInput("");
-    const userMsg: ChatMessage = { id: `m${Date.now()}`, role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [...prev, { id: `m${Date.now()}`, role: "user", text }]);
     setThinking(true);
     setTimeout(() => {
       const lower = text.toLowerCase();
       const match = AI_RESPONSES.find((r) => lower.includes(r.trigger));
-      const aiMsg: ChatMessage = {
+      setMessages((prev) => [...prev, {
         id: `m${Date.now() + 1}`,
         role: "ai",
-        text: match
-          ? match.text
-          : "I searched through your documents but didn't find a specific reference to that topic. Try rephrasing, or upload more documents to expand the knowledge base.",
+        text: match ? match.text : "I searched through your documents but didn't find a specific reference to that topic. Try rephrasing, or upload more documents to expand the knowledge base.",
         source: match?.source,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+      }]);
       setThinking(false);
     }, 1200);
   }
 
-  function startSave(msgId: string, excerpt: string) {
-    setSavingId(msgId);
-    setSaveTitle(excerpt.slice(0, 60));
-  }
-
-  function usePoiForIdea(ideaId: string, poiTitle: string) {
-    setIdeas((prev) =>
-      prev.map((i) => (i.id === ideaId ? { ...i, usedInPoi: poiTitle } : i))
-    );
-  }
-
-  function confirmSave(msg: ChatMessage) {
-    if (!saveTitle.trim()) return;
+  function saveIdea(title: string) {
+    if (!pendingSave) return;
     const newIdea: Idea = {
       id: `i${Date.now()}`,
-      title: saveTitle.trim(),
-      excerpt: msg.text.slice(0, 120),
-      source: msg.source,
+      title,
+      excerpt: pendingSave.text.slice(0, 140),
+      source: pendingSave.source,
       tags: [],
     };
     setIdeas((prev) => [newIdea, ...prev]);
-    setSavingId(null);
-    setSaveTitle("");
-    setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, saved: true } : m)));
+    setPendingSave(null);
+    setSelectionTooltip(null);
     setIdeasOpen(true);
+    window.getSelection()?.removeAllRanges();
+  }
+
+  function usePoiForIdea(ideaId: string, poiTitle: string) {
+    setIdeas((prev) => prev.map((i) => (i.id === ideaId ? { ...i, usedInPoi: poiTitle } : i)));
+  }
+
+  function addTag(ideaId: string, tag: string) {
+    setIdeas((prev) => prev.map((i) => i.id === ideaId && !i.tags.includes(tag) ? { ...i, tags: [...i.tags, tag] } : i));
+  }
+
+  function removeTag(ideaId: string, tag: string) {
+    setIdeas((prev) => prev.map((i) => i.id === ideaId ? { ...i, tags: i.tags.filter((t) => t !== tag) } : i));
   }
 
   return (
@@ -382,46 +391,27 @@ export function DocumentsManager() {
             <h1 className="text-[22px] font-semibold text-zinc-900">Knowledge Base</h1>
             <p className="text-[13px] text-zinc-500 mt-0.5">Chat with your documents and capture ideas</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-[12px] font-medium transition-colors">
-              <Upload className="size-3.5" strokeWidth={1.5} />
-              Upload document
-            </button>
-          </div>
+          <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-[12px] font-medium transition-colors">
+            <Upload className="size-3.5" strokeWidth={1.5} />
+            Upload document
+          </button>
         </div>
 
         {/* 3-panel card */}
-        <div
-          className="flex rounded-2xl border border-zinc-200 overflow-hidden bg-white shadow-sm"
-          style={{ height: "calc(100vh - 220px)", minHeight: 480 }}
-        >
+        <div className="flex rounded-2xl border border-zinc-200 overflow-hidden bg-white shadow-sm" style={{ height: "calc(100vh - 220px)", minHeight: 480 }}>
+
           {/* Left: Document list */}
           <aside className="w-[200px] flex-shrink-0 flex flex-col border-r border-zinc-100">
             <div className="px-3 py-3 border-b border-zinc-100">
               <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Documents</p>
             </div>
             <div className="flex-1 overflow-y-auto py-1.5">
-              <button
-                onClick={() => setActiveDocId(null)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
-                  activeDocId === null
-                    ? "bg-zinc-100 text-zinc-900"
-                    : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
-                }`}
-              >
+              <button onClick={() => setActiveDocId(null)} className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${activeDocId === null ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"}`}>
                 <Sparkles className="size-3.5 flex-shrink-0 text-zinc-400" strokeWidth={1.5} />
                 <span className="text-[12px] font-medium">All documents</span>
               </button>
               {docs.map((doc) => (
-                <button
-                  key={doc.id}
-                  onClick={() => setActiveDocId(doc.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
-                    activeDocId === doc.id
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
-                  }`}
-                >
+                <button key={doc.id} onClick={() => setActiveDocId(doc.id)} className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${activeDocId === doc.id ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"}`}>
                   <DocIcon type={doc.type} />
                   <span className="text-[11px] font-medium leading-tight truncate flex-1">{doc.name}</span>
                 </button>
@@ -439,12 +429,8 @@ export function DocumentsManager() {
               {activeDocId ? (
                 <>
                   <DocIcon type={docs.find((d) => d.id === activeDocId)!.type} />
-                  <span className="text-[12px] font-medium text-zinc-700 truncate">
-                    {docs.find((d) => d.id === activeDocId)?.name}
-                  </span>
-                  <button onClick={() => setActiveDocId(null)} className="ml-1 text-zinc-400 hover:text-zinc-600">
-                    <X className="size-3" />
-                  </button>
+                  <span className="text-[12px] font-medium text-zinc-700 truncate">{docs.find((d) => d.id === activeDocId)?.name}</span>
+                  <button onClick={() => setActiveDocId(null)} className="ml-1 text-zinc-400 hover:text-zinc-600"><X className="size-3" /></button>
                 </>
               ) : (
                 <>
@@ -455,11 +441,7 @@ export function DocumentsManager() {
               <div className="ml-auto">
                 <button
                   onClick={() => setIdeasOpen((v) => !v)}
-                  className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors ${
-                    ideasOpen
-                      ? "bg-amber-50 text-amber-700 border border-amber-200"
-                      : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
-                  }`}
+                  className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors ${ideasOpen ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
                 >
                   <Lightbulb className="size-3" strokeWidth={1.5} />
                   Ideas {ideas.length > 0 && `(${ideas.length})`}
@@ -468,12 +450,16 @@ export function DocumentsManager() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            <div
+              ref={messagesRef}
+              className="flex-1 overflow-y-auto px-5 py-5 space-y-5"
+              onMouseUp={handleMessagesMouseUp}
+            >
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "ai" ? (
-                    <div className="max-w-[520px] w-full">
-                      <div className="bg-zinc-50 border border-zinc-200 rounded-2xl rounded-tl-sm px-4 py-3">
+                    <div className="mr-14 max-w-[480px] w-full">
+                      <div className="bg-zinc-50 border border-zinc-200 rounded-2xl rounded-tl-sm px-4 py-3 select-text">
                         <p className="text-[13px] text-zinc-800 leading-relaxed">{msg.text}</p>
                         {msg.source && (
                           <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-zinc-200">
@@ -482,43 +468,10 @@ export function DocumentsManager() {
                           </div>
                         )}
                       </div>
-                      {msg.source && !msg.saved && savingId !== msg.id && (
-                        <button
-                          onClick={() => startSave(msg.id, msg.text)}
-                          className="mt-1.5 flex items-center gap-1 text-[11px] text-zinc-400 hover:text-amber-600 transition-colors"
-                        >
-                          <Lightbulb className="size-3" strokeWidth={1.5} />
-                          Save idea
-                        </button>
-                      )}
-                      {msg.saved && (
-                        <p className="mt-1.5 text-[11px] text-emerald-500 flex items-center gap-1">
-                          <span className="size-1.5 rounded-full bg-emerald-400 inline-block" />
-                          Saved to ideas
-                        </p>
-                      )}
-                      {savingId === msg.id && (
-                        <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex gap-2 items-center">
-                          <input
-                            autoFocus
-                            value={saveTitle}
-                            onChange={(e) => setSaveTitle(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && confirmSave(msg)}
-                            placeholder="Title for this idea…"
-                            className="flex-1 text-[12px] bg-transparent outline-none text-zinc-800 placeholder-zinc-400"
-                          />
-                          <button onClick={() => confirmSave(msg)} className="text-[11px] font-medium text-amber-700 hover:text-amber-900">
-                            Save
-                          </button>
-                          <button onClick={() => setSavingId(null)} className="text-zinc-400 hover:text-zinc-600">
-                            <X className="size-3" />
-                          </button>
-                        </div>
-                      )}
                     </div>
                   ) : (
-                    <div className="max-w-[420px]">
-                      <div className="bg-zinc-100 rounded-2xl rounded-tr-sm px-4 py-3">
+                    <div className="ml-14 max-w-[420px]">
+                      <div className="bg-zinc-100 rounded-2xl rounded-tr-sm px-4 py-3 select-text">
                         <p className="text-[13px] text-zinc-700 leading-relaxed">{msg.text}</p>
                       </div>
                     </div>
@@ -528,14 +481,10 @@ export function DocumentsManager() {
 
               {thinking && (
                 <div className="flex justify-start">
-                  <div className="bg-zinc-50 border border-zinc-200 rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div className="mr-14 bg-zinc-50 border border-zinc-200 rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex gap-1.5 items-center h-4">
                       {[0, 1, 2].map((i) => (
-                        <span
-                          key={i}
-                          className="size-1.5 rounded-full bg-zinc-300"
-                          style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
-                        />
+                        <span key={i} className="size-1.5 rounded-full bg-zinc-300" style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
                       ))}
                     </div>
                   </div>
@@ -550,22 +499,13 @@ export function DocumentsManager() {
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                   placeholder="Ask anything about your collection…"
                   rows={1}
                   className="flex-1 resize-none bg-transparent outline-none text-[13px] text-zinc-800 placeholder-zinc-400 leading-relaxed"
                   style={{ maxHeight: 100, overflowY: "auto" }}
                 />
-                <button
-                  onClick={sendMessage}
-                  disabled={!input.trim() || thinking}
-                  className="size-7 rounded-lg bg-zinc-700 hover:bg-zinc-800 disabled:opacity-30 flex items-center justify-center flex-shrink-0 transition-colors"
-                >
+                <button onClick={sendMessage} disabled={!input.trim() || thinking} className="size-7 rounded-lg bg-zinc-700 hover:bg-zinc-800 disabled:opacity-30 flex items-center justify-center flex-shrink-0 transition-colors">
                   <Send className="size-3 text-white" strokeWidth={2} />
                 </button>
               </div>
@@ -588,7 +528,7 @@ export function DocumentsManager() {
                 {ideas.length === 0 && (
                   <div className="text-center py-8">
                     <Lightbulb className="size-7 text-zinc-200 mx-auto mb-2" strokeWidth={1} />
-                    <p className="text-[11px] text-zinc-400">No ideas saved yet.</p>
+                    <p className="text-[11px] text-zinc-400">Select any text in the chat to save an idea.</p>
                   </div>
                 )}
                 {ideas.map((idea) => (
@@ -597,6 +537,8 @@ export function DocumentsManager() {
                     idea={idea}
                     onDelete={() => setIdeas((prev) => prev.filter((i) => i.id !== idea.id))}
                     onUseInPoi={(poiId, poiTitle) => usePoiForIdea(idea.id, poiTitle)}
+                    onAddTag={(tag) => addTag(idea.id, tag)}
+                    onRemoveTag={(tag) => removeTag(idea.id, tag)}
                   />
                 ))}
               </div>
@@ -604,6 +546,33 @@ export function DocumentsManager() {
           )}
         </div>
       </div>
+
+      {/* Selection tooltip */}
+      {selectionTooltip && (
+        <div
+          className="fixed z-40 pointer-events-auto"
+          style={{ left: selectionTooltip.x, top: selectionTooltip.y, transform: "translate(-50%, calc(-100% - 8px))" }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => { setPendingSave({ text: selectionTooltip.text }); setSelectionTooltip(null); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white rounded-xl text-[12px] font-medium shadow-lg hover:bg-zinc-800 transition-colors whitespace-nowrap"
+          >
+            <Lightbulb className="size-3.5 text-amber-400" strokeWidth={1.5} />
+            Save as idea
+          </button>
+          <div className="w-2 h-2 bg-zinc-900 rotate-45 mx-auto -mt-1 rounded-sm" />
+        </div>
+      )}
+
+      {/* Save idea modal */}
+      {pendingSave && (
+        <SaveIdeaModal
+          defaultTitle={pendingSave.text.slice(0, 60)}
+          onSave={saveIdea}
+          onClose={() => setPendingSave(null)}
+        />
+      )}
 
       <style>{`
         @keyframes bounce {
