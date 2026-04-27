@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
   Languages, Mic, Megaphone, DollarSign, MessageSquare,
-  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users,
+  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users, Sparkles,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
@@ -28,6 +28,7 @@ type NavItem = {
   label: string;
   children?: NavChild[];
   badge?: Badge;
+  highlight?: boolean;
 };
 
 type NavSection = {
@@ -48,13 +49,13 @@ const navSections: NavSection[] = [
       { key: "guides", path: "/guides", icon: Headphones, label: "Audio Guides" },
       { key: "pois", path: "/pois", icon: MapPin, label: "Points of Interest" },
       { key: "map", path: "/map", icon: Map, label: "Map" },
+      { key: "documents", path: "/documents", icon: Sparkles, label: "AI Assistant", highlight: true },
     ],
   },
   {
     label: "Resources",
     items: [
       { key: "media", path: "/media", icon: FolderOpen, label: "Media Library" },
-      { key: "documents", path: "/documents", icon: FileText, label: "AI Assistant" },
     ],
   },
   {
@@ -192,6 +193,24 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               }
 
               const active = isActive(item.path!);
+              if (item.highlight) {
+                return (
+                  <Link
+                    key={item.key}
+                    to={item.path!}
+                    onClick={onNavigate}
+                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
+                      active
+                        ? "bg-violet-100 text-violet-700 font-medium"
+                        : "text-violet-500 hover:text-violet-700 hover:bg-violet-50"
+                    }`}
+                  >
+                    <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
+                    <span className="flex-1">{item.label}</span>
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-500 uppercase tracking-wide">AI</span>
+                  </Link>
+                );
+              }
               return (
                 <Link
                   key={item.key}
