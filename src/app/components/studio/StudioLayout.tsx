@@ -54,7 +54,7 @@ const navSections: NavSection[] = [
     label: "Resources",
     items: [
       { key: "media", path: "/media", icon: FolderOpen, label: "Media Library" },
-      { key: "documents", path: "/documents", icon: FileText, label: "Knowledge Base" },
+      { key: "documents", path: "/documents", icon: FileText, label: "AI Assistant" },
     ],
   },
   {
