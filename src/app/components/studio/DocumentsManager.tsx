@@ -10,9 +10,10 @@ import {
   Tag,
   MapPin,
   Check,
+  Search,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
-import { mockPOIs } from "../../data/mockData";
+import { mockPOIs, mockGuides } from "../../data/mockData";
 
 type Doc = {
   id: string;
@@ -100,6 +101,15 @@ const AI_RESPONSES: { trigger: string; text: string; source: string }[] = [
   },
 ];
 
+// Mock mapping: which guide each POI belongs to
+const POI_GUIDE_MAP: Record<string, string> = {
+  "poi-1": "guide-1",
+  "poi-2": "guide-1",
+  "poi-3": "guide-2",
+  "poi-4": "guide-2",
+  "poi-5": "guide-3",
+};
+
 const DOC_TYPE_COLORS: Record<Doc["type"], string> = {
   pdf: "bg-red-50 text-red-500",
   docx: "bg-blue-50 text-blue-500",
@@ -111,6 +121,124 @@ function DocIcon({ type }: { type: Doc["type"] }) {
   return (
     <div className={`size-7 rounded-lg flex items-center justify-center flex-shrink-0 ${DOC_TYPE_COLORS[type]}`}>
       <FileText className="size-3.5" strokeWidth={1.5} />
+    </div>
+  );
+}
+
+function PoiPickerModal({
+  onConfirm,
+  onClose,
+}: {
+  onConfirm: (poiId: string, poiTitle: string) => void;
+  onClose: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const filtered = mockPOIs.filter((p) =>
+    p.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedPoi = mockPOIs.find((p) => p.id === selected);
+
+  return (
+    <div
+      className="fixed inset-0 bg-zinc-950/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+        style={{ maxHeight: 520 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+          <div>
+            <h2 className="text-[14px] font-semibold text-zinc-900">Use in a POI</h2>
+            <p className="text-[11px] text-zinc-400 mt-0.5">Choose which POI to send this idea to</p>
+          </div>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="px-4 py-3 border-b border-zinc-100">
+          <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 focus-within:border-zinc-400 transition-colors">
+            <Search className="size-3.5 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+            <input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search POIs…"
+              className="flex-1 bg-transparent outline-none text-[13px] text-zinc-800 placeholder-zinc-400"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="text-zinc-400 hover:text-zinc-600">
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* POI list */}
+        <div className="flex-1 overflow-y-auto py-1.5">
+          {filtered.length === 0 && (
+            <div className="text-center py-8 text-[12px] text-zinc-400">No POIs match "{search}"</div>
+          )}
+          {filtered.map((poi) => {
+            const guideId = POI_GUIDE_MAP[poi.id];
+            const guide = mockGuides.find((g) => g.id === guideId);
+            const isSelected = selected === poi.id;
+            return (
+              <button
+                key={poi.id}
+                onClick={() => setSelected(poi.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                  isSelected ? "bg-blue-50" : "hover:bg-zinc-50"
+                }`}
+              >
+                <div className={`size-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                  isSelected ? "bg-blue-100 text-blue-600" : "bg-zinc-100 text-zinc-500"
+                }`}>
+                  <MapPin className="size-4" strokeWidth={1.5} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[13px] font-medium truncate ${isSelected ? "text-blue-700" : "text-zinc-800"}`}>
+                    {poi.title}
+                  </p>
+                  {guide && (
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">{guide.title}</p>
+                  )}
+                </div>
+                {isSelected && <Check className="size-4 text-blue-500 flex-shrink-0" strokeWidth={2.5} />}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-zinc-100 flex items-center justify-between gap-3">
+          <p className="text-[11px] text-zinc-400 truncate">
+            {selectedPoi ? `Selected: ${selectedPoi.title}` : "No POI selected"}
+          </p>
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 rounded-lg text-[12px] text-zinc-500 hover:bg-zinc-100 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={!selected}
+              onClick={() => selectedPoi && onConfirm(selectedPoi.id, selectedPoi.title)}
+              className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-30 transition-colors"
+            >
+              Apply to POI
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -156,33 +284,24 @@ function IdeaCard({
           Used in {idea.usedInPoi}
         </div>
       ) : (
-        <div className="relative">
+        <>
           <button
-            onClick={() => setPickerOpen((v) => !v)}
+            onClick={() => setPickerOpen(true)}
             className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors font-medium"
           >
             <MapPin className="size-3" strokeWidth={1.5} />
             Use in a POI
           </button>
           {pickerOpen && (
-            <div className="absolute bottom-full left-0 mb-1 z-20 bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden w-[200px]">
-              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-3 pt-2.5 pb-1">Select POI</p>
-              {mockPOIs.map((poi) => (
-                <button
-                  key={poi.id}
-                  onClick={() => {
-                    onUseInPoi(poi.id, poi.title);
-                    setPickerOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-zinc-50 transition-colors"
-                >
-                  <MapPin className="size-3 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
-                  <span className="text-[12px] text-zinc-700 truncate">{poi.title}</span>
-                </button>
-              ))}
-            </div>
+            <PoiPickerModal
+              onConfirm={(poiId, poiTitle) => {
+                onUseInPoi(poiId, poiTitle);
+                setPickerOpen(false);
+              }}
+              onClose={() => setPickerOpen(false)}
+            />
           )}
-        </div>
+        </>
       )}
     </div>
   );
@@ -399,8 +518,8 @@ export function DocumentsManager() {
                     </div>
                   ) : (
                     <div className="max-w-[420px]">
-                      <div className="bg-zinc-900 text-white rounded-2xl rounded-tr-sm px-4 py-3">
-                        <p className="text-[13px] leading-relaxed">{msg.text}</p>
+                      <div className="bg-zinc-100 rounded-2xl rounded-tr-sm px-4 py-3">
+                        <p className="text-[13px] text-zinc-700 leading-relaxed">{msg.text}</p>
                       </div>
                     </div>
                   )}
@@ -445,7 +564,7 @@ export function DocumentsManager() {
                 <button
                   onClick={sendMessage}
                   disabled={!input.trim() || thinking}
-                  className="size-7 rounded-lg bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 flex items-center justify-center flex-shrink-0 transition-colors"
+                  className="size-7 rounded-lg bg-zinc-700 hover:bg-zinc-800 disabled:opacity-30 flex items-center justify-center flex-shrink-0 transition-colors"
                 >
                   <Send className="size-3 text-white" strokeWidth={2} />
                 </button>
