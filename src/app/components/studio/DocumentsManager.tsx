@@ -388,8 +388,8 @@ export function DocumentsManager() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-[22px] font-semibold text-zinc-900">Knowledge Base</h1>
-            <p className="text-[13px] text-zinc-500 mt-0.5">Chat with your documents and capture ideas</p>
+            <h1 className="text-[22px] font-semibold text-zinc-900">Co-Curator</h1>
+            <p className="text-[13px] text-zinc-500 mt-0.5">Your AI assistant — explores the knowledge base and helps you create better content</p>
           </div>
           <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-[12px] font-medium transition-colors">
             <Upload className="size-3.5" strokeWidth={1.5} />
@@ -403,7 +403,7 @@ export function DocumentsManager() {
           {/* Left: Document list */}
           <aside className="w-[200px] flex-shrink-0 flex flex-col border-r border-zinc-100">
             <div className="px-3 py-3 border-b border-zinc-100">
-              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Documents</p>
+              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Knowledge Base</p>
             </div>
             <div className="flex-1 overflow-y-auto py-1.5">
               <button onClick={() => setActiveDocId(null)} className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${activeDocId === null ? "bg-zinc-100 text-zinc-900" : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"}`}>
