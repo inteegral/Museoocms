@@ -8,6 +8,7 @@ import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
 import { useState } from "react";
 import { GuidePreviewModal } from "./GuidePreviewModal";
+import { AIAssistantDrawer } from "./AIAssistantDrawer";
 
 const currentUser = teamMembers.find((m) => m.id === CURRENT_USER_ID)!;
 
@@ -49,7 +50,6 @@ const navSections: NavSection[] = [
       { key: "guides", path: "/guides", icon: Headphones, label: "Audio Guides" },
       { key: "pois", path: "/pois", icon: MapPin, label: "Points of Interest" },
       { key: "map", path: "/map", icon: Map, label: "Map" },
-      { key: "documents", path: "/documents", icon: Sparkles, label: "AI Assistant", highlight: true },
     ],
   },
   {
@@ -448,6 +448,8 @@ export function StudioLayout() {
       {visitorGuide && (
         <GuidePreviewModal guideName={visitorGuide} onClose={() => setVisitorGuide(null)} />
       )}
+
+      <AIAssistantDrawer />
     </div>
   );
 }
