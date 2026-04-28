@@ -543,34 +543,27 @@ export function DocumentsManager() {
 
           {/* Center: Chat / Plan */}
           <div className="flex-1 flex flex-col min-w-0">
-            {/* Context bar */}
-            <div className="px-4 py-2.5 border-b border-zinc-100 flex items-center gap-2">
-              {/* Mode tabs */}
-              <div className="flex items-center gap-0.5 bg-zinc-100 rounded-lg p-0.5 flex-shrink-0">
-                <button onClick={() => setMode("chat")} className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-medium transition-colors ${mode === "chat" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}>
-                  <MessageSquare className="size-3" strokeWidth={1.5} />
-                  Chat
-                </button>
-                <button onClick={() => setMode("plan")} className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-medium transition-colors ${mode === "plan" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}>
-                  <Route className="size-3" strokeWidth={1.5} />
-                  Plan a guide
-                </button>
+            {/* Top bar: mode tabs */}
+            <div className="px-4 pt-3 pb-0 flex items-center justify-between border-b border-zinc-100">
+              <div className="flex items-center gap-0">
+                {(["chat", "plan"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setMode(m)}
+                    className={`flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-medium border-b-2 transition-colors ${
+                      mode === m
+                        ? "border-zinc-900 text-zinc-900"
+                        : "border-transparent text-zinc-400 hover:text-zinc-600"
+                    }`}
+                  >
+                    {m === "chat" ? <MessageSquare className="size-3.5" strokeWidth={1.5} /> : <Route className="size-3.5" strokeWidth={1.5} />}
+                    {m === "chat" ? "Chat" : "Plan a guide"}
+                  </button>
+                ))}
               </div>
 
-              {mode === "chat" && !activeDocId && (
-                <>
-                  <Sparkles className="size-3.5 text-zinc-400" strokeWidth={1.5} />
-                  <span className="text-[11px] text-zinc-400">Chatting with all documents</span>
-                </>
-              )}
-              {mode === "chat" && activeDocId && (
-                <>
-                  <DocIcon type={docs.find((d) => d.id === activeDocId)!.type} />
-                  <span className="text-[12px] font-medium text-zinc-700 truncate">{docs.find((d) => d.id === activeDocId)?.name}</span>
-                  <button onClick={() => setActiveDocId(null)} className="ml-1 text-zinc-400 hover:text-zinc-600"><X className="size-3" /></button>
-                </>
-              )}
-              <div className="ml-auto flex items-center gap-2">
+              {/* Right controls */}
+              <div className="flex items-center gap-2 pb-1">
                 {/* Tone selector */}
                 <div className="relative" ref={toneRef}>
                   <button
@@ -659,6 +652,24 @@ export function DocumentsManager() {
                 </button>
               </div>
             </div>
+
+            {/* Sub-bar: context info (chat only) */}
+            {mode === "chat" && (
+              <div className="px-4 py-1.5 bg-zinc-50 border-b border-zinc-100 flex items-center gap-2 min-h-0">
+                {!activeDocId ? (
+                  <>
+                    <Sparkles className="size-3 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                    <span className="text-[11px] text-zinc-400">Chatting with all documents</span>
+                  </>
+                ) : (
+                  <>
+                    <DocIcon type={docs.find((d) => d.id === activeDocId)!.type} />
+                    <span className="text-[11px] font-medium text-zinc-600 truncate">{docs.find((d) => d.id === activeDocId)?.name}</span>
+                    <button onClick={() => setActiveDocId(null)} className="ml-1 text-zinc-400 hover:text-zinc-600 transition-colors"><X className="size-3" /></button>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Plan a guide UI */}
             {mode === "plan" && (
