@@ -278,6 +278,24 @@ export function StudioLayout() {
             </Link>
           </div>
 
+          {/* AI Assistant — featured entry */}
+          <div className="px-3 pt-3 pb-1">
+            <Link
+              to="/documents"
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all ${
+                isActive("/documents")
+                  ? "bg-violet-600 text-white shadow-md shadow-violet-200"
+                  : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+              }`}
+            >
+              <Sparkles className="size-4 flex-shrink-0" strokeWidth={1.5} />
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold leading-tight">AI Assistant</p>
+                <p className={`text-[10px] leading-tight mt-0.5 ${isActive("/documents") ? "text-violet-200" : "text-violet-400"}`}>Co-Curator</p>
+              </div>
+            </Link>
+          </div>
+
           <SidebarNav />
 
           {/* Visitor Mode */}
