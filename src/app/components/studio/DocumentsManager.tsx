@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   FileText, Upload, Send, Lightbulb, BookOpen,
-  X, Sparkles, Tag, MapPin, Check, Search, Plus,
+  X, Sparkles, Tag, MapPin, Check, Search, Plus, SlidersHorizontal,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockPOIs, mockGuides } from "../../data/mockData";
@@ -90,6 +90,29 @@ const AI_RESPONSES: { trigger: string; text: string; source: string }[] = [
     source: "Museum History 1891–2024.txt",
   },
 ];
+
+const AUDIENCES = ["Adults", "Families & Kids", "School Groups", "Experts"] as const;
+const TONES = ["Narrative", "Academic", "Short & Direct", "Playful"] as const;
+type Audience = typeof AUDIENCES[number];
+type Tone = typeof TONES[number];
+
+const TONE_VARIANTS: Partial<Record<string, Partial<Record<Audience, string>>>> = {
+  renaissance: {
+    "Families & Kids": "Did you know some paintings in your museum were made by Botticelli's students? In Room 4 there are three panels — they look almost like the real Botticelli, but experts found small differences during a restoration in 1994. Can you spot them?",
+    "Experts": "Three panels in Room 4 carry strong workshop attribution to the Bottega del Botticelli, confirmed by infrared reflectography during the 1994 restoration. Underdrawing style and pigment analysis suggest a date between 1485–1495.",
+    "School Groups": "These paintings were made in Botticelli's workshop around 500 years ago! A team of restorers in 1994 used special cameras to look underneath the paint and figure out who really made them.",
+  },
+  accessibility: {
+    "Families & Kids": "Great news for families! There are four special touch stations along the west wing where kids (and adults!) can feel the shapes of famous artworks. The whole route takes about 45 minutes at a relaxed pace.",
+    "Experts": "The accessibility programme includes haptic reproductions at 4 nodes along the west corridor, with audio stops calibrated at seated height (approx. 110cm). A reduced-pace route is documented at ~45 min.",
+    "School Groups": "Your museum has a touch tour! Four stations let students feel reproductions of real artworks — perfect for groups with visual impairments or anyone who learns by touching.",
+  },
+  history: {
+    "Families & Kids": "Your museum is over 130 years old! It started as a private collection belonging to Count Emilio Ferretti, who loved art so much he wanted to share it with everyone. It opened to the public in 1923.",
+    "Experts": "Founded 1891 as the Ferretti private collection, institutionalised and opened to the public 1923. The 2001 expansion introduced a climate-controlled sub-ground storage facility, currently housing ~3,000 unexhibited artefacts.",
+    "School Groups": "This museum was started by a count named Emilio Ferretti back in 1891. After he passed away, it was turned into a public museum so everyone could enjoy the art he collected.",
+  },
+};
 
 const POI_GUIDE_MAP: Record<string, string> = {
   "poi-1": "guide-1",
@@ -308,8 +331,22 @@ export function DocumentsManager() {
   const [ideasOpen, setIdeasOpen] = useState(true);
   const [selectionTooltip, setSelectionTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
   const [pendingSave, setPendingSave] = useState<{ text: string; source?: string } | null>(null);
+  const [audience, setAudience] = useState<Audience>("Adults");
+  const [tone, setTone] = useState<Tone>("Narrative");
+  const [toneOpen, setToneOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const toneRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (toneRef.current && !toneRef.current.contains(e.target as Node)) {
+        setToneOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -344,10 +381,12 @@ export function DocumentsManager() {
     setTimeout(() => {
       const lower = text.toLowerCase();
       const match = AI_RESPONSES.find((r) => lower.includes(r.trigger));
+      const toneVariant = match ? TONE_VARIANTS[match.trigger]?.[audience] : undefined;
+      const responseText = toneVariant ?? (match ? match.text : "I searched through your documents but didn't find a specific reference to that topic. Try rephrasing, or upload more documents to expand the knowledge base.");
       setMessages((prev) => [...prev, {
         id: `m${Date.now() + 1}`,
         role: "ai",
-        text: match ? match.text : "I searched through your documents but didn't find a specific reference to that topic. Try rephrasing, or upload more documents to expand the knowledge base.",
+        text: responseText,
         source: match?.source,
       }]);
       setThinking(false);
@@ -361,7 +400,7 @@ export function DocumentsManager() {
       title,
       excerpt: pendingSave.text.slice(0, 140),
       source: pendingSave.source,
-      tags: [],
+      tags: [audience, tone],
     };
     setIdeas((prev) => [newIdea, ...prev]);
     setPendingSave(null);
@@ -438,7 +477,50 @@ export function DocumentsManager() {
                   <span className="text-[11px] text-zinc-400">Chatting with all documents</span>
                 </>
               )}
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2">
+                {/* Tone selector */}
+                <div className="relative" ref={toneRef}>
+                  <button
+                    onClick={() => setToneOpen((v) => !v)}
+                    className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors ${toneOpen ? "bg-violet-50 text-violet-700 border border-violet-200" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
+                  >
+                    <SlidersHorizontal className="size-3" strokeWidth={1.5} />
+                    {audience} · {tone}
+                  </button>
+                  {toneOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 z-30 bg-white border border-zinc-200 rounded-2xl shadow-xl p-4 w-[280px]">
+                      <div className="mb-3">
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Audience</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {AUDIENCES.map((a) => (
+                            <button
+                              key={a}
+                              onClick={() => setAudience(a)}
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${audience === a ? "bg-violet-100 text-violet-700 border border-violet-200" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
+                            >
+                              {a}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Tone</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {TONES.map((t) => (
+                            <button
+                              key={t}
+                              onClick={() => setTone(t)}
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${tone === t ? "bg-violet-100 text-violet-700 border border-violet-200" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={() => setIdeasOpen((v) => !v)}
                   className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors ${ideasOpen ? "bg-amber-50 text-amber-700 border border-amber-200" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
