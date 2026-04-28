@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import {
   FileText, Upload, Send, Lightbulb, BookOpen,
   X, Sparkles, Tag, MapPin, Check, Search, Plus, SlidersHorizontal,
-  User, Users, GraduationCap, FlaskConical, BookMarked, Microscope, AlignLeft, Zap, Smile,
+  User, Users, GraduationCap, FlaskConical, BookMarked, Microscope, Zap, Smile,
+  ArrowUp, ArrowDown, Route, Clock, ChevronRight, MessageSquare,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 import { PageShell } from "./PageShell";
 import { mockPOIs, mockGuides } from "../../data/mockData";
 
@@ -29,6 +31,39 @@ type Idea = {
   source?: string;
   tags: string[];
   usedInPoi?: string;
+};
+
+type PlanPOI = {
+  id: string;
+  title: string;
+  rationale: string;
+  duration: string;
+  note: string;
+};
+
+type PlanBrief = {
+  title: string;
+  duration: string;
+  constraints: string;
+};
+
+const PLAN_DURATIONS = ["30 min", "45 min", "1 hour", "90 min"] as const;
+
+const MOCK_PROPOSALS: Record<string, PlanPOI[]> = {
+  family: [
+    { id: "pp1", title: "The Story Wall", rationale: "Interactive intro that hooks younger visitors from the first moment.", duration: "4 min", note: "" },
+    { id: "pp2", title: "Venus de Milo", rationale: "The 'missing arms' mystery is a perfect conversation starter for kids.", duration: "5 min", note: "" },
+    { id: "pp3", title: "Corinthian Helmet", rationale: "A tactile reproduction is available — children can touch a replica.", duration: "6 min", note: "" },
+    { id: "pp4", title: "Roman Mosaic", rationale: "Puzzle-like visuals engage younger audiences naturally.", duration: "5 min", note: "" },
+    { id: "pp5", title: "Apollo Statue", rationale: "Close with a myth — Apollo's stories are accessible and memorable.", duration: "5 min", note: "" },
+  ],
+  default: [
+    { id: "pp1", title: "Museum Entrance Hall", rationale: "Sets the historical context and prepares visitors for the journey ahead.", duration: "5 min", note: "" },
+    { id: "pp2", title: "Venus de Milo", rationale: "Iconic centerpiece with high emotional and visual impact.", duration: "8 min", note: "" },
+    { id: "pp3", title: "Attic Amphora", rationale: "Showcases Greek pottery craftsmanship with narrative depth.", duration: "7 min", note: "" },
+    { id: "pp4", title: "Roman Mosaic", rationale: "Bridges the Greek and Roman periods in a natural narrative arc.", duration: "6 min", note: "" },
+    { id: "pp5", title: "Apollo Statue", rationale: "Strong closing piece that embodies the classical ideal of beauty.", duration: "6 min", note: "" },
+  ],
 };
 
 const INITIAL_DOCS: Doc[] = [
@@ -323,6 +358,7 @@ function IdeaCard({
 }
 
 export function DocumentsManager() {
+  const navigate = useNavigate();
   const [docs] = useState<Doc[]>(INITIAL_DOCS);
   const [activeDocId, setActiveDocId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -335,6 +371,11 @@ export function DocumentsManager() {
   const [audience, setAudience] = useState<Audience>("Adults");
   const [tone, setTone] = useState<Tone>("Narrative");
   const [toneOpen, setToneOpen] = useState(false);
+  // Plan mode
+  const [mode, setMode] = useState<"chat" | "plan">("chat");
+  const [planBrief, setPlanBrief] = useState<PlanBrief>({ title: "", duration: "45 min", constraints: "" });
+  const [planProposal, setPlanProposal] = useState<PlanPOI[] | null>(null);
+  const [planGenerating, setPlanGenerating] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const toneRef = useRef<HTMLDivElement>(null);
@@ -422,6 +463,44 @@ export function DocumentsManager() {
     setIdeas((prev) => prev.map((i) => i.id === ideaId ? { ...i, tags: i.tags.filter((t) => t !== tag) } : i));
   }
 
+  function generateProposal() {
+    if (!planBrief.title.trim()) return;
+    setPlanGenerating(true);
+    setPlanProposal(null);
+    setTimeout(() => {
+      const key = planBrief.title.toLowerCase().includes("famil") || planBrief.title.toLowerCase().includes("kid") || audience === "Families & Kids" ? "family" : "default";
+      setPlanProposal(MOCK_PROPOSALS[key].map((p) => ({ ...p, id: `pp${Date.now()}${p.id}` })));
+      setPlanGenerating(false);
+    }, 1800);
+  }
+
+  function movePlanPoi(index: number, dir: -1 | 1) {
+    setPlanProposal((prev) => {
+      if (!prev) return prev;
+      const next = [...prev];
+      const swap = index + dir;
+      if (swap < 0 || swap >= next.length) return next;
+      [next[index], next[swap]] = [next[swap], next[index]];
+      return next;
+    });
+  }
+
+  function removePlanPoi(id: string) {
+    setPlanProposal((prev) => prev ? prev.filter((p) => p.id !== id) : prev);
+  }
+
+  function updatePlanPoiNote(id: string, note: string) {
+    setPlanProposal((prev) => prev ? prev.map((p) => p.id === id ? { ...p, note } : p) : prev);
+  }
+
+  function createGuideDraft() {
+    navigate("/guides/new");
+  }
+
+  const planTotalMin = planProposal
+    ? planProposal.reduce((sum, p) => sum + parseInt(p.duration), 0)
+    : 0;
+
   return (
     <PageShell>
       <div className="max-w-5xl mx-auto">
@@ -462,20 +541,33 @@ export function DocumentsManager() {
             </div>
           </aside>
 
-          {/* Center: Chat */}
+          {/* Center: Chat / Plan */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Context bar */}
             <div className="px-4 py-2.5 border-b border-zinc-100 flex items-center gap-2">
-              {activeDocId ? (
+              {/* Mode tabs */}
+              <div className="flex items-center gap-0.5 bg-zinc-100 rounded-lg p-0.5 flex-shrink-0">
+                <button onClick={() => setMode("chat")} className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-medium transition-colors ${mode === "chat" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}>
+                  <MessageSquare className="size-3" strokeWidth={1.5} />
+                  Chat
+                </button>
+                <button onClick={() => setMode("plan")} className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-medium transition-colors ${mode === "plan" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}>
+                  <Route className="size-3" strokeWidth={1.5} />
+                  Plan a guide
+                </button>
+              </div>
+
+              {mode === "chat" && !activeDocId && (
+                <>
+                  <Sparkles className="size-3.5 text-zinc-400" strokeWidth={1.5} />
+                  <span className="text-[11px] text-zinc-400">Chatting with all documents</span>
+                </>
+              )}
+              {mode === "chat" && activeDocId && (
                 <>
                   <DocIcon type={docs.find((d) => d.id === activeDocId)!.type} />
                   <span className="text-[12px] font-medium text-zinc-700 truncate">{docs.find((d) => d.id === activeDocId)?.name}</span>
                   <button onClick={() => setActiveDocId(null)} className="ml-1 text-zinc-400 hover:text-zinc-600"><X className="size-3" /></button>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="size-3.5 text-zinc-400" strokeWidth={1.5} />
-                  <span className="text-[11px] text-zinc-400">Chatting with all documents</span>
                 </>
               )}
               <div className="ml-auto flex items-center gap-2">
@@ -568,8 +660,137 @@ export function DocumentsManager() {
               </div>
             </div>
 
+            {/* Plan a guide UI */}
+            {mode === "plan" && (
+              <div className="flex-1 overflow-y-auto px-6 py-5">
+                {!planProposal && !planGenerating && (
+                  <div className="max-w-lg mx-auto pt-4">
+                    <div className="mb-6">
+                      <h2 className="text-[15px] font-semibold text-zinc-900">New guide proposal</h2>
+                      <p className="text-[12px] text-zinc-400 mt-0.5">Describe your idea and the AI will suggest a sequence of listening stops.</p>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1.5">Guide title</label>
+                        <input
+                          value={planBrief.title}
+                          onChange={(e) => setPlanBrief((b) => ({ ...b, title: e.target.value }))}
+                          placeholder="e.g. Greek Collection Highlights"
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-[13px] text-zinc-800 placeholder-zinc-400 outline-none focus:border-zinc-400 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1.5">Estimated duration</label>
+                        <div className="flex gap-2">
+                          {PLAN_DURATIONS.map((d) => (
+                            <button key={d} onClick={() => setPlanBrief((b) => ({ ...b, duration: d }))} className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium transition-colors ${planBrief.duration === d ? "border-violet-300 bg-violet-50 text-violet-700" : "border-zinc-200 text-zinc-500 hover:border-zinc-300"}`}>
+                              {d}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1.5">Constraints <span className="text-zinc-300 font-normal normal-case tracking-normal">(optional)</span></label>
+                        <textarea
+                          value={planBrief.constraints}
+                          onChange={(e) => setPlanBrief((b) => ({ ...b, constraints: e.target.value }))}
+                          placeholder="e.g. Ground floor only, max 5 stops, focus on Greek pottery…"
+                          rows={2}
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-[13px] text-zinc-800 placeholder-zinc-400 outline-none focus:border-zinc-400 transition-colors resize-none"
+                        />
+                      </div>
+                      <div className="pt-1 flex items-center gap-3">
+                        <button
+                          onClick={generateProposal}
+                          disabled={!planBrief.title.trim()}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 text-white text-[13px] font-medium transition-colors"
+                        >
+                          <Sparkles className="size-3.5" strokeWidth={1.5} />
+                          Generate proposal
+                        </button>
+                        <p className="text-[11px] text-zinc-400">Audience: <span className="font-medium text-zinc-600">{audience}</span></p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {planGenerating && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 text-zinc-400">
+                    <div className="flex gap-1.5">
+                      {[0, 1, 2].map((i) => (
+                        <span key={i} className="size-2 rounded-full bg-zinc-300" style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                      ))}
+                    </div>
+                    <p className="text-[12px]">Building your guide proposal…</p>
+                  </div>
+                )}
+
+                {planProposal && !planGenerating && (
+                  <div className="max-w-lg mx-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h2 className="text-[15px] font-semibold text-zinc-900">{planBrief.title}</h2>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">{planProposal.length} stops · ~{planTotalMin} min · {audience}</p>
+                      </div>
+                      <button onClick={() => { setPlanProposal(null); setPlanGenerating(false); }} className="text-[11px] text-zinc-400 hover:text-zinc-600 transition-colors">
+                        ← Restart
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      {planProposal.map((poi, i) => (
+                        <div key={poi.id} className="bg-zinc-50 border border-zinc-200 rounded-xl p-3.5">
+                          <div className="flex items-start gap-3">
+                            <div className="flex flex-col gap-0.5 flex-shrink-0 mt-0.5">
+                              <button onClick={() => movePlanPoi(i, -1)} disabled={i === 0} className="text-zinc-300 hover:text-zinc-600 disabled:opacity-20 transition-colors"><ArrowUp className="size-3" strokeWidth={2} /></button>
+                              <button onClick={() => movePlanPoi(i, 1)} disabled={i === planProposal.length - 1} className="text-zinc-300 hover:text-zinc-600 disabled:opacity-20 transition-colors"><ArrowDown className="size-3" strokeWidth={2} /></button>
+                            </div>
+                            <div className="size-5 rounded-full bg-zinc-200 text-zinc-500 flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5">{i + 1}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-[13px] font-semibold text-zinc-900">{poi.title}</p>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <span className="flex items-center gap-1 text-[11px] text-zinc-400">
+                                    <Clock className="size-3" strokeWidth={1.5} />{poi.duration}
+                                  </span>
+                                  <button onClick={() => removePlanPoi(poi.id)} className="text-zinc-300 hover:text-red-400 transition-colors"><X className="size-3.5" /></button>
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{poi.rationale}</p>
+                              <input
+                                value={poi.note}
+                                onChange={(e) => updatePlanPoiNote(poi.id, e.target.value)}
+                                placeholder="Add a note for the editor…"
+                                className="mt-2 w-full bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-700 placeholder-zinc-300 outline-none focus:border-zinc-400 transition-colors"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setPlanProposal((prev) => prev ? [...prev, { id: `pp${Date.now()}`, title: "New stop", rationale: "", duration: "5 min", note: "" }] : prev)}
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-dashed border-zinc-300 text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 text-[12px] font-medium transition-colors mb-4"
+                    >
+                      <Plus className="size-3.5" strokeWidth={2} />
+                      Add stop manually
+                    </button>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-zinc-200">
+                      <p className="text-[12px] text-zinc-500">Total: <span className="font-semibold text-zinc-800">~{planTotalMin} min</span></p>
+                      <button onClick={createGuideDraft} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-[13px] font-medium transition-colors">
+                        Create guide draft
+                        <ChevronRight className="size-4" strokeWidth={2} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Messages */}
-            <div
+            {mode === "chat" && <div
               ref={messagesRef}
               className="flex-1 overflow-y-auto px-5 py-5 space-y-5"
               onMouseUp={handleMessagesMouseUp}
@@ -610,10 +831,10 @@ export function DocumentsManager() {
                 </div>
               )}
               <div ref={bottomRef} />
-            </div>
+            </div>}
 
-            {/* Input */}
-            <div className="px-4 py-3 border-t border-zinc-100">
+            {/* Input — chat only */}
+            {mode === "chat" && <div className="px-4 py-3 border-t border-zinc-100">
               <div className="flex items-end gap-2 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 focus-within:border-zinc-400 transition-colors">
                 <textarea
                   value={input}
@@ -628,7 +849,7 @@ export function DocumentsManager() {
                   <Send className="size-3 text-white" strokeWidth={2} />
                 </button>
               </div>
-            </div>
+            </div>}
           </div>
 
           {/* Right: Ideas panel */}
