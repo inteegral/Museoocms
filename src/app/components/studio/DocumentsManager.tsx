@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   FileText, Upload, Send, Lightbulb, BookOpen,
   X, Sparkles, Tag, MapPin, Check, Search, Plus, SlidersHorizontal,
+  User, Users, GraduationCap, FlaskConical, BookMarked, Microscope, AlignLeft, Zap, Smile,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockPOIs, mockGuides } from "../../data/mockData";
@@ -488,31 +489,67 @@ export function DocumentsManager() {
                     {audience} · {tone}
                   </button>
                   {toneOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 z-30 bg-white border border-zinc-200 rounded-2xl shadow-xl p-4 w-[280px]">
-                      <div className="mb-3">
-                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Audience</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {AUDIENCES.map((a) => (
+                    <div className="absolute right-0 top-full mt-1.5 z-30 bg-white border border-zinc-200 rounded-2xl shadow-xl w-[340px]" onClick={(e) => e.stopPropagation()}>
+                      <div className="px-4 pt-4 pb-3 border-b border-zinc-100">
+                        <p className="text-[13px] font-semibold text-zinc-900">Voice settings</p>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">Tune how the AI writes for your audience</p>
+                      </div>
+
+                      <div className="px-4 py-3 border-b border-zinc-100">
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2.5">Audience</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {([
+                            { value: "Adults", icon: User, desc: "General public" },
+                            { value: "Families & Kids", icon: Users, desc: "Parents with children" },
+                            { value: "School Groups", icon: GraduationCap, desc: "Students & teachers" },
+                            { value: "Experts", icon: FlaskConical, desc: "Researchers & scholars" },
+                          ] as const).map(({ value, icon: Icon, desc }) => (
                             <button
-                              key={a}
-                              onClick={() => setAudience(a)}
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${audience === a ? "bg-violet-100 text-violet-700 border border-violet-200" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
+                              key={value}
+                              onClick={() => setAudience(value)}
+                              className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                                audience === value
+                                  ? "border-violet-300 bg-violet-50"
+                                  : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
+                              }`}
                             >
-                              {a}
+                              <div className={`size-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${audience === value ? "bg-violet-100 text-violet-600" : "bg-zinc-100 text-zinc-500"}`}>
+                                <Icon className="size-3.5" strokeWidth={1.5} />
+                              </div>
+                              <div>
+                                <p className={`text-[11px] font-semibold leading-tight ${audience === value ? "text-violet-700" : "text-zinc-700"}`}>{value}</p>
+                                <p className="text-[10px] text-zinc-400 mt-0.5 leading-tight">{desc}</p>
+                              </div>
                             </button>
                           ))}
                         </div>
                       </div>
-                      <div>
-                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Tone</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {TONES.map((t) => (
+
+                      <div className="px-4 py-3">
+                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2.5">Tone</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {([
+                            { value: "Narrative", icon: BookMarked, desc: "Story-driven, immersive" },
+                            { value: "Academic", icon: Microscope, desc: "Precise, referenced" },
+                            { value: "Short & Direct", icon: Zap, desc: "Concise, scannable" },
+                            { value: "Playful", icon: Smile, desc: "Light, engaging" },
+                          ] as const).map(({ value, icon: Icon, desc }) => (
                             <button
-                              key={t}
-                              onClick={() => setTone(t)}
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${tone === t ? "bg-violet-100 text-violet-700 border border-violet-200" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
+                              key={value}
+                              onClick={() => setTone(value)}
+                              className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                                tone === value
+                                  ? "border-violet-300 bg-violet-50"
+                                  : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
+                              }`}
                             >
-                              {t}
+                              <div className={`size-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${tone === value ? "bg-violet-100 text-violet-600" : "bg-zinc-100 text-zinc-500"}`}>
+                                <Icon className="size-3.5" strokeWidth={1.5} />
+                              </div>
+                              <div>
+                                <p className={`text-[11px] font-semibold leading-tight ${tone === value ? "text-violet-700" : "text-zinc-700"}`}>{value}</p>
+                                <p className="text-[10px] text-zinc-400 mt-0.5 leading-tight">{desc}</p>
+                              </div>
                             </button>
                           ))}
                         </div>
