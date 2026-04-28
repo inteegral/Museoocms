@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Sparkles, X, Send, BookOpen, ArrowUpRight } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 type Message = {
   id: string;
@@ -41,6 +41,8 @@ const AI_RESPONSES: { trigger: string; text: string; source: string }[] = [
 ];
 
 export function AIAssistantDrawer() {
+  const location = useLocation();
+  const isFullWorkspace = location.pathname.startsWith("/documents");
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
@@ -76,6 +78,8 @@ export function AIAssistantDrawer() {
       setThinking(false);
     }, 1000);
   }
+
+  if (isFullWorkspace) return null;
 
   return (
     <>
