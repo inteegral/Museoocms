@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map,
-  Megaphone, DollarSign, MessageSquare, Key,
+  Megaphone, DollarSign, MessageSquare,
   Trophy, ClipboardList, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, ChevronLeft, Smartphone, Users, CalendarDays,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
@@ -62,7 +62,6 @@ const navSections: NavSection[] = [
       { key: "events", path: "/events", icon: CalendarDays, label: "Events" },
       { key: "marketing", path: "/marketing", icon: Megaphone, label: "Marketing" },
       { key: "monetization", path: "/monetization", icon: DollarSign, label: "Monetization" },
-      { key: "access-codes", path: "/access-codes", icon: Key, label: "Access Codes" },
     ],
   },
   {

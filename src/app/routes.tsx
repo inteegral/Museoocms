@@ -17,7 +17,6 @@ import { Surveys } from "./components/studio/Surveys";
 import { Hunt } from "./components/studio/Hunt";
 import { Marketing } from "./components/studio/Marketing";
 import { Monetization } from "./components/studio/Monetization";
-import { AccessCodes } from "./components/studio/AccessCodes";
 import { Team } from "./components/studio/Team";
 import { Profile } from "./components/studio/Profile";
 import { VisitorPlayer } from "./components/visitor/VisitorPlayer";
@@ -53,7 +52,6 @@ export const router = createBrowserRouter([
       { path: "hunt", Component: Hunt },
       { path: "marketing", Component: Marketing },
       { path: "monetization", Component: Monetization },
-      { path: "access-codes", Component: AccessCodes },
       { path: "settings", Component: Settings },
       { path: "team", Component: Team },
       { path: "profile", Component: Profile },
