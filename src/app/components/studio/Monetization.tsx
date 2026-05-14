@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 
-type MonTab      = "access" | "log";
+type MonTab      = "access" | "orders" | "log";
 type DeliveryType = "digital" | "physical";
 type OrderStatus  = "ready" | "ordered" | "printing" | "shipped" | "delivered";
 type CodeStatus   = "available" | "redeemed" | "expired";
@@ -205,37 +205,38 @@ export function Monetization() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-[26px] font-semibold text-zinc-900 tracking-tight mb-1">Monetization</h1>
-          <p className="text-[13px] text-zinc-500">Gestisci l'accesso e la distribuzione dei codici per le audioguide a pagamento</p>
+          <p className="text-[13px] text-zinc-500">Manage access and code distribution for paid audio guides</p>
         </div>
 
         {/* Stats */}
         <div className="flex items-center gap-8 mb-6 px-0.5">
           <div>
             <span className="text-[22px] font-light text-zinc-900">{paidGuides.length}</span>
-            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Guide a pagamento</span>
+            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Paid guides</span>
           </div>
           <div className="w-px h-5 bg-zinc-200" />
           <div>
             <span className="text-[22px] font-light text-emerald-600">{totalAvailable}</span>
-            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Disponibili</span>
+            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Available</span>
           </div>
           <div className="w-px h-5 bg-zinc-200" />
           <div>
             <span className="text-[22px] font-light text-zinc-900">{totalRedeemed}</span>
-            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Riscattati</span>
+            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Redeemed</span>
           </div>
           <div className="w-px h-5 bg-zinc-200" />
           <div>
             <span className="text-[22px] font-light text-zinc-900">{totalOrdered.toLocaleString()}</span>
-            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Ordinati</span>
+            <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Ordered</span>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-zinc-200 mb-6 gap-1">
           {([
-            { id: "access", label: "Accesso & Distribuzione" },
-            { id: "log",    label: "Log & Ordini"            },
+            { id: "access", label: "Access & Distribution" },
+            { id: "orders", label: "Orders"                },
+            { id: "log",    label: "Log"                     },
           ] as { id: MonTab; label: string }[]).map(t => (
             <button
               key={t.id}
@@ -261,7 +262,7 @@ export function Monetization() {
             <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
               <div className="px-6 py-3 border-b border-zinc-100 bg-zinc-50 grid grid-cols-[1fr_140px_120px]">
                 <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Audio guide</span>
-                <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Accesso</span>
+                <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Access</span>
                 <span />
               </div>
               <div className="divide-y divide-zinc-100">
@@ -272,7 +273,7 @@ export function Monetization() {
                     <div key={guide.id} className="px-6 py-4 grid grid-cols-[1fr_140px_120px] items-center">
                       <div>
                         <p className="text-[13px] font-semibold text-zinc-900 mb-0.5">{guide.name}</p>
-                        {isPaid && <p className="text-[11px] text-zinc-400">{avail} codici disponibili</p>}
+                        {isPaid && <p className="text-[11px] text-zinc-400">{avail} codes available</p>}
                       </div>
                       <button onClick={() => { setEditingAccess(guide); setEditAccess(guide.access); }}
                         className="flex items-center gap-3 w-fit hover:opacity-75 transition-opacity">
@@ -287,7 +288,7 @@ export function Monetization() {
                         {isPaid && (
                           <button onClick={() => { setOrderGuide(guide); setOrderDelivery("digital"); setOrderQty(500); setShowOrderModal(true); }}
                             className="inline-flex items-center gap-1.5 text-zinc-500 text-[12px] font-medium hover:text-zinc-900 transition-colors">
-                            <Plus className="size-3.5" />Nuovo ordine
+                            <Plus className="size-3.5" />New order
                           </button>
                         )}
                       </div>
@@ -305,11 +306,11 @@ export function Monetization() {
                 </div>
                 <div className="flex-1">
                   <p className="text-[14px] font-semibold text-zinc-900">In-loco</p>
-                  <p className="text-[12px] text-zinc-500">Codici testuali da distribuire in biglietteria, al desk o nelle brochure</p>
+                  <p className="text-[12px] text-zinc-500">Text codes to distribute at the ticket desk, reception or in brochures</p>
                 </div>
                 <button onClick={() => { setShowInloco(!showInloco); setShowQr(false); }}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 text-white text-[12px] font-medium rounded-lg hover:bg-zinc-800 transition-all">
-                  <Plus className="size-3.5" />Genera batch
+                  <Plus className="size-3.5" />Generate batch
                 </button>
               </div>
               {showInloco && (
@@ -326,7 +327,7 @@ export function Monetization() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Quantità</label>
+                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Quantity</label>
                       <div className="relative">
                         <select value={inlocoQty} onChange={e => setInlocoQty(parseInt(e.target.value))}
                           className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900">
@@ -337,13 +338,13 @@ export function Monetization() {
                     </div>
                     <button onClick={() => generateBatch("inloco", inlocoGuide, inlocoQty)}
                       className="px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all whitespace-nowrap">
-                      Genera &amp; scarica CSV
+                      Generate &amp; download CSV
                     </button>
                     <button onClick={() => setShowInloco(false)} className="p-2.5 text-zinc-400 hover:text-zinc-700 transition-colors">
                       <X className="size-4" />
                     </button>
                   </div>
-                  <p className="mt-2 text-[11px] text-zinc-400">Alfabeto: A–Z e 2–9 · esclusi <span className="font-mono">0 O 1 I</span> per evitare ambiguità visiva su stampa</p>
+                  <p className="mt-2 text-[11px] text-zinc-400">Alphabet: A–Z and 2–9 · excluding <span className="font-mono">0 O 1 I</span> to avoid visual ambiguity in print</p>
                 </div>
               )}
             </div>
@@ -355,12 +356,12 @@ export function Monetization() {
                   <QrCode className="size-4 text-violet-600" strokeWidth={1.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[14px] font-semibold text-zinc-900">QR personali</p>
-                  <p className="text-[12px] text-zinc-500">Ogni codice con il suo QR scannerizzabile — ideale per gruppi, scolaresche, eventi</p>
+                  <p className="text-[14px] font-semibold text-zinc-900">Personal QR</p>
+                  <p className="text-[12px] text-zinc-500">Each code with its own scannable QR — ideal for groups, schools, events</p>
                 </div>
                 <button onClick={() => { setShowQr(!showQr); setShowInloco(false); }}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 text-white text-[12px] font-medium rounded-lg hover:bg-zinc-800 transition-all">
-                  <Plus className="size-3.5" />Genera con QR
+                  <Plus className="size-3.5" />Generate with QR
                 </button>
               </div>
               {showQr && (
@@ -377,7 +378,7 @@ export function Monetization() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Quantità</label>
+                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Quantity</label>
                       <div className="relative">
                         <select value={qrQty} onChange={e => setQrQty(parseInt(e.target.value))}
                           className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900">
@@ -388,7 +389,7 @@ export function Monetization() {
                     </div>
                     <button onClick={() => generateBatch("qr", qrGuide, qrQty)}
                       className="px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all whitespace-nowrap">
-                      Genera &amp; scarica ZIP
+                      Generate &amp; download ZIP
                     </button>
                     <button onClick={() => setShowQr(false)} className="p-2.5 text-zinc-400 hover:text-zinc-700 transition-colors">
                       <X className="size-4" />
@@ -406,12 +407,12 @@ export function Monetization() {
                   <Globe className="size-4 text-amber-600" strokeWidth={1.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[14px] font-semibold text-zinc-900">Acquisto online</p>
-                  <p className="text-[12px] text-zinc-500">Il tuo sistema di pagamento chiama il webhook · Museoo emette e invia il codice via email al visitatore</p>
+                  <p className="text-[14px] font-semibold text-zinc-900">Online purchase</p>
+                  <p className="text-[12px] text-zinc-500">Your payment system calls the webhook · Museoo issues and sends the code by email to the visitor</p>
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-lg flex-shrink-0">
                   <span className="size-1.5 rounded-full bg-emerald-400" />
-                  <span className="text-[12px] text-emerald-700 font-medium">Attivo</span>
+                  <span className="text-[12px] text-emerald-700 font-medium">Active</span>
                 </div>
               </div>
               <div className="px-6 pb-6 border-t border-zinc-100 pt-5 space-y-4">
@@ -421,7 +422,7 @@ export function Monetization() {
                     <div className="flex-1 px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg font-mono text-[12px] text-zinc-700 truncate select-all">{WEBHOOK_URL}</div>
                     <button onClick={() => copy(WEBHOOK_URL, "webhook")}
                       className="px-3.5 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex items-center gap-1.5 text-[12px] font-medium flex-shrink-0">
-                      {copiedWebhook ? <><Check className="size-3.5 text-emerald-500" />Copiato</> : <><Copy className="size-3.5" />Copia</>}
+                      {copiedWebhook ? <><Check className="size-3.5 text-emerald-500" />Copied</> : <><Copy className="size-3.5" />Copy</>}
                     </button>
                   </div>
                 </div>
@@ -437,14 +438,14 @@ export function Monetization() {
                     </button>
                     <button onClick={() => copy(API_KEY, "apikey")}
                       className="px-3.5 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex items-center gap-1.5 text-[12px] font-medium flex-shrink-0">
-                      {copiedApiKey ? <><Check className="size-3.5 text-emerald-500" />Copiato</> : <><Copy className="size-3.5" />Copia</>}
+                      {copiedApiKey ? <><Check className="size-3.5 text-emerald-500" />Copied</> : <><Copy className="size-3.5" />Copy</>}
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between py-3.5 px-4 bg-zinc-50 rounded-xl">
                   <div>
-                    <p className="text-[13px] font-semibold text-zinc-900">Email automatica al visitatore</p>
-                    <p className="text-[12px] text-zinc-500 mt-0.5">Invia il codice non appena il webhook viene ricevuto correttamente</p>
+                    <p className="text-[13px] font-semibold text-zinc-900">Automatic email to visitor</p>
+                    <p className="text-[12px] text-zinc-500 mt-0.5">Send the code as soon as the webhook is received successfully</p>
                   </div>
                   <button onClick={() => setEmailEnabled(!emailEnabled)}
                     className="relative flex-shrink-0 rounded-full transition-colors duration-200 ml-6"
@@ -460,7 +461,7 @@ export function Monetization() {
             <div className="flex items-start gap-2.5 px-1">
               <Info className="size-3.5 text-zinc-400 flex-shrink-0 mt-0.5" />
               <p className="text-[12px] text-zinc-400 leading-relaxed">
-                I codici a pagamento si bloccano al dispositivo del visitatore al primo utilizzo — non trasferibili. Le guide gratuite usano un QR universale senza lock.
+                Paid codes are locked to the visitor's device on first use — non-transferable. Free guides use a universal QR without device lock.
               </p>
             </div>
 
@@ -468,22 +469,20 @@ export function Monetization() {
         )}
 
         {/* ════════════════════════════════════════
-            TAB 2 — Log & Ordini
+            TAB 2 — Ordini
         ════════════════════════════════════════ */}
-        {tab === "log" && (
+        {tab === "orders" && (
           <div className="space-y-5">
-
-            {/* Orders */}
             <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
               <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
                 <div>
-                  <h2 className="text-[14px] font-semibold text-zinc-900">Ordini fisici</h2>
-                  <p className="text-[12px] text-zinc-400 mt-0.5">Download digitali e sticker roll pre-stampati</p>
+                  <h2 className="text-[14px] font-semibold text-zinc-900">Orders</h2>
+                  <p className="text-[12px] text-zinc-400 mt-0.5">Digital downloads and pre-printed sticker rolls</p>
                 </div>
                 <div className="relative">
                   <select value={filterOrder} onChange={e => setFilterOrder(e.target.value)}
                     className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
-                    <option value="all">Tutte le guide</option>
+                    <option value="all">All guides</option>
                     {paidGuides.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
                   </select>
                   <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
@@ -491,14 +490,14 @@ export function Monetization() {
               </div>
 
               <div className="px-6 py-2.5 bg-zinc-50 border-b border-zinc-100 grid grid-cols-[1fr_80px_100px_110px_60px] gap-4">
-                {["Ordine", "Qty", "Consegna", "Stato", ""].map((h, i) => (
+                {["Order", "Qty", "Delivery", "Status", ""].map((h, i) => (
                   <span key={i} className={`text-[10px] font-semibold text-zinc-400 uppercase tracking-widest ${i === 1 ? "text-right" : ""}`}>{h}</span>
                 ))}
               </div>
 
               <div className="divide-y divide-zinc-100">
                 {visibleOrders.length === 0 ? (
-                  <div className="px-6 py-10 text-center text-[13px] text-zinc-400">Nessun ordine</div>
+                  <div className="px-6 py-10 text-center text-[13px] text-zinc-400">No orders</div>
                 ) : visibleOrders.map(order => {
                   const pct = progressPct(order.redeemed, order.quantity);
                   const cfg = ORDER_STATUS_CFG[order.status];
@@ -540,15 +539,24 @@ export function Monetization() {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════
+            TAB 3 — Log
+        ════════════════════════════════════════ */}
+        {tab === "log" && (
+          <div className="space-y-5">
+
             {/* Webhook log */}
             <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
               <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
                 <div>
-                  <h2 className="text-[14px] font-semibold text-zinc-900">Log webhook</h2>
-                  <p className="text-[12px] text-zinc-400 mt-0.5">Ultimi eventi ricevuti dall'endpoint online</p>
+                  <h2 className="text-[14px] font-semibold text-zinc-900">Webhook log</h2>
+                  <p className="text-[12px] text-zinc-400 mt-0.5">Latest events received from the online endpoint</p>
                 </div>
                 <button className="flex items-center gap-1.5 text-[12px] text-zinc-400 hover:text-zinc-700 transition-colors">
-                  <RotateCcw className="size-3.5" />Aggiorna
+                  <RotateCcw className="size-3.5" />Refresh
                 </button>
               </div>
               <div className="divide-y divide-zinc-100">
@@ -567,11 +575,11 @@ export function Monetization() {
             {/* Code log */}
             <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
               <div className="px-6 py-4 border-b border-zinc-100 flex items-center gap-3">
-                <h2 className="text-[14px] font-semibold text-zinc-900 flex-1">Log codici</h2>
+                <h2 className="text-[14px] font-semibold text-zinc-900 flex-1">Code log</h2>
                 <div className="relative">
                   <select value={logFilterGuide} onChange={e => setLogFilterGuide(e.target.value)}
                     className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
-                    <option value="all">Tutte le guide</option>
+                    <option value="all">All guides</option>
                     {paidGuides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
@@ -579,7 +587,7 @@ export function Monetization() {
                 <div className="relative">
                   <select value={logFilterChannel} onChange={e => setLogFilterChannel(e.target.value as CodeChannel | "all")}
                     className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
-                    <option value="all">Tutti i canali</option>
+                    <option value="all">All channels</option>
                     <option value="inloco">In-loco</option>
                     <option value="qr">QR print</option>
                     <option value="online">Online</option>
@@ -589,7 +597,7 @@ export function Monetization() {
                 <div className="relative">
                   <select value={logFilterStatus} onChange={e => setLogFilterStatus(e.target.value as CodeStatus | "all")}
                     className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
-                    <option value="all">Tutti gli stati</option>
+                    <option value="all">All statuses</option>
                     <option value="available">Available</option>
                     <option value="redeemed">Redeemed</option>
                     <option value="expired">Expired</option>
@@ -599,14 +607,14 @@ export function Monetization() {
               </div>
 
               <div className="px-6 py-2 bg-zinc-50 border-b border-zinc-100 grid grid-cols-[120px_1fr_90px_90px_110px_90px] gap-4">
-                {["Codice", "Audio guide", "Canale", "Emesso", "Stato", "Riscattato"].map(h => (
+                {["Code", "Audio guide", "Channel", "Issued", "Status", "Redeemed"].map(h => (
                   <span key={h} className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">{h}</span>
                 ))}
               </div>
 
               <div className="divide-y divide-zinc-100">
                 {filteredCodes.length === 0 ? (
-                  <div className="px-6 py-12 text-center text-[13px] text-zinc-400">Nessun codice trovato</div>
+                  <div className="px-6 py-12 text-center text-[13px] text-zinc-400">No codes found</div>
                 ) : filteredCodes.map(c => {
                   const s  = CODE_STATUS_CFG[c.status];
                   const ch = CHANNEL_CFG[c.channel];
@@ -628,7 +636,7 @@ export function Monetization() {
 
               {filteredCodes.length > 0 && (
                 <div className="px-6 py-3 border-t border-zinc-100 bg-zinc-50">
-                  <span className="text-[11px] text-zinc-400">{filteredCodes.length} codici</span>
+                  <span className="text-[11px] text-zinc-400">{filteredCodes.length} codes</span>
                 </div>
               )}
             </div>
@@ -643,7 +651,7 @@ export function Monetization() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm border border-zinc-200">
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200">
               <div>
-                <h2 className="text-[15px] font-semibold text-zinc-900">Tipo di accesso</h2>
+                <h2 className="text-[15px] font-semibold text-zinc-900">Access type</h2>
                 <p className="text-[12px] text-zinc-400 mt-0.5">{editingAccess.name}</p>
               </div>
               <button onClick={() => setEditingAccess(null)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
@@ -662,7 +670,7 @@ export function Monetization() {
                     <div className={`size-2 rounded-full mb-2 ${type === "free" ? "bg-emerald-400" : "bg-amber-400"}`} />
                     <p className="text-[13px] font-semibold text-zinc-900 capitalize">{type}</p>
                     <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">
-                      {type === "free" ? "QR universale · accesso libero" : "Codice unico per visitatore · device-locked"}
+                      {type === "free" ? "Universal QR · free access" : "Unique code per visitor · device-locked"}
                     </p>
                   </button>
                 ))}
@@ -671,11 +679,11 @@ export function Monetization() {
             <div className="flex gap-3 px-6 py-5 border-t border-zinc-200 bg-zinc-50">
               <button onClick={() => setEditingAccess(null)}
                 className="flex-1 px-4 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
-                Annulla
+                Cancel
               </button>
               <button onClick={saveEditAccess}
                 className="flex-1 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all">
-                Salva
+                Save
               </button>
             </div>
           </div>
@@ -688,7 +696,7 @@ export function Monetization() {
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200">
               <div>
-                <h2 className="text-[15px] font-semibold text-zinc-900">Nuovo ordine</h2>
+                <h2 className="text-[15px] font-semibold text-zinc-900">New order</h2>
                 <p className="text-[12px] text-zinc-400 mt-0.5">{orderGuide.name}</p>
               </div>
               <button onClick={() => setShowOrderModal(false)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
@@ -697,11 +705,11 @@ export function Monetization() {
             </div>
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-[12px] font-semibold text-zinc-700 mb-2">Metodo di consegna</label>
+                <label className="block text-[12px] font-semibold text-zinc-700 mb-2">Delivery method</label>
                 <div className="grid grid-cols-2 gap-3">
                   {([
-                    { type: "digital" as DeliveryType, icon: <FileDown className="size-5 text-zinc-400" />, title: "Digitale", desc: "Scarica CSV o JSON immediatamente" },
-                    { type: "physical" as DeliveryType, icon: <Package className="size-5 text-zinc-400" />, title: "Fisico", desc: "Sticker roll pre-stampato · spedito in 5–7 giorni" },
+                    { type: "digital" as DeliveryType, icon: <FileDown className="size-5 text-zinc-400" />, title: "Digital", desc: "Download CSV or JSON immediately" },
+                    { type: "physical" as DeliveryType, icon: <Package className="size-5 text-zinc-400" />, title: "Physical", desc: "Pre-printed sticker roll · shipped in 5–7 days" },
                   ]).map(({ type, icon, title, desc }) => (
                     <button key={type} onClick={() => setOrderDelivery(type)}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${orderDelivery === type ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-300"}`}>
@@ -713,12 +721,12 @@ export function Monetization() {
                 </div>
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-zinc-700 mb-2">Quantità</label>
+                <label className="block text-[12px] font-semibold text-zinc-700 mb-2">Quantity</label>
                 <div className="relative">
                   <select value={orderQty} onChange={e => setOrderQty(parseInt(e.target.value))}
                     className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
                     {[500, 1000, 3000, 5000, 10000, 50000, 100000].map(n => (
-                      <option key={n} value={n}>{n.toLocaleString()} codici</option>
+                      <option key={n} value={n}>{n.toLocaleString()} codes</option>
                     ))}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
@@ -727,7 +735,7 @@ export function Monetization() {
               {orderDelivery === "digital" ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <label className="text-[12px] font-semibold text-zinc-700">Formato</label>
+                    <label className="text-[12px] font-semibold text-zinc-700">Format</label>
                     <div className="flex gap-1 ml-auto">
                       {(["csv", "json"] as const).map(f => (
                         <button key={f} onClick={() => setOrderFormat(f)}
@@ -746,7 +754,7 @@ export function Monetization() {
                 <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 flex items-start gap-3">
                   <Truck className="size-4 text-zinc-400 flex-shrink-0 mt-0.5" />
                   <p className="text-[11px] text-zinc-500 leading-relaxed">
-                    L'ordine verrà stampato e spedito come sticker roll pre-tagliato entro 5–7 giorni lavorativi. Il numero di tracking verrà inviato all'email dell'account.
+                    The order will be printed and shipped as a pre-cut sticker roll within 5–7 business days. The tracking number will be sent to the account email.
                   </p>
                 </div>
               )}
@@ -755,12 +763,12 @@ export function Monetization() {
               <button onClick={handlePlaceOrder}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all">
                 {orderDelivery === "digital"
-                  ? <><Download className="size-4" />Genera &amp; scarica</>
-                  : <><Package className="size-4" />Conferma ordine</>
+                  ? <><Download className="size-4" />Generate &amp; download</>
+                  : <><Package className="size-4" />Confirm order</>
                 }
               </button>
               <button onClick={() => setShowOrderModal(false)} className="w-full py-2 text-[12px] text-zinc-400 hover:text-zinc-700 transition-colors">
-                Annulla
+                Cancel
               </button>
             </div>
           </div>

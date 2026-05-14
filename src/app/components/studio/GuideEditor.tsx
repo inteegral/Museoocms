@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router";
-import { ArrowLeft, Plus, GripVertical, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye } from "lucide-react";
+import { ArrowLeft, Plus, GripVertical, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye, Ticket, Unlock } from "lucide-react";
 import confetti from "canvas-confetti";
 import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents } from "../../data/mockData";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
@@ -341,6 +341,29 @@ function GuideEditorContent() {
               className="text-[14px] text-zinc-500 leading-relaxed w-full border-none outline-none bg-transparent resize-none focus:ring-0 placeholder:text-zinc-300 cursor-text"
               placeholder="Add a description..."
             />
+            {(() => {
+              const isPaid = guide.accessMode === "paid";
+              const used  = isPaid ? (guide.codesUsed    ?? 0) : (guide.accessesUsed   ?? 0);
+              const total = isPaid ? (guide.codesTotal   ?? 0) : (guide.accessesLimit  ?? 0);
+              const remaining = total - used;
+              const pct = total ? Math.round((used / total) * 100) : 0;
+              const isLow = total ? remaining / total < 0.15 : false;
+              const barColor = isLow ? "#f59e0b" : isPaid ? "#8b5cf6" : "#10b981";
+              return (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${isPaid ? "bg-violet-50 text-violet-700 border border-violet-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
+                    {isPaid ? <Ticket className="size-2.5" strokeWidth={2} /> : <Unlock className="size-2.5" strokeWidth={2} />}
+                    {isPaid ? "Paid access" : "Free access"}
+                  </span>
+                  <div className="w-14 h-1.5 bg-zinc-100 rounded-full overflow-hidden flex-shrink-0">
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                  </div>
+                  <span className={`text-[10px] font-medium tabular-nums ${isLow ? "text-amber-600" : "text-zinc-400"}`}>
+                    {remaining.toLocaleString()} / {total.toLocaleString()} accesses
+                  </span>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Workflow progress */}
