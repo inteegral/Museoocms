@@ -13,18 +13,18 @@ import { Translations } from "./Translations";
 import { VoiceTalent } from "./VoiceTalent";
 
 const COVER_GALLERY = [
-  "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800&q=80",
-  "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?w=800&q=80",
-  "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=800&q=80",
-  "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80",
-  "https://images.unsplash.com/photo-1566127444979-b3d2b654e3c2?w=800&q=80",
-  "https://images.unsplash.com/photo-1577083165633-14ebcdb0f658?w=800&q=80",
+  "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",
+  "https://images.unsplash.com/photo-1541367777708-7905fe3296c0?w=800&q=80",
+  "https://images.unsplash.com/photo-1579541671172-43429ce17aca?w=800&q=80",
+  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+  "https://images.unsplash.com/photo-1526779259212-939e64788e3c?w=800&q=80",
+  "https://images.unsplash.com/photo-1545987796-200677ee1011?w=800&q=80",
+  "https://images.unsplash.com/photo-1580974852861-c381510bc98d?w=800&q=80",
+  "https://images.unsplash.com/photo-1569779213435-ba3167dde7cc?w=800&q=80",
+  "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=800&q=80",
+  "https://images.unsplash.com/photo-1517697471339-4aa32003c11a?w=800&q=80",
   "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=800&q=80",
-  "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80",
   "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80",
-  "https://images.unsplash.com/photo-1531243625752-c0eb5e6fbaf0?w=800&q=80",
-  "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=800&q=80",
-  "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=800&q=80",
 ];
 
 interface POI {
