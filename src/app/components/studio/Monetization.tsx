@@ -2,11 +2,14 @@ import { useState } from "react";
 import {
   Smartphone, QrCode, Download, Plus, Check, X, ChevronDown,
   Package, FileDown, Truck, Clock, CheckCircle2,
+  Globe, Eye, EyeOff, RotateCcw, Copy,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 
 type DeliveryType = "digital" | "physical";
-type OrderStatus = "ready" | "ordered" | "printing" | "shipped" | "delivered";
+type OrderStatus  = "ready" | "ordered" | "printing" | "shipped" | "delivered";
+type CodeStatus   = "available" | "redeemed" | "expired";
+type CodeChannel  = "inloco" | "qr" | "online";
 
 interface Order {
   id: string;
@@ -25,6 +28,17 @@ interface GuideEntry {
   access: "free" | "paid";
 }
 
+interface AccessCode {
+  id: string;
+  code: string;
+  guideId: string;
+  guideName: string;
+  channel: CodeChannel;
+  status: CodeStatus;
+  issuedAt: string;
+  redeemedAt?: string;
+}
+
 const mockGuides: GuideEntry[] = [
   { id: "1", name: "Renaissance Masterpieces", access: "free" },
   { id: "2", name: "Ancient Egypt Collection",  access: "paid" },
@@ -41,25 +55,64 @@ const mockOrders: Order[] = [
   { id: "o6", guideName: "Ancient Egypt Collection", date: "2026-04-18", quantity: 3000,  redeemed:   0, label: "April Batch",     delivery: "physical", status: "printing"  },
 ];
 
+const ACCESS_CODES: AccessCode[] = [
+  { id: "c1",  code: "X7K2M", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "redeemed",  issuedAt: "2026-03-28", redeemedAt: "2026-04-01" },
+  { id: "c2",  code: "P4N9R", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "redeemed",  issuedAt: "2026-03-28", redeemedAt: "2026-04-02" },
+  { id: "c3",  code: "T6H3W", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "available", issuedAt: "2026-03-28" },
+  { id: "c4",  code: "B8F2V", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "available", issuedAt: "2026-03-28" },
+  { id: "c5",  code: "M5K7N", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "inloco", status: "redeemed",  issuedAt: "2026-03-20", redeemedAt: "2026-03-22" },
+  { id: "c6",  code: "R3T9H", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "inloco", status: "available", issuedAt: "2026-03-20" },
+  { id: "c7",  code: "W2X8P", guideId: "2", guideName: "Ancient Egypt Collection", channel: "qr",     status: "redeemed",  issuedAt: "2026-03-15", redeemedAt: "2026-03-16" },
+  { id: "c8",  code: "F9M4K", guideId: "2", guideName: "Ancient Egypt Collection", channel: "qr",     status: "available", issuedAt: "2026-03-15" },
+  { id: "c9",  code: "N7B3T", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "qr",     status: "available", issuedAt: "2026-04-10" },
+  { id: "c10", code: "H4V6Z", guideId: "2", guideName: "Ancient Egypt Collection", channel: "online", status: "redeemed",  issuedAt: "2026-04-05", redeemedAt: "2026-04-05" },
+  { id: "c11", code: "K2P8Y", guideId: "2", guideName: "Ancient Egypt Collection", channel: "online", status: "redeemed",  issuedAt: "2026-04-06", redeemedAt: "2026-04-07" },
+  { id: "c12", code: "G5W3N", guideId: "2", guideName: "Ancient Egypt Collection", channel: "online", status: "available", issuedAt: "2026-04-08" },
+  { id: "c13", code: "Y7R4M", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "online", status: "expired",   issuedAt: "2026-02-01" },
+];
+
+const WEBHOOK_LOGS = [
+  { id: "w1", time: "2026-04-08 14:32", ref: "ORD-8821", guide: "Ancient Egypt Collection", status: 200 },
+  { id: "w2", time: "2026-04-07 09:15", ref: "ORD-8812", guide: "Ancient Egypt Collection", status: 200 },
+  { id: "w3", time: "2026-04-06 16:44", ref: "ORD-8791", guide: "Ancient Egypt Collection", status: 200 },
+  { id: "w4", time: "2026-04-05 11:22", ref: "ORD-8764", guide: "Ancient Egypt Collection", status: 422 },
+  { id: "w5", time: "2026-04-05 10:58", ref: "ORD-8763", guide: "Ancient Egypt Collection", status: 200 },
+];
+
+const WEBHOOK_URL = "https://api.museoo.com/webhooks/issue-code";
+const API_KEY     = "msk_live_8f2k9x4p7q3n1m6v5r8t2w9y";
+
+const STATUS_CODE_CFG: Record<CodeStatus, { label: string; dot: string; text: string }> = {
+  available: { label: "Available", dot: "bg-emerald-400", text: "text-emerald-700" },
+  redeemed:  { label: "Redeemed",  dot: "bg-zinc-400",   text: "text-zinc-500"   },
+  expired:   { label: "Expired",   dot: "bg-red-400",    text: "text-red-600"    },
+};
+
+const CHANNEL_CFG: Record<CodeChannel, { label: string; text: string; bg: string }> = {
+  inloco: { label: "In-loco",  text: "text-sky-700",    bg: "bg-sky-50"    },
+  qr:     { label: "QR print", text: "text-violet-700", bg: "bg-violet-50" },
+  online: { label: "Online",   text: "text-amber-700",  bg: "bg-amber-50"  },
+};
+
 function progressPct(redeemed: number, total: number) {
   return total > 0 ? Math.round((redeemed / total) * 100) : 0;
 }
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; dot: string; text: string; icon: React.ReactNode }> = {
-  ready:     { label: "Ready",     dot: "bg-zinc-400",   text: "text-zinc-500",   icon: <FileDown className="size-3.5" /> },
-  ordered:   { label: "Ordered",   dot: "bg-sky-400",    text: "text-sky-600",    icon: <Clock className="size-3.5" /> },
-  printing:  { label: "Printing",  dot: "bg-amber-400",  text: "text-amber-600",  icon: <Clock className="size-3.5" /> },
-  shipped:   { label: "Shipped",   dot: "bg-blue-400",   text: "text-blue-600",   icon: <Truck className="size-3.5" /> },
+  ready:     { label: "Ready",     dot: "bg-zinc-400",    text: "text-zinc-500",    icon: <FileDown className="size-3.5" /> },
+  ordered:   { label: "Ordered",   dot: "bg-sky-400",     text: "text-sky-600",     icon: <Clock className="size-3.5" /> },
+  printing:  { label: "Printing",  dot: "bg-amber-400",   text: "text-amber-600",   icon: <Clock className="size-3.5" /> },
+  shipped:   { label: "Shipped",   dot: "bg-blue-400",    text: "text-blue-600",    icon: <Truck className="size-3.5" /> },
   delivered: { label: "Delivered", dot: "bg-emerald-400", text: "text-emerald-600", icon: <CheckCircle2 className="size-3.5" /> },
 };
 
 function generateQRCodes(count: number, guide: GuideEntry) {
   return Array.from({ length: count }, () => ({
-    qr_code: `QR-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
-    audioguide_id: guide.name.toLowerCase().replace(/\s+/g, "-"),
+    qr_code:         `QR-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+    audioguide_id:   guide.name.toLowerCase().replace(/\s+/g, "-"),
     audioguide_name: guide.name,
-    created_at: new Date().toISOString(),
-    status: "available",
+    created_at:      new Date().toISOString(),
+    status:          "available",
   }));
 }
 
@@ -97,16 +150,36 @@ export function Monetization() {
 
   // New order modal
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [orderGuide, setOrderGuide] = useState<GuideEntry | null>(null);
+  const [orderGuide,    setOrderGuide]    = useState<GuideEntry | null>(null);
   const [orderDelivery, setOrderDelivery] = useState<DeliveryType>("digital");
-  const [orderFormat, setOrderFormat] = useState<"csv" | "json">("csv");
-  const [orderQty, setOrderQty] = useState<number>(500);
+  const [orderFormat,   setOrderFormat]   = useState<"csv" | "json">("csv");
+  const [orderQty,      setOrderQty]      = useState<number>(500);
 
   // Edit access modal
   const [editingAccess, setEditingAccess] = useState<GuideEntry | null>(null);
-  const [editAccess, setEditAccess] = useState<"free" | "paid">("free");
+  const [editAccess,    setEditAccess]    = useState<"free" | "paid">("free");
+
+  // Online / webhook
+  const [showApiKey,    setShowApiKey]    = useState(false);
+  const [emailEnabled,  setEmailEnabled]  = useState(true);
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
+  const [copiedApiKey,  setCopiedApiKey]  = useState(false);
+
+  // Code log filters
+  const [logFilterGuide,   setLogFilterGuide]   = useState("all");
+  const [logFilterChannel, setLogFilterChannel] = useState<CodeChannel | "all">("all");
+  const [logFilterStatus,  setLogFilterStatus]  = useState<CodeStatus  | "all">("all");
 
   const paidGuides = guides.filter(g => g.access === "paid");
+
+  function copy(text: string, which: "webhook" | "apikey") {
+    navigator.clipboard.writeText(text).catch(() => {});
+    if (which === "webhook") {
+      setCopiedWebhook(true); setTimeout(() => setCopiedWebhook(false), 2000);
+    } else {
+      setCopiedApiKey(true);  setTimeout(() => setCopiedApiKey(false),  2000);
+    }
+  }
 
   const openOrderModal = (guide: GuideEntry) => {
     setOrderGuide(guide);
@@ -128,28 +201,34 @@ export function Monetization() {
 
   const handlePlaceOrder = () => {
     if (!orderGuide) return;
-    const count = orderQty;
     if (orderDelivery === "digital") {
-      const codes = generateQRCodes(count, orderGuide);
+      const codes = generateQRCodes(orderQty, orderGuide);
       downloadFile(codes, orderGuide, orderFormat);
     }
     const newOrder: Order = {
-      id: `o${orders.length + 1}`,
+      id:       `o${orders.length + 1}`,
       guideName: orderGuide.name,
-      date: new Date().toISOString().split("T")[0],
-      quantity: count,
+      date:     new Date().toISOString().split("T")[0],
+      quantity: orderQty,
       redeemed: 0,
-      label: `Order ${orders.length + 1}`,
+      label:    `Order ${orders.length + 1}`,
       delivery: orderDelivery,
-      status: orderDelivery === "digital" ? "ready" : "ordered",
+      status:   orderDelivery === "digital" ? "ready" : "ordered",
     };
     setOrders([newOrder, ...orders]);
     setShowOrderModal(false);
   };
 
-  const visibleOrders = filterGuide === "all" ? orders : orders.filter(o => o.guideName === filterGuide);
-  const totalCodes   = paidGuides.reduce((s, g) => s + orders.filter(o => o.guideName === g.name).reduce((a, o) => a + o.quantity, 0), 0);
-  const totalRedeemed = paidGuides.reduce((s, g) => s + orders.filter(o => o.guideName === g.name).reduce((a, o) => a + o.redeemed, 0), 0);
+  const visibleOrders  = filterGuide === "all" ? orders : orders.filter(o => o.guideName === filterGuide);
+  const totalCodes     = paidGuides.reduce((s, g) => s + orders.filter(o => o.guideName === g.name).reduce((a, o) => a + o.quantity, 0), 0);
+  const totalRedeemed  = paidGuides.reduce((s, g) => s + orders.filter(o => o.guideName === g.name).reduce((a, o) => a + o.redeemed, 0), 0);
+
+  const filteredCodes = ACCESS_CODES.filter(c => {
+    if (logFilterGuide   !== "all" && c.guideId  !== logFilterGuide)   return false;
+    if (logFilterChannel !== "all" && c.channel  !== logFilterChannel) return false;
+    if (logFilterStatus  !== "all" && c.status   !== logFilterStatus)  return false;
+    return true;
+  });
 
   return (
     <PageShell>
@@ -161,7 +240,7 @@ export function Monetization() {
           <p className="text-[13px] text-zinc-500">Manage free and paid access · order and distribute visitor QR codes</p>
         </div>
 
-        {/* Inline stats */}
+        {/* Stats */}
         <div className="flex items-center gap-8 mb-8 px-0.5">
           <div>
             <span className="text-[22px] font-light text-zinc-900">{paidGuides.length}</span>
@@ -202,22 +281,13 @@ export function Monetization() {
                         <p className="text-[11px] text-zinc-400">{genTotal} ordered · {redTotal} redeemed</p>
                       )}
                     </div>
-                    <button
-                      onClick={() => openEditAccess(guide)}
-                      className="flex items-center gap-3 w-fit hover:opacity-75 transition-opacity"
-                    >
-                      <div
-                        className="relative flex-shrink-0 rounded-full transition-colors duration-200"
-                        style={{ width: 36, height: 20, backgroundColor: isPaid ? "#a1a1aa" : "#e4e4e7" }}
-                      >
-                        <span
-                          className="absolute rounded-full transition-all duration-200"
-                          style={{ width: 14, height: 14, top: 3, left: isPaid ? 19 : 3, backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
-                        />
+                    <button onClick={() => openEditAccess(guide)} className="flex items-center gap-3 w-fit hover:opacity-75 transition-opacity">
+                      <div className="relative flex-shrink-0 rounded-full transition-colors duration-200"
+                        style={{ width: 36, height: 20, backgroundColor: isPaid ? "#a1a1aa" : "#e4e4e7" }}>
+                        <span className="absolute rounded-full transition-all duration-200"
+                          style={{ width: 14, height: 14, top: 3, left: isPaid ? 19 : 3, backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }} />
                       </div>
-                      <span className="text-[12px] font-medium text-zinc-500 w-7">
-                        {isPaid ? "Paid" : "Free"}
-                      </span>
+                      <span className="text-[12px] font-medium text-zinc-500 w-7">{isPaid ? "Paid" : "Free"}</span>
                     </button>
                     <div className="flex justify-end">
                       {!isPaid ? (
@@ -225,10 +295,8 @@ export function Monetization() {
                           <QrCode className="size-3.5" /><span>Download QR</span>
                         </button>
                       ) : (
-                        <button
-                          onClick={() => openOrderModal(guide)}
-                          className="inline-flex items-center gap-1.5 text-zinc-500 text-[12px] font-medium hover:text-zinc-900 transition-colors"
-                        >
+                        <button onClick={() => openOrderModal(guide)}
+                          className="inline-flex items-center gap-1.5 text-zinc-500 text-[12px] font-medium hover:text-zinc-900 transition-colors">
                           <Plus className="size-3.5" /><span>New Order</span>
                         </button>
                       )}
@@ -246,34 +314,25 @@ export function Monetization() {
                 <h2 className="text-[14px] font-semibold text-zinc-900">Orders</h2>
                 <p className="text-[12px] text-zinc-400 mt-0.5">Digital downloads and physical sticker rolls</p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <select
-                    value={filterGuide}
-                    onChange={(e) => setFilterGuide(e.target.value)}
-                    className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer"
-                  >
-                    <option value="all">All guides</option>
-                    {paidGuides.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
-                </div>
+              <div className="relative">
+                <select value={filterGuide} onChange={(e) => setFilterGuide(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
+                  <option value="all">All guides</option>
+                  {paidGuides.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
             <div className="px-6 py-2.5 bg-zinc-50 border-b border-zinc-100 grid grid-cols-[1fr_80px_100px_100px_80px] gap-4 items-center">
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Order</span>
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest text-right">Qty</span>
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Delivery</span>
-              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Status</span>
-              <span />
+              {["Order", "Qty", "Delivery", "Status", ""].map((h, i) => (
+                <span key={i} className={`text-[10px] font-semibold text-zinc-400 uppercase tracking-widest ${i === 1 ? "text-right" : ""}`}>{h}</span>
+              ))}
             </div>
 
             <div className="divide-y divide-zinc-100">
               {visibleOrders.length === 0 ? (
-                <div className="px-6 py-10 text-center">
-                  <p className="text-[13px] text-zinc-400">No orders found</p>
-                </div>
+                <div className="px-6 py-10 text-center"><p className="text-[13px] text-zinc-400">No orders found</p></div>
               ) : visibleOrders.map((order) => {
                 const pct = progressPct(order.redeemed, order.quantity);
                 const cfg = STATUS_CONFIG[order.status];
@@ -285,30 +344,23 @@ export function Monetization() {
                       {order.redeemed > 0 && (
                         <div className="mt-1.5 flex items-center gap-2">
                           <div className="w-20 h-1 bg-zinc-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${pct === 100 ? "bg-zinc-300" : "bg-zinc-400"}`}
-                              style={{ width: `${pct}%` }}
-                            />
+                            <div className={`h-full rounded-full ${pct === 100 ? "bg-zinc-300" : "bg-zinc-400"}`} style={{ width: `${pct}%` }} />
                           </div>
                           <span className="text-[10px] text-zinc-400">{order.redeemed}/{order.quantity}</span>
                         </div>
                       )}
                     </div>
-
                     <span className="text-[13px] font-semibold text-zinc-700 tabular-nums text-right">{order.quantity.toLocaleString()}</span>
-
                     <div className="flex items-center gap-1.5">
                       {order.delivery === "digital"
                         ? <><FileDown className="size-3.5 text-zinc-400" /><span className="text-[12px] text-zinc-500">Digital</span></>
                         : <><Package className="size-3.5 text-zinc-400" /><span className="text-[12px] text-zinc-500">Physical</span></>
                       }
                     </div>
-
                     <div className="flex items-center gap-1.5">
                       <span className={`size-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
                       <span className={`text-[12px] font-medium ${cfg.text}`}>{cfg.label}</span>
                     </div>
-
                     <div className="flex justify-end">
                       {order.delivery === "digital" && order.status === "ready" && (
                         <button className="p-1.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all">
@@ -342,6 +394,159 @@ export function Monetization() {
             </div>
           </div>
 
+          {/* ── Acquisto online ── */}
+          <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
+            <div className="px-6 py-5 flex items-center gap-4">
+              <div className="size-9 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <Globe className="size-4 text-amber-600" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[14px] font-semibold text-zinc-900">Acquisto online</p>
+                <p className="text-[12px] text-zinc-500">Il tuo sistema di pagamento chiama il webhook · Museoo emette il codice e lo invia via email al visitatore</p>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-lg flex-shrink-0">
+                <span className="size-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[12px] text-emerald-700 font-medium">Attivo</span>
+              </div>
+            </div>
+
+            <div className="px-6 pb-6 border-t border-zinc-100 pt-5 space-y-4">
+
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">Webhook endpoint</label>
+                <div className="flex gap-2">
+                  <div className="flex-1 px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg font-mono text-[12px] text-zinc-700 truncate select-all">
+                    {WEBHOOK_URL}
+                  </div>
+                  <button onClick={() => copy(WEBHOOK_URL, "webhook")}
+                    className="px-3.5 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex items-center gap-1.5 text-[12px] font-medium flex-shrink-0">
+                    {copiedWebhook ? <><Check className="size-3.5 text-emerald-500" />Copiato</> : <><Copy className="size-3.5" />Copia</>}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">API key</label>
+                <div className="flex gap-2">
+                  <div className="flex-1 px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg font-mono text-[12px] text-zinc-700 truncate">
+                    {showApiKey ? API_KEY : "msk_live_" + "•".repeat(16)}
+                  </div>
+                  <button onClick={() => setShowApiKey(!showApiKey)}
+                    className="px-3 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex-shrink-0"
+                    title={showApiKey ? "Nascondi" : "Mostra"}>
+                    {showApiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                  </button>
+                  <button onClick={() => copy(API_KEY, "apikey")}
+                    className="px-3.5 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex items-center gap-1.5 text-[12px] font-medium flex-shrink-0">
+                    {copiedApiKey ? <><Check className="size-3.5 text-emerald-500" />Copiato</> : <><Copy className="size-3.5" />Copia</>}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-3.5 px-4 bg-zinc-50 rounded-xl">
+                <div>
+                  <p className="text-[13px] font-semibold text-zinc-900">Email automatica al visitatore</p>
+                  <p className="text-[12px] text-zinc-500 mt-0.5">Invia il codice non appena il webhook viene ricevuto correttamente</p>
+                </div>
+                <button onClick={() => setEmailEnabled(!emailEnabled)}
+                  className="relative flex-shrink-0 rounded-full transition-colors duration-200 ml-6"
+                  style={{ width: 36, height: 20, backgroundColor: emailEnabled ? "#18181b" : "#e4e4e7" }}>
+                  <span className="absolute rounded-full transition-all duration-200"
+                    style={{ width: 14, height: 14, top: 3, left: emailEnabled ? 19 : 3, backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }} />
+                </button>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[12px] font-semibold text-zinc-700">Ultimi eventi webhook</p>
+                  <button className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors">
+                    <RotateCcw className="size-3" />Aggiorna
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {WEBHOOK_LOGS.map(log => (
+                    <div key={log.id} className="flex items-center gap-3 px-3 py-2.5 bg-zinc-50 rounded-lg">
+                      <span className={`size-1.5 rounded-full flex-shrink-0 ${log.status === 200 ? "bg-emerald-400" : "bg-red-400"}`} />
+                      <span className={`text-[11px] font-semibold w-8 flex-shrink-0 ${log.status === 200 ? "text-emerald-600" : "text-red-600"}`}>{log.status}</span>
+                      <span className="text-[11px] font-mono text-zinc-400 w-36 flex-shrink-0">{log.time}</span>
+                      <span className="text-[11px] font-mono font-semibold text-zinc-700 w-24 flex-shrink-0">{log.ref}</span>
+                      <span className="text-[11px] text-zinc-400 flex-1 truncate">{log.guide}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Log codici ── */}
+          <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
+            <div className="px-6 py-4 border-b border-zinc-100 flex items-center gap-3">
+              <h2 className="text-[14px] font-semibold text-zinc-900 flex-1">Log codici</h2>
+              <div className="relative">
+                <select value={logFilterGuide} onChange={e => setLogFilterGuide(e.target.value)}
+                  className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
+                  <option value="all">Tutte le guide</option>
+                  {paidGuides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
+              </div>
+              <div className="relative">
+                <select value={logFilterChannel} onChange={e => setLogFilterChannel(e.target.value as CodeChannel | "all")}
+                  className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
+                  <option value="all">Tutti i canali</option>
+                  <option value="inloco">In-loco</option>
+                  <option value="qr">QR print</option>
+                  <option value="online">Online</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
+              </div>
+              <div className="relative">
+                <select value={logFilterStatus} onChange={e => setLogFilterStatus(e.target.value as CodeStatus | "all")}
+                  className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
+                  <option value="all">Tutti gli stati</option>
+                  <option value="available">Available</option>
+                  <option value="redeemed">Redeemed</option>
+                  <option value="expired">Expired</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="px-6 py-2 bg-zinc-50 border-b border-zinc-100 grid grid-cols-[120px_1fr_90px_90px_110px_90px] gap-4">
+              {["Codice", "Audio guide", "Canale", "Emesso", "Stato", "Riscattato"].map(h => (
+                <span key={h} className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">{h}</span>
+              ))}
+            </div>
+
+            <div className="divide-y divide-zinc-100">
+              {filteredCodes.length === 0 ? (
+                <div className="px-6 py-12 text-center text-[13px] text-zinc-400">Nessun codice trovato</div>
+              ) : filteredCodes.map(c => {
+                const s  = STATUS_CODE_CFG[c.status];
+                const ch = CHANNEL_CFG[c.channel];
+                return (
+                  <div key={c.id} className="px-6 py-3.5 grid grid-cols-[120px_1fr_90px_90px_110px_90px] gap-4 items-center hover:bg-zinc-50/60 transition-colors">
+                    <span className="font-mono text-[13px] font-semibold text-zinc-900 tracking-[0.18em]">{c.code}</span>
+                    <span className="text-[12px] text-zinc-600 truncate">{c.guideName}</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold w-fit ${ch.text} ${ch.bg}`}>{ch.label}</span>
+                    <span className="text-[12px] text-zinc-500">{c.issuedAt}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`size-1.5 rounded-full flex-shrink-0 ${s.dot}`} />
+                      <span className={`text-[12px] font-medium ${s.text}`}>{s.label}</span>
+                    </div>
+                    <span className="text-[12px] text-zinc-400">{c.redeemedAt ?? "—"}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {filteredCodes.length > 0 && (
+              <div className="px-6 py-3 border-t border-zinc-100 bg-zinc-50">
+                <span className="text-[11px] text-zinc-400">{filteredCodes.length} codici</span>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
@@ -360,8 +565,6 @@ export function Monetization() {
             </div>
 
             <div className="p-6 space-y-5">
-
-              {/* Delivery type */}
               <div>
                 <label className="block text-[12px] font-semibold text-zinc-700 mb-2">Delivery method</label>
                 <div className="grid grid-cols-2 gap-3">
@@ -369,13 +572,8 @@ export function Monetization() {
                     { type: "digital" as DeliveryType, icon: <FileDown className="size-5 text-zinc-400" />, title: "Digital", desc: "Download CSV or JSON immediately" },
                     { type: "physical" as DeliveryType, icon: <Package className="size-5 text-zinc-400" />, title: "Physical", desc: "Pre-printed sticker roll · shipped in 5–7 days" },
                   ]).map(({ type, icon, title, desc }) => (
-                    <button
-                      key={type}
-                      onClick={() => setOrderDelivery(type)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        orderDelivery === type ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-300"
-                      }`}
-                    >
+                    <button key={type} onClick={() => setOrderDelivery(type)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${orderDelivery === type ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-300"}`}>
                       <div className="mb-2">{icon}</div>
                       <p className="text-[13px] font-semibold text-zinc-900">{title}</p>
                       <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">{desc}</p>
@@ -384,15 +582,11 @@ export function Monetization() {
                 </div>
               </div>
 
-              {/* Quantity */}
               <div>
                 <label className="block text-[12px] font-semibold text-zinc-700 mb-2">Quantity</label>
                 <div className="relative">
-                  <select
-                    value={orderQty}
-                    onChange={(e) => setOrderQty(parseInt(e.target.value))}
-                    className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer"
-                  >
+                  <select value={orderQty} onChange={(e) => setOrderQty(parseInt(e.target.value))}
+                    className="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
                     {[500, 1000, 3000, 5000, 10000, 50000, 100000].map((n) => (
                       <option key={n} value={n}>{n.toLocaleString()} codes</option>
                     ))}
@@ -401,20 +595,14 @@ export function Monetization() {
                 </div>
               </div>
 
-              {/* Contextual panel */}
               {orderDelivery === "digital" ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="text-[12px] font-semibold text-zinc-700">Format</label>
                     <div className="flex gap-1 ml-auto">
                       {(["csv", "json"] as const).map((f) => (
-                        <button
-                          key={f}
-                          onClick={() => setOrderFormat(f)}
-                          className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                            orderFormat === f ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
-                          }`}
-                        >
+                        <button key={f} onClick={() => setOrderFormat(f)}
+                          className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${orderFormat === f ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}>
                           .{f}
                         </button>
                       ))}
@@ -440,19 +628,14 @@ export function Monetization() {
             </div>
 
             <div className="px-6 py-5 border-t border-zinc-100 space-y-3">
-              <button
-                onClick={handlePlaceOrder}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all"
-              >
+              <button onClick={handlePlaceOrder}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all">
                 {orderDelivery === "digital"
-                  ? <><Download className="size-4" />Generate & Download</>
+                  ? <><Download className="size-4" />Generate &amp; Download</>
                   : <><Package className="size-4" />Place Order</>
                 }
               </button>
-              <button
-                onClick={() => setShowOrderModal(false)}
-                className="w-full py-2 text-[12px] text-zinc-400 hover:text-zinc-700 transition-colors"
-              >
+              <button onClick={() => setShowOrderModal(false)} className="w-full py-2 text-[12px] text-zinc-400 hover:text-zinc-700 transition-colors">
                 Cancel
               </button>
             </div>
@@ -476,15 +659,12 @@ export function Monetization() {
             <div className="p-6">
               <div className="grid grid-cols-2 gap-3">
                 {(["free", "paid"] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setEditAccess(type)}
+                  <button key={type} onClick={() => setEditAccess(type)}
                     className={`p-4 rounded-xl border-2 text-left transition-all ${
                       editAccess === type
                         ? type === "free" ? "border-emerald-400 bg-emerald-50" : "border-amber-400 bg-amber-50"
                         : "border-zinc-200 bg-white hover:border-zinc-300"
-                    }`}
-                  >
+                    }`}>
                     <div className={`size-2 rounded-full mb-2 ${type === "free" ? "bg-emerald-400" : "bg-amber-400"}`} />
                     <p className="text-[13px] font-semibold text-zinc-900 capitalize">{type}</p>
                     <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">
@@ -495,10 +675,12 @@ export function Monetization() {
               </div>
             </div>
             <div className="flex gap-3 px-6 py-5 border-t border-zinc-200 bg-zinc-50">
-              <button onClick={() => setEditingAccess(null)} className="flex-1 px-4 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
+              <button onClick={() => setEditingAccess(null)}
+                className="flex-1 px-4 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
                 Cancel
               </button>
-              <button onClick={saveEditAccess} className="flex-1 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all">
+              <button onClick={saveEditAccess}
+                className="flex-1 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all">
                 Save
               </button>
             </div>
