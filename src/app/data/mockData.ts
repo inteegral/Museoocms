@@ -17,6 +17,8 @@ export const mockPOIs = [
     body: "Welcome to the Venus de Milo, one of the most iconic sculptures of ancient Greek art. This marble statue dates from the Hellenistic period, around 130–100 BC, and represents Aphrodite, the Greek goddess of love and beauty...",
     imageUrl: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800&q=80",
     orderIndex: 0,
+    translations: ["it", "en", "fr"],
+    voices: ["it", "en"],
   },
   {
     id: "poi-2",
@@ -24,6 +26,8 @@ export const mockPOIs = [
     body: "This black-figure Attic amphora is a masterpiece of Greek pottery from the 6th century BC. The depicted scenes illustrate episodes from Greek mythology, with particular attention to anatomical detail and narrative composition...",
     imageUrl: "https://images.unsplash.com/photo-uaUeba2TIJs?w=800&q=80",
     orderIndex: 1,
+    translations: ["it", "en"],
+    voices: ["it"],
   },
   {
     id: "poi-3",
@@ -31,6 +35,8 @@ export const mockPOIs = [
     body: "Admire this extraordinary Roman mosaic from the 3rd century AD, discovered during the 1987 excavations. The polychrome tesserae form scenes of everyday life, offering a privileged window into Roman society...",
     imageUrl: "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?w=800&q=80",
     orderIndex: 2,
+    translations: ["it"],
+    voices: [],
   },
   {
     id: "poi-4",
@@ -38,6 +44,8 @@ export const mockPOIs = [
     body: "This Corinthian bronze helmet dates from the 5th century BC and is a perfect example of Greek warrior armour. Its distinctive shape fully protected the head, leaving only small openings for the eyes and mouth...",
     imageUrl: "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=800&q=80",
     orderIndex: 3,
+    translations: [],
+    voices: [],
   },
   {
     id: "poi-5",
@@ -45,6 +53,8 @@ export const mockPOIs = [
     body: "The statue of Apollo, god of music and poetry, is a sublime example of classical Greek sculpture. Its perfect proportions and serene expression embody the ancient ideal of beauty...",
     imageUrl: "https://images.unsplash.com/photo-hjC9MNmh7Q4?w=800&q=80",
     orderIndex: 4,
+    translations: ["it", "en", "de"],
+    voices: ["it", "en", "de"],
   },
 ];
 
@@ -56,9 +66,11 @@ export const mockGuides = [
     status: "published" as const,
     editorialStatus: "complete" as const,
     poiCount: 8,
+    poiIds: ["poi-1", "poi-2", "poi-3", "poi-4", "poi-5"],
     languages: ["it", "en"],
     createdAt: "15 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800&q=80",
+    expositionType: "permanent" as const,
   },
   {
     id: "guide-2",
@@ -67,9 +79,13 @@ export const mockGuides = [
     status: "draft" as const,
     editorialStatus: "under-revision" as const,
     poiCount: 5,
+    poiIds: ["poi-1", "poi-3", "poi-5"],
     languages: ["it"],
     createdAt: "20 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?w=800&q=80",
+    expositionType: "temporary" as const,
+    startDate: "2026-04-01",
+    endDate: "2026-06-30",
   },
   {
     id: "guide-3",
@@ -78,9 +94,11 @@ export const mockGuides = [
     status: "draft" as const,
     editorialStatus: "in-progress" as const,
     poiCount: 6,
+    poiIds: ["poi-2", "poi-4"],
     languages: ["it"],
     createdAt: "22 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=800&q=80",
+    expositionType: "permanent" as const,
   },
 ];
 
@@ -178,6 +196,53 @@ export const mockAnalytics = {
     { metric: "Share",     "Venus": 75,  "Amphora": 60, "Apollo": 55, "Athena": 52, "Bacchus": 45, "Mosaic": 70, "Helmet": 50, "Sphinx": 62, "Scarab": 44, "Papyrus": 38, "Forum": 68, "Fresco": 48, "Coins": 40, "Arch": 62, "Column": 50 },
   ],
 };
+
+export const mockEvents = [
+  {
+    id: "event-1",
+    title: "Greek Ceramics — Special Exhibition",
+    description: "An extraordinary selection of Attic ceramics never before exhibited together, on loan from four European collections.",
+    startDate: "2026-04-15",
+    endDate: "2026-07-30",
+    location: "Hall B, Ground Floor",
+    imageUrl: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=800&q=80",
+    status: "upcoming" as const,
+    linkedGuides: ["guide-1", "guide-2"],
+  },
+  {
+    id: "event-2",
+    title: "Curator Talk: Bronze Age Mediterranean",
+    description: "Join our chief curator for an in-depth conversation about cross-cultural exchange in the Bronze Age Mediterranean.",
+    startDate: "2026-05-20",
+    endDate: "2026-05-20",
+    location: "Auditorium",
+    imageUrl: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80",
+    status: "upcoming" as const,
+    linkedGuides: [],
+  },
+  {
+    id: "event-3",
+    title: "Family Workshop: Ancient Greece",
+    description: "Hands-on activities for children ages 6–12. Create your own amphora inspired by the museum collection.",
+    startDate: "2026-03-01",
+    endDate: "2026-05-31",
+    location: "Education Room",
+    imageUrl: "https://images.unsplash.com/photo-1513581166391-887a96ddeafd?w=800&q=80",
+    status: "ongoing" as const,
+    linkedGuides: ["guide-3"],
+  },
+  {
+    id: "event-4",
+    title: "Night at the Museum",
+    description: "An exclusive after-hours experience with live music, storytelling, and special guided tours through the permanent collection.",
+    startDate: "2026-02-14",
+    endDate: "2026-02-14",
+    location: "Main Hall",
+    imageUrl: "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=800&q=80",
+    status: "past" as const,
+    linkedGuides: ["guide-1"],
+  },
+];
 
 export const mockPacks = [
   {

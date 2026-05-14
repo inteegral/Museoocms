@@ -57,9 +57,9 @@ const allVoices: Voice[] = [
 ];
 
 const initialGuides: Guide[] = [
-  { id: "g1", name: "Renaissance Tour", targetLanguages: ["IT", "ES", "FR"], voiceAssignments: { IT: "v2", ES: "v3", FR: null } },
-  { id: "g2", name: "Modern Art Collection", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: "v2", ES: null } },
-  { id: "g3", name: "Ancient Sculptures", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: null, ES: null } },
+  { id: "guide-1", name: "Complete Museum Tour", targetLanguages: ["IT", "ES", "FR"], voiceAssignments: { IT: "v2", ES: "v3", FR: null } },
+  { id: "guide-2", name: "Highlights - Must-See Masterpieces", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: "v2", ES: null } },
+  { id: "guide-3", name: "Family Tour", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: null, ES: null } },
 ];
 
 const initialPOIs: POI[] = [
@@ -330,11 +330,13 @@ function VoicePanel({ textApproved, audioStatus, voice, lang, showPicker, voiceS
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
-export function Translations() {
+export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {}) {
+  const locked = !!defaultGuideId;
   const [pois, setPois] = useState<POI[]>(initialPOIs);
   const [guides] = useState<Guide[]>(initialGuides);
-  const [guideId, setGuideId] = useState(initialGuides[0].id);
-  const [lang, setLang] = useState(initialGuides[0].targetLanguages[0]);
+  const initialGuide = initialGuides.find(g => g.id === defaultGuideId) ?? initialGuides[0];
+  const [guideId, setGuideId] = useState(initialGuide.id);
+  const [lang, setLang] = useState(initialGuide.targetLanguages[0]);
   const [poiId, setPoiId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [search, setSearch] = useState("");
@@ -670,13 +672,15 @@ export function Translations() {
         </div>
 
         <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <div className="relative">
-            <select value={guideId} onChange={e => changeGuide(e.target.value)}
-              className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] font-semibold text-zinc-900 focus:outline-none cursor-pointer">
-              {initialGuides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
-          </div>
+          {!locked && (
+            <div className="relative">
+              <select value={guideId} onChange={e => changeGuide(e.target.value)}
+                className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] font-semibold text-zinc-900 focus:outline-none cursor-pointer">
+                {initialGuides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
+            </div>
+          )}
           <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-xl p-1">
             {guide.targetLanguages.map(l => (
               <button key={l} onClick={() => setLang(l)}

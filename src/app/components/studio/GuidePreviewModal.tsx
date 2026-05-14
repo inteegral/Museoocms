@@ -402,8 +402,13 @@ function POICard({
   );
 }
 
-// ── Main modal ────────────────────────────────────────────────────────────────
-export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps) {
+// ── GuidePhonePreview — exported so ReviewMode can embed it ───────────────────
+export function GuidePhonePreview({ guideName, onActivePOIChange, onScrollRef, annotationLayer }: {
+  guideName: string;
+  onActivePOIChange?: (index: number) => void;
+  onScrollRef?: (el: HTMLDivElement | null) => void;
+  annotationLayer?: React.ReactNode;
+}) {
   const [activePOIIndex, setActivePOIIndex] = useState(0);
   const [isPlaying, setIsPlaying]           = useState(false);
   const [progress, setProgress]             = useState(0);
@@ -472,6 +477,10 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
   }, [isPlaying, speed]);
 
   useEffect(() => {
+    onActivePOIChange?.(activePOIIndex);
+  }, [activePOIIndex]);
+
+  useEffect(() => {
     if (!showMap) return;
     const t = setInterval(() => setUserStep((s) => (s + 1) % USER_PATH.length), 2000);
     return () => clearInterval(t);
@@ -509,17 +518,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
   const { x: userX, y: userY } = USER_PATH[userStep];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-
-      <button onClick={onClose} className="absolute top-6 right-6 size-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-50">
-        <X className="size-5" />
-      </button>
-
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center pointer-events-none">
-        <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold mb-0.5" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>Visitor Preview</p>
-        <p className="text-[13px] text-white/60" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>{guideName}</p>
-      </div>
-
+    <>
       {/* Phone shell */}
       <div
         className="relative flex-shrink-0"
@@ -551,7 +550,11 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
           </div>
 
           {/* Scrollable content */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+          <div
+            ref={(el) => { scrollRef.current = el; onScrollRef?.(el); }}
+            className="flex-1 overflow-y-auto"
+            style={{ scrollbarWidth: "none", position: "relative" }}
+          >
 
             {/* ── Sticky language pill ── */}
             <div style={{ position: "sticky", top: 0, height: 0, overflow: "visible", zIndex: 30, pointerEvents: "none" }}>
@@ -886,6 +889,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
                 </div>
               )}
             </div>
+            {annotationLayer}
           </div>
 
           {/* Map FAB — inside screen, bottom-right */}
@@ -1060,6 +1064,22 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+// ── GuidePreviewModal — thin wrapper around GuidePhonePreview ─────────────────
+export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+      <button onClick={onClose} className="absolute top-6 right-6 size-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-50">
+        <X className="size-5" />
+      </button>
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+        <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold mb-0.5" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>Visitor Preview</p>
+        <p className="text-[13px] text-white/60" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>{guideName}</p>
+      </div>
+      <GuidePhonePreview guideName={guideName} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Clock, FileText, Mic, Globe, BookOpen, CheckCircle2, AlertCircle, CircleDashed } from "lucide-react";
-import { mockGuides, mockPOIs } from "../../data/mockData";
+import { useState, useEffect, useRef } from "react";
+import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, Mic, Globe, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check } from "lucide-react";
+import { mockGuides, mockPOIs, mockDocuments } from "../../data/mockData";
 
 type POIStatus = "idea" | "in-progress" | "under-revision" | "complete";
 
@@ -25,7 +25,6 @@ interface POIEditorProps {
   onClose: () => void;
   onSave: (updatedPOI: POI) => void;
   onDelete: (poiId: string) => void;
-  onDevelopWithAI?: () => void;
 }
 
 const statusConfig = {
@@ -42,6 +41,94 @@ function estimateDuration(text: string) {
   const minutes = words / 130;
   if (minutes < 1) return `${Math.round(minutes * 60)}s`;
   return `${Math.floor(minutes)}m ${Math.round((minutes % 1) * 60)}s`;
+}
+
+const WAVEFORM = [3,5,8,5,10,7,4,9,6,11,8,5,12,9,6,10,7,4,8,5,9,6,11,7,4,8,5,10,6,9,7,5,11,8,4,9,6,10,5,8,7,11,6,4,9,8,5,10,7,6];
+
+function AudioPlayer({ label, dark = false, duration }: { label?: string; dark?: boolean; duration: string }) {
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [elapsed, setElapsed] = useState("0:00");
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const totalSeconds = (() => {
+    const m = duration.match(/(\d+)m\s*(\d+)s/);
+    if (m) return parseInt(m[1]) * 60 + parseInt(m[2]);
+    const s = duration.match(/(\d+)s/);
+    return s ? parseInt(s[1]) : 30;
+  })();
+
+  useEffect(() => {
+    if (playing) {
+      intervalRef.current = setInterval(() => {
+        setProgress(p => {
+          if (p >= 100) { setPlaying(false); setElapsed("0:00"); return 0; }
+          const next = p + (100 / (totalSeconds * 10));
+          const sec = Math.floor((next / 100) * totalSeconds);
+          setElapsed(`${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`);
+          return next;
+        });
+      }, 100);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [playing, totalSeconds]);
+
+  const bg = dark ? "bg-zinc-900" : "bg-zinc-50 border border-zinc-200";
+  const trackBg = dark ? "bg-white/15" : "bg-zinc-200";
+  const trackFill = dark ? "bg-white" : "bg-zinc-800";
+  const barBase = dark ? "bg-white/20" : "bg-zinc-300";
+  const barFill = dark ? "bg-white/70" : "bg-zinc-500";
+  const timeColor = dark ? "text-white/40" : "text-zinc-400";
+  const labelColor = dark ? "text-white/30" : "text-zinc-400";
+
+  return (
+    <div className={`px-4 py-3.5 rounded-xl ${bg}`}>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setPlaying(p => !p)}
+          className={`size-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+            dark ? "bg-white/10 hover:bg-white/20" : "bg-zinc-900 hover:bg-zinc-700"
+          }`}
+        >
+          {playing
+            ? <Pause className={`size-3.5 ${dark ? "text-white" : "text-white"}`} />
+            : <Play className={`size-3.5 ml-0.5 ${dark ? "text-white" : "text-white"}`} />
+          }
+        </button>
+
+        <div className="flex-1 min-w-0">
+          {/* Waveform */}
+          <div className="flex items-center gap-[2px] h-8 mb-1.5">
+            {WAVEFORM.map((h, i) => {
+              const filled = (i / WAVEFORM.length) * 100 <= progress;
+              return (
+                <div
+                  key={i}
+                  className={`flex-1 rounded-full transition-colors duration-100 ${filled ? barFill : barBase}`}
+                  style={{ height: `${(h / 12) * 100}%` }}
+                />
+              );
+            })}
+          </div>
+          {/* Progress bar */}
+          <div className={`h-0.5 rounded-full overflow-hidden ${trackBg}`}>
+            <div className={`h-full rounded-full transition-all ${trackFill}`} style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+
+        <div className={`flex flex-col items-end gap-0.5 flex-shrink-0 text-[10px] tabular-nums ${timeColor}`}>
+          <span>{elapsed}</span>
+          <span>{duration}</span>
+        </div>
+      </div>
+
+      {label && (
+        <p className={`text-[10px] mt-2.5 text-center ${labelColor}`}>{label}</p>
+      )}
+    </div>
+  );
 }
 
 function MediaPicker({ current, onSelect, onClose }: {
@@ -102,11 +189,19 @@ function MediaPicker({ current, onSelect, onClose }: {
   );
 }
 
-export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: POIEditorProps) {
+export function POIEditor({ poi, onClose, onSave, onDelete }: POIEditorProps) {
   const [formData, setFormData] = useState(poi);
-  const [activeTab, setActiveTab] = useState<"details" | "audio-script" | "location">("details");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+
+  // Co-curator
+  const [showCoCurator, setShowCoCurator] = useState(false);
+  const [coCuratorInput, setCoCuratorInput] = useState(`${poi.title}\n\n${poi.description}`);
+  const [coCuratorPhase, setCoCuratorPhase] = useState<"idle" | "generating" | "done">("idle");
+  const [generatedScript, setGeneratedScript] = useState("");
+  const [coCuratorDocIds, setCoCuratorDocIds] = useState<string[]>([]);
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [docSearch, setDocSearch] = useState("");
 
   const assignedGuides = formData.assignedToGuides
     ? mockGuides.filter(g => formData.assignedToGuides!.includes(g.id))
@@ -115,12 +210,6 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
   const currentStatus = statusConfig[formData.status];
   const wordCount = formData.audioScript?.trim().split(/\s+/).filter(Boolean).length ?? 0;
   const duration = formData.audioScript ? estimateDuration(formData.audioScript) : null;
-
-  const scriptState = formData.scriptValidated
-    ? { label: "Validated", icon: CheckCircle2, className: "text-emerald-600 bg-emerald-50 border-emerald-200" }
-    : formData.audioScript
-    ? { label: "Draft", icon: AlertCircle, className: "text-amber-600 bg-amber-50 border-amber-200" }
-    : { label: "—", icon: CircleDashed, className: "text-zinc-400 bg-zinc-50 border-zinc-200" };
 
   return (
     <>
@@ -144,6 +233,19 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Co-curator toggle */}
+              <button
+                onClick={() => { setShowCoCurator(!showCoCurator); if (!showCoCurator) setCoCuratorPhase("idle"); }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all ${
+                  showCoCurator
+                    ? "bg-violet-600 border-violet-600 text-white"
+                    : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-400"
+                }`}
+              >
+                <Wand2 className="size-3.5" />
+                Co-curator
+              </button>
+
               {/* Status dropdown */}
               <div className="relative">
                 <button
@@ -183,7 +285,40 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
             </div>
           </div>
 
-          {/* ── Body: 3 columns ── */}
+          {/* ── Workflow bar ── */}
+          {(() => {
+            const steps = [
+              { id: "script",      label: "Script",      done: !!formData.audioScript,                                       langs: null,                        onClick: () => document.getElementById("poi-script")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
+              { id: "translation", label: "Translation", done: !!(formData.translations && formData.translations.length > 0), langs: formData.translations ?? [], onClick: () => {} },
+              { id: "voicing",     label: "Voicing",     done: !!(formData.voices && formData.voices.length > 0),             langs: formData.voices ?? [],       onClick: () => {} },
+              { id: "in-guides",   label: "In guides",   done: assignedGuides.length > 0,                                    langs: null,                        onClick: () => {} },
+            ];
+            const nextStep = steps.find(s => !s.done);
+            return (
+              <div className="px-6 py-3 border-b border-zinc-100 flex items-center gap-2 flex-shrink-0">
+                {steps.map((step, i) => (
+                  <div key={step.id} className="flex items-center gap-2">
+                    {i > 0 && <div className="w-5 h-px bg-zinc-200" />}
+                    <button onClick={step.onClick} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
+                      <div className={`size-2 rounded-full flex-shrink-0 ${step.done ? "bg-zinc-800" : step.id === nextStep?.id ? "bg-zinc-400" : "bg-zinc-200"}`} />
+                      <span className={`text-[12px] whitespace-nowrap ${step.done ? "text-zinc-400" : step.id === nextStep?.id ? "text-zinc-800 font-semibold" : "text-zinc-400"}`}>
+                        {step.label}
+                      </span>
+                      {step.langs && step.langs.length > 0 && (
+                        <div className="flex items-center gap-0.5 ml-0.5">
+                          {step.langs.map(lang => (
+                            <span key={lang} className="px-1.5 py-0.5 bg-zinc-100 rounded text-[10px] font-semibold text-zinc-500 uppercase">{lang}</span>
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* ── Body ── */}
           <div className="flex flex-1 min-h-0">
 
             {/* COL 1 — Image */}
@@ -219,129 +354,98 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
               </div>
             </div>
 
-            {/* COL 2 — Tabs + form */}
+            {/* COL 2 — Single scrollable form */}
             <div className="flex-1 flex flex-col min-w-0">
-              {/* Tab bar */}
-              <div className="px-6 border-b border-zinc-100 flex gap-5 flex-shrink-0">
-                {[
-                  { id: "details",      label: "Details",      icon: FileText },
-                  { id: "audio-script", label: "Audio Script", icon: Mic },
-                  { id: "location",     label: "Location",     icon: MapPin },
-                ].map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => setActiveTab(id as any)}
-                    className={`flex items-center gap-1.5 pb-3.5 pt-3 text-[13px] font-semibold border-b-2 transition-all ${
-                      activeTab === id ? "border-zinc-900 text-zinc-900" : "border-transparent text-zinc-400 hover:text-zinc-700"
-                    }`}
-                  >
-                    <Icon className="size-3.5" />
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
 
-              {/* Tab content */}
-              <div className="flex-1 overflow-y-auto px-6 py-6">
-                {activeTab === "details" && (
-                  <div className="space-y-5 max-w-lg">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Description</label>
-                      <textarea
-                        value={formData.description}
-                        onChange={e => setFormData({ ...formData, description: e.target.value })}
-                        rows={4}
-                        className="w-full px-3.5 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-none"
-                        placeholder="Short description of this point of interest…"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Category</label>
-                      <input
-                        type="text"
-                        value={formData.category}
-                        onChange={e => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
-                        placeholder="e.g. Sculpture, Painting, Architecture…"
-                      />
+                {/* Details */}
+                <div className="space-y-4">
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Details</p>
+                  <div>
+                    <label className="block text-[12px] font-medium text-zinc-600 mb-1.5">Description</label>
+                    <textarea
+                      value={formData.description}
+                      onChange={e => setFormData({ ...formData, description: e.target.value })}
+                      rows={3}
+                      className="w-full px-3.5 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-none"
+                      placeholder="Short description of this point of interest…"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-medium text-zinc-600 mb-1.5">Category</label>
+                    <input
+                      type="text"
+                      value={formData.category}
+                      onChange={e => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+                      placeholder="e.g. Sculpture, Painting, Architecture…"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-zinc-100" />
+
+                {/* Audio Script */}
+                <div className="space-y-4">
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Audio Script</p>
+                  <div id="poi-script">
+                    <textarea
+                      value={formData.audioScript || ""}
+                      onChange={e => setFormData({ ...formData, audioScript: e.target.value })}
+                      rows={10}
+                      className="w-full px-3.5 py-3 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-none leading-relaxed"
+                      placeholder="Write the audio narration script for this POI…"
+                    />
+                    <div className="flex items-center justify-between mt-2 text-[11px] text-zinc-400">
+                      <span>{wordCount} words</span>
+                      {duration && <span>≈ {duration}</span>}
                     </div>
                   </div>
-                )}
-
-                {activeTab === "audio-script" && (
-                  <div className="space-y-5">
-                    <div className="flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <Sparkles className="size-4 text-zinc-500" />
-                        <span className="text-[13px] font-medium text-zinc-700">Generate with AI</span>
-                      </div>
-                      <button onClick={onDevelopWithAI} className="px-3.5 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
-                        Generate
-                      </button>
+                  {wordCount > 0 && duration && (
+                    <div className="space-y-2">
+                      <AudioPlayer dark duration={duration} label="TTS preview · voice not yet assigned" />
+                      {formData.voices && formData.voices.length > 0 && formData.voices.map(lang => (
+                        <AudioPlayer key={lang} duration={duration} label={lang.toUpperCase()} />
+                      ))}
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Script</label>
-                      <textarea
-                        value={formData.audioScript || ""}
-                        onChange={e => setFormData({ ...formData, audioScript: e.target.value })}
-                        rows={12}
-                        className="w-full px-3.5 py-3 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-none leading-relaxed"
-                        placeholder="Write the audio narration script for this POI…"
+                  )}
+                </div>
+
+                <div className="border-t border-zinc-100" />
+
+                {/* Location */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Location</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2.5">
+                      <MapPin className="size-3.5 text-zinc-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-[13px] font-medium text-zinc-800">Geolocation</p>
+                        <p className="text-[11px] text-zinc-400">Auto-trigger when visitor reaches this location</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFormData({ ...formData, isGeolocated: !formData.isGeolocated })}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${formData.isGeolocated ? "bg-zinc-900" : "bg-zinc-200"}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${formData.isGeolocated ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+                    </button>
+                  </div>
+                  {formData.isGeolocated && (
+                    <div className="h-56 bg-zinc-100 rounded-xl border border-zinc-200 overflow-hidden relative">
+                      <div className="absolute inset-0 opacity-10"
+                        style={{ backgroundImage: "repeating-linear-gradient(0deg,#000 0,#000 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#000 0,#000 1px,transparent 1px,transparent 40px)" }}
                       />
-                      <div className="flex items-center justify-between mt-2 text-[11px] text-zinc-400">
-                        <span>{wordCount} words</span>
-                        {duration && <span>≈ {duration}</span>}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                        <div className="size-9 rounded-full bg-white shadow-md flex items-center justify-center">
+                          <MapPin className="size-4 text-zinc-500" />
+                        </div>
+                        <p className="text-[12px] text-zinc-400 font-medium">Map integration</p>
+                        <p className="text-[11px] text-zinc-400">Drop a pin to set the trigger zone</p>
                       </div>
                     </div>
-                    {wordCount > 10 && (
-                      <div className="p-4 bg-zinc-900 rounded-xl">
-                        <div className="flex items-center gap-3 mb-3">
-                          <button className="size-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all flex-shrink-0">
-                            <Play className="size-4 text-white ml-0.5" />
-                          </button>
-                          <div className="flex-1">
-                            <div className="h-1 bg-white/20 rounded-full overflow-hidden">
-                              <div className="h-full w-0 bg-white rounded-full" />
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 text-white/50 flex-shrink-0">
-                            <Clock className="size-3" />
-                            <span className="text-[11px]">{duration}</span>
-                          </div>
-                        </div>
-                        <p className="text-[11px] text-white/40 text-center">TTS preview · voice not yet assigned</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "location" && (
-                  <div className="space-y-5 max-w-lg">
-                    <div className="flex items-center justify-between p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <MapPin className="size-4 text-zinc-500" />
-                        <div>
-                          <p className="text-[13px] font-semibold text-zinc-900">Geolocation</p>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">Auto-trigger when visitor reaches this location</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFormData({ ...formData, isGeolocated: !formData.isGeolocated })}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${formData.isGeolocated ? "bg-zinc-900" : "bg-zinc-200"}`}
-                      >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${formData.isGeolocated ? "translate-x-6" : "translate-x-1"}`} />
-                      </button>
-                    </div>
-                    {formData.isGeolocated && (
-                      <div className="aspect-video bg-zinc-100 rounded-xl border border-zinc-200 flex items-center justify-center">
-                        <div className="text-center">
-                          <MapPin className="size-10 text-zinc-300 mx-auto mb-2" />
-                          <p className="text-[12px] text-zinc-400">Map integration</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
 
               </div>
 
@@ -360,82 +464,158 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
               </div>
             </div>
 
-            {/* COL 3 — Properties */}
-            <div className="w-56 flex-shrink-0 border-l border-zinc-100 bg-zinc-50 overflow-y-auto">
-              <div className="p-5 space-y-6">
-
-                {/* Script */}
-                <div>
-                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2.5">Script</p>
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[12px] font-semibold ${scriptState.className}`}>
-                    <scriptState.icon className="size-3.5" />
-                    {scriptState.label}
+            {/* Co-curator panel */}
+            {showCoCurator && (
+              <div className="w-72 flex-shrink-0 border-l border-zinc-100 bg-white flex flex-col overflow-hidden">
+                {/* Co-curator header */}
+                <div className="px-5 py-4 border-b border-zinc-100 flex items-center justify-between flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div className="size-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                      <Wand2 className="size-3.5 text-violet-600" />
+                    </div>
+                    <span className="text-[13px] font-semibold text-zinc-900">Co-curator</span>
                   </div>
+                  <button
+                    onClick={() => { setShowCoCurator(false); setCoCuratorPhase("idle"); setGeneratedScript(""); }}
+                    className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors"
+                  >
+                    <X className="size-3.5" />
+                  </button>
                 </div>
 
-                {/* Voices */}
-                <div>
-                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2.5">Voices</p>
-                  {formData.voices && formData.voices.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {formData.voices.map(lang => (
-                        <span key={lang} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-[11px] font-semibold text-blue-700 uppercase">
-                          <Mic className="size-3" />
-                          {lang}
-                        </span>
-                      ))}
+                <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+                  {/* Guide context pill */}
+                  {assignedGuides.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Guide context</p>
+                      <div className="space-y-1.5">
+                        {assignedGuides.map(g => (
+                          <div key={g.id} className="flex items-center gap-2 p-2 bg-violet-50 border border-violet-200 rounded-lg">
+                            <img src={g.thumbnail} alt={g.title} className="size-5 rounded-md object-cover flex-shrink-0" />
+                            <span className="text-[11px] font-medium text-violet-800 truncate leading-tight">{g.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-zinc-400 mt-2 leading-relaxed">Tone, audience and language are inherited from the guide profile.</p>
                     </div>
-                  ) : (
-                    <span className="text-[12px] text-zinc-400">—</span>
                   )}
-                </div>
 
-                {/* Translations */}
-                <div>
-                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2.5">Translations</p>
-                  {formData.translations && formData.translations.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {formData.translations.map(lang => (
-                        <span key={lang} className="inline-flex items-center gap-1 px-2 py-1 bg-violet-50 border border-violet-200 rounded-lg text-[11px] font-semibold text-violet-700 uppercase">
-                          <Globe className="size-3" />
-                          {lang}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-[12px] text-zinc-400">—</span>
-                  )}
-                </div>
-
-                {/* Guides */}
-                <div>
-                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2.5">In guides</p>
-                  {assignedGuides.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {assignedGuides.map(g => (
-                        <div key={g.id} className="flex items-center gap-2 p-2 bg-white border border-zinc-200 rounded-lg">
-                          <img src={g.thumbnail} alt={g.title} className="size-6 rounded-md object-cover flex-shrink-0" />
-                          <span className="text-[11px] font-medium text-zinc-700 truncate leading-tight">{g.title}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-[12px] text-zinc-400">—</span>
-                  )}
-                </div>
-
-                {/* Geolocation badge */}
-                {formData.isGeolocated && (
+                  {/* Input */}
                   <div>
-                    <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2.5">Location</p>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-[12px] font-semibold text-emerald-700">
-                      <MapPin className="size-3.5" /> Mapped
-                    </span>
+                    <label className="block text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">Describe this stop</label>
+                    <textarea
+                      value={coCuratorInput}
+                      onChange={e => setCoCuratorInput(e.target.value)}
+                      rows={6}
+                      className="w-full px-3.5 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all resize-none leading-relaxed"
+                      placeholder="Describe what the visitor sees at this stop…"
+                    />
+                    <p className="text-[10px] text-zinc-400 mt-1.5">The Co-curator will calibrate the script to the guide's profile.</p>
                   </div>
-                )}
 
+                  {/* Sources */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Sources</p>
+                      <button
+                        onClick={() => setShowDocModal(true)}
+                        className="text-[11px] px-2.5 py-1 rounded-lg border border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 transition-all"
+                      >
+                        Browse
+                      </button>
+                    </div>
+                    {coCuratorDocIds.length === 0 ? (
+                      <p className="text-[11px] text-zinc-400">No documents selected — Co-curator will use guide context only.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {coCuratorDocIds.map(id => {
+                          const doc = mockDocuments.find(d => d.id === id);
+                          if (!doc) return null;
+                          return (
+                            <span key={id} className="flex items-center gap-1 text-[11px] bg-violet-50 border border-violet-200 text-violet-800 px-2 py-1 rounded-md">
+                              <FileText className="size-3 flex-shrink-0" />
+                              <span className="truncate max-w-[120px]">{doc.filename}</span>
+                              <button
+                                onClick={() => setCoCuratorDocIds(ids => ids.filter(i => i !== id))}
+                                className="text-violet-400 hover:text-red-400 transition-colors ml-0.5"
+                              >
+                                <X className="size-2.5" />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Generate button */}
+                  {coCuratorPhase !== "done" && (
+                    <button
+                      disabled={coCuratorPhase === "generating" || !coCuratorInput.trim()}
+                      onClick={() => {
+                        setCoCuratorPhase("generating");
+                        setGeneratedScript("");
+                        setTimeout(() => {
+                          const guideCtx = assignedGuides[0]?.title ?? "this guide";
+                          setGeneratedScript(
+                            `Welcome to one of the most captivating stops on ${guideCtx}.\n\n` +
+                            `${formData.title} stands as a testament to the mastery of its era. ` +
+                            `As you face it, notice the interplay of light and shadow across its surface — ` +
+                            `a deliberate choice by the artist to draw your gaze in a specific sequence.\n\n` +
+                            `Look closely at the details in the lower left corner. Few visitors pause long enough to discover the subtle signature embedded there, a quiet act of pride in a world where artists rarely received public recognition.\n\n` +
+                            `Take a moment. Let the work speak to you before moving on.`
+                          );
+                          setCoCuratorPhase("done");
+                        }, 1800);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-300 text-white text-[13px] font-semibold rounded-xl transition-all"
+                    >
+                      {coCuratorPhase === "generating" ? (
+                        <>
+                          <Loader2 className="size-3.5 animate-spin" />
+                          Generating…
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="size-3.5" />
+                          Generate script
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Generated result */}
+                  {coCuratorPhase === "done" && generatedScript && (
+                    <div className="space-y-3">
+                      <div className="p-3.5 bg-violet-50 border border-violet-200 rounded-xl">
+                        <p className="text-[12px] text-violet-900 leading-relaxed whitespace-pre-line">{generatedScript}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setFormData({ ...formData, audioScript: generatedScript });
+                            setShowCoCurator(false);
+                            setCoCuratorPhase("idle");
+                            setGeneratedScript("");
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-zinc-900 hover:bg-zinc-700 text-white text-[12px] font-semibold rounded-lg transition-all"
+                        >
+                          <CheckCircle2 className="size-3.5" />
+                          Apply
+                        </button>
+                        <button
+                          onClick={() => { setCoCuratorPhase("idle"); setGeneratedScript(""); }}
+                          className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors"
+                          title="Regenerate"
+                        >
+                          <RotateCcw className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>
@@ -447,6 +627,73 @@ export function POIEditor({ poi, onClose, onSave, onDelete, onDevelopWithAI }: P
           onSelect={url => setFormData({ ...formData, imageUrl: url })}
           onClose={() => setShowMediaPicker(false)}
         />
+      )}
+
+      {showDocModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={() => setShowDocModal(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+              <p className="text-[14px] font-semibold text-zinc-900">Document library</p>
+              <button onClick={() => setShowDocModal(false)} className="text-zinc-300 hover:text-zinc-500 transition-colors">
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="px-5 py-3 border-b border-zinc-100">
+              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 rounded-lg border border-zinc-200">
+                <Search className="size-3.5 text-zinc-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={docSearch}
+                  onChange={e => setDocSearch(e.target.value)}
+                  placeholder="Search documents…"
+                  className="flex-1 text-[13px] bg-transparent focus:outline-none text-zinc-700 placeholder:text-zinc-400"
+                  autoFocus
+                />
+                {docSearch && (
+                  <button onClick={() => setDocSearch("")} className="text-zinc-300 hover:text-zinc-500">
+                    <X className="size-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="overflow-y-auto max-h-72 px-3 py-2">
+              {mockDocuments
+                .filter(d => d.filename.toLowerCase().includes(docSearch.toLowerCase()))
+                .map(doc => {
+                  const selected = coCuratorDocIds.includes(doc.id);
+                  return (
+                    <button
+                      key={doc.id}
+                      onClick={() => setCoCuratorDocIds(ids =>
+                        selected ? ids.filter(id => id !== doc.id) : [...ids, doc.id]
+                      )}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all hover:bg-zinc-50 ${selected ? "bg-zinc-50" : ""}`}
+                    >
+                      <div className={`size-5 rounded flex items-center justify-center flex-shrink-0 border transition-all ${selected ? "bg-zinc-900 border-zinc-900" : "border-zinc-300"}`}>
+                        {selected && <Check className="size-3 text-white" />}
+                      </div>
+                      <FileText className="size-3.5 text-zinc-400 flex-shrink-0" />
+                      <span className="text-[13px] text-zinc-700 flex-1 truncate">{doc.filename}</span>
+                      <span className="text-[12px] text-zinc-400 flex-shrink-0">{doc.size}</span>
+                    </button>
+                  );
+                })}
+            </div>
+
+            <div className="px-5 py-4 border-t border-zinc-100 flex items-center justify-between">
+              <p className="text-[12px] text-zinc-400">{coCuratorDocIds.length} selected</p>
+              <button
+                onClick={() => setShowDocModal(false)}
+                className="px-4 py-2 text-[13px] bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

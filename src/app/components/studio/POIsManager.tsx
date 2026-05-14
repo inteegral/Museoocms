@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { Plus, Sparkles, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen } from "lucide-react";
+import { Plus, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen, AlertTriangle, X } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { AIAssistant } from "./AIAssistant";
 import { POIEditor } from "./POIEditor";
 import { mockGuides } from "../../data/mockData";
 
@@ -203,12 +202,10 @@ function POIBadges({ poi }: { poi: POI }) {
 function POICard({
   poi,
   onMove,
-  onEdit,
   onOpen,
 }: {
   poi: POI;
   onMove: (poiId: string, newStatus: POIStatus) => void;
-  onEdit: (poi: POI) => void;
   onOpen: (poi: POI) => void;
 }) {
   const [{ isDragging }, drag] = useDrag({
@@ -263,15 +260,6 @@ function POICard({
 
         <div className="flex items-center justify-between pt-1">
           <span className="text-[11px] px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 font-medium">{poi.category}</span>
-          {poi.status === "idea" && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(poi); }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#D33333] text-white text-[11px] font-semibold rounded-md hover:bg-[#b82828] transition-colors"
-            >
-              <Sparkles className="size-3" />
-              Develop
-            </button>
-          )}
         </div>
 
         <div className="pt-2 border-t border-zinc-100">
@@ -286,13 +274,11 @@ function KanbanColumn({
   status,
   pois,
   onMove,
-  onEdit,
   onOpen,
 }: {
   status: POIStatus;
   pois: POI[];
   onMove: (poiId: string, newStatus: POIStatus) => void;
-  onEdit: (poi: POI) => void;
   onOpen: (poi: POI) => void;
 }) {
   const [{ isOver }, drop] = useDrop({
@@ -324,7 +310,7 @@ function KanbanColumn({
       {/* Cards */}
       <div className={`flex-1 rounded-xl p-3 space-y-3 transition-colors ${isOver ? "bg-zinc-100" : "bg-zinc-50/70"}`}>
         {pois.map((poi) => (
-          <POICard key={poi.id} poi={poi} onMove={onMove} onEdit={onEdit} onOpen={onOpen} />
+          <POICard key={poi.id} poi={poi} onMove={onMove} onOpen={onOpen} />
         ))}
         {pois.length === 0 && (
           <div className="flex items-center justify-center h-24 border-2 border-dashed border-zinc-200 rounded-lg">
@@ -338,12 +324,12 @@ function KanbanColumn({
 
 function POIsManagerContent() {
   const [pois, setPOIs] = useState<POI[]>(mockPOIs);
-  const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [showPOIEditor, setShowPOIEditor] = useState(false);
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [selectedGuideFilter, setSelectedGuideFilter] = useState<string>("all");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [deleteConfirm, setDeleteConfirm] = useState<{ poiId: string; poiTitle: string; guides: typeof mockGuides } | null>(null);
 
   const openNewPOI = () => {
     const blank: POI = {
@@ -379,11 +365,6 @@ function POIsManagerContent() {
     );
   };
 
-  const handleEditWithAI = (poi: POI) => {
-    setSelectedPOI(poi);
-    setShowAIAssistant(true);
-  };
-
   const handleOpenPOI = (poi: POI) => {
     setSelectedPOI(poi);
     setShowPOIEditor(true);
@@ -400,37 +381,22 @@ function POIsManagerContent() {
   };
 
   const handleDeletePOI = (poiId: string) => {
-    if (confirm("Are you sure you want to delete this POI?")) {
-      setPOIs(pois.filter((poi) => poi.id !== poiId));
-      setShowPOIEditor(false);
-      setSelectedPOI(null);
+    const poi = pois.find(p => p.id === poiId);
+    const affectedGuides = mockGuides.filter(g =>
+      (poi?.assignedToGuides ?? []).includes(g.id)
+    );
+    if (affectedGuides.length > 0) {
+      setDeleteConfirm({ poiId, poiTitle: poi?.title ?? "this POI", guides: affectedGuides });
+    } else {
+      confirmDelete(poiId);
     }
   };
 
-  const handleDevelopWithAI = () => {
+  const confirmDelete = (poiId: string) => {
+    setPOIs(prev => prev.filter(p => p.id !== poiId));
     setShowPOIEditor(false);
-    setShowAIAssistant(true);
-  };
-
-  const handleAIProposal = (proposal: any) => {
-    if (selectedPOI && proposal.contents?.[selectedPOI.id]) {
-      const content = proposal.contents[selectedPOI.id];
-      setPOIs(
-        pois.map((poi) =>
-          poi.id === selectedPOI.id
-            ? {
-                ...poi,
-                description: content.description,
-                audioScript: content.audioScript,
-                status: "complete" as POIStatus,
-                updatedAt: "Just now",
-              }
-            : poi
-        )
-      );
-      setShowAIAssistant(false);
-      setSelectedPOI(null);
-    }
+    setSelectedPOI(null);
+    setDeleteConfirm(null);
   };
 
   const statuses: POIStatus[] = ["idea", "in-progress", "under-revision", "complete"];
@@ -516,28 +482,11 @@ function POIsManagerContent() {
                 status={status}
                 pois={filteredPOIs.filter((p) => p.status === status)}
                 onMove={handleMovePOI}
-                onEdit={handleEditWithAI}
                 onOpen={handleOpenPOI}
               />
             ))}
           </div>
         </div>
-
-      {/* AI Assistant Modal */}
-      {showAIAssistant && selectedPOI && (
-        <AIAssistant
-          guideName={`Develop POI: ${selectedPOI.title}`}
-          onClose={() => {
-            setShowAIAssistant(false);
-            setSelectedPOI(null);
-          }}
-          onAccept={handleAIProposal}
-          documentsContext={[
-            { id: "1", name: "Museum_History.pdf", type: "pdf" },
-            { id: "2", name: "Artwork_Catalog.pdf", type: "pdf" },
-          ]}
-        />
-      )}
 
       {/* POI Editor Modal */}
       {showPOIEditor && selectedPOI && (
@@ -549,10 +498,78 @@ function POIsManagerContent() {
           }}
           onSave={handleSavePOI}
           onDelete={handleDeletePOI}
-          onDevelopWithAI={handleDevelopWithAI}
         />
       )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (() => {
+        const publishedGuides = deleteConfirm.guides.filter(g => g.status === "published");
+        const draftGuides = deleteConfirm.guides.filter(g => g.status !== "published");
+        const isBlocked = publishedGuides.length > 0;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-start gap-4 mb-5">
+                  <div className={`size-10 rounded-full flex items-center justify-center flex-shrink-0 ${isBlocked ? "bg-red-50" : "bg-amber-50"}`}>
+                    <AlertTriangle className={`size-5 ${isBlocked ? "text-red-500" : "text-amber-500"}`} />
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-semibold text-zinc-900 mb-1">
+                      {isBlocked ? "Cannot delete this POI" : `Used in ${deleteConfirm.guides.length} ${deleteConfirm.guides.length === 1 ? "guide" : "guides"}`}
+                    </p>
+                    <p className="text-[13px] text-zinc-500 leading-relaxed">
+                      {isBlocked
+                        ? <>Remove <span className="font-medium text-zinc-700">"{deleteConfirm.poiTitle}"</span> from all published guides before deleting it.</>
+                        : <>Deleting <span className="font-medium text-zinc-700">"{deleteConfirm.poiTitle}"</span> will also remove it from:</>
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 mb-6 ml-14">
+                  {deleteConfirm.guides.map(g => (
+                    <div key={g.id} className="flex items-center gap-2.5">
+                      <span className={`size-1.5 rounded-full flex-shrink-0 ${g.status === "published" ? "bg-emerald-400" : "bg-zinc-300"}`} />
+                      <p className="text-[13px] text-zinc-700 font-medium">{g.title}</p>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        g.status === "published" ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-500"
+                      }`}>
+                        {g.status === "published" ? "Published" : "Draft"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {isBlocked ? (
+                  <button
+                    onClick={() => setDeleteConfirm(null)}
+                    className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all"
+                  >
+                    OK, go back
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setDeleteConfirm(null)}
+                      className="flex-1 py-2.5 border border-zinc-200 text-[13px] font-semibold text-zinc-700 rounded-xl hover:bg-zinc-50 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmDelete(deleteConfirm.poiId)}
+                      className="flex-1 py-2.5 bg-red-600 text-white text-[13px] font-semibold rounded-xl hover:bg-red-700 transition-all"
+                    >
+                      Delete anyway
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </PageShell>
   );
 }

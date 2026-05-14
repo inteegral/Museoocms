@@ -4,8 +4,8 @@ import { StudioDashboard } from "./components/studio/StudioDashboard";
 import { GuidesList } from "./components/studio/GuidesList";
 import { CreateGuide } from "./components/studio/CreateGuide";
 import { GuideEditor } from "./components/studio/GuideEditor";
-import { PublishFlow } from "./components/studio/PublishFlow";
 import { POIsManager } from "./components/studio/POIsManager";
+import { Events } from "./components/studio/Events";
 import { DocumentsManager } from "./components/studio/DocumentsManager";
 import { MediaLibrary } from "./components/studio/MediaLibrary";
 import { Settings } from "./components/studio/Settings";
@@ -28,6 +28,7 @@ import { SuperAdminTenants } from "./components/superadmin/SuperAdminTenants";
 import { SuperAdminTenantDetail } from "./components/superadmin/SuperAdminTenantDetail";
 import { SuperAdminPlans } from "./components/superadmin/SuperAdminPlans";
 import { SuperAdminBilling } from "./components/superadmin/SuperAdminBilling";
+import { ReviewMode } from "./components/studio/ReviewMode";
 
 export const router = createBrowserRouter([
   {
@@ -38,8 +39,8 @@ export const router = createBrowserRouter([
       { path: "guides", Component: GuidesList },
       { path: "guides/new", Component: CreateGuide },
       { path: "guides/:id", Component: GuideEditor },
-      { path: "guides/:id/publish", Component: PublishFlow },
       { path: "pois", Component: POIsManager },
+      { path: "events", Component: Events },
       { path: "map", Component: Map },
       { path: "translations", Component: Translations },
       { path: "documents", Component: DocumentsManager },
@@ -70,6 +71,10 @@ export const router = createBrowserRouter([
       { path: "plans", Component: SuperAdminPlans },
       { path: "billing", Component: SuperAdminBilling },
     ],
+  },
+  {
+    path: "/review/:guideId",
+    Component: ReviewMode,
   },
   {
     path: "/onboarding",

@@ -1,8 +1,8 @@
 import { Outlet, Link, useLocation } from "react-router";
 import {
-  LayoutDashboard, Headphones, MapPin, Map, FolderOpen,
-  Languages, Mic, Megaphone, DollarSign, MessageSquare,
-  Trophy, ClipboardList, FileText, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, Smartphone, Users, Sparkles,
+  LayoutDashboard, Headphones, MapPin, Map,
+  Megaphone, DollarSign, MessageSquare,
+  Trophy, ClipboardList, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, ChevronLeft, Smartphone, Users, CalendarDays,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
@@ -35,15 +35,10 @@ type NavItem = {
 type NavSection = {
   label: string;
   items: NavItem[];
+  spacerBefore?: boolean;
 };
 
 const navSections: NavSection[] = [
-  {
-    label: "Overview",
-    items: [
-      { key: "dashboard", path: "/", icon: LayoutDashboard, label: "Dashboard" },
-    ],
-  },
   {
     label: "Content",
     items: [
@@ -53,31 +48,28 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    label: "Resources",
-    items: [
-      { key: "media", path: "/media", icon: FolderOpen, label: "Media Library" },
-    ],
-  },
-  {
-    label: "Production",
-    items: [
-      { key: "translations", path: "/translations", icon: Languages, label: "Translations", badge: { type: "count", value: 12 } },
-      { key: "voice-talent", path: "/voice-talent", icon: Mic, label: "Voice Talent" },
-    ],
-  },
-  {
     label: "Engagement",
+    spacerBefore: true,
     items: [
-      { key: "reviews", path: "/reviews", icon: MessageSquare, label: "Reviews", badge: { type: "dot", color: "#22c55e" } },
       { key: "surveys", path: "/surveys", icon: ClipboardList, label: "Surveys" },
       { key: "hunt", path: "/hunt", icon: Trophy, label: "Gamification" },
     ],
   },
   {
     label: "Growth",
+    spacerBefore: true,
     items: [
+      { key: "events", path: "/events", icon: CalendarDays, label: "Events" },
       { key: "marketing", path: "/marketing", icon: Megaphone, label: "Marketing" },
       { key: "monetization", path: "/monetization", icon: DollarSign, label: "Monetization" },
+    ],
+  },
+  {
+    label: "Insights",
+    spacerBefore: true,
+    items: [
+      { key: "dashboard", path: "/", icon: LayoutDashboard, label: "Dashboard" },
+      { key: "reviews", path: "/reviews", icon: MessageSquare, label: "Reviews", badge: { type: "dot", color: "#22c55e" } },
     ],
   },
 ];
@@ -87,7 +79,7 @@ const bottomItems = [
   { path: "/settings", icon: Settings, label: "Settings" },
 ];
 
-function Badge({ badge }: { badge: Badge }) {
+function BadgeEl({ badge }: { badge: Badge }) {
   if (badge.type === "count") {
     return (
       <span className="ml-auto text-[10px] font-semibold bg-red-500 text-white rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
@@ -103,7 +95,7 @@ function Badge({ badge }: { badge: Badge }) {
   );
 }
 
-function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
     const open = new Set<string>();
@@ -133,10 +125,39 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     return location.pathname.startsWith(path);
   };
 
+  if (collapsed) {
+    return (
+      <nav className="flex-1 px-2 py-3 overflow-y-auto flex flex-col gap-0.5">
+        {navSections.map((section) =>
+          section.items.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path!);
+            return (
+              <Link
+                key={item.key}
+                to={item.path!}
+                onClick={onNavigate}
+                title={item.label}
+                className={`relative flex items-center justify-center p-2.5 rounded-lg transition-all group ${
+                  active ? "bg-zinc-900 text-white" : "text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
+                }`}
+              >
+                <Icon className="size-[18px]" strokeWidth={active ? 2 : 1.5} />
+                {item.badge && item.badge.type === "dot" && (
+                  <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-emerald-400" />
+                )}
+              </Link>
+            );
+          })
+        )}
+      </nav>
+    );
+  }
+
   return (
     <nav className="flex-1 px-2 py-3 overflow-y-auto">
       {navSections.map((section, si) => (
-        <div key={section.label} className={si > 0 ? "mt-4" : ""}>
+        <div key={section.label} className={si > 0 ? (section.spacerBefore ? "mt-7" : "mt-4") : ""}>
           <p className="px-2 mb-1 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
             {section.label}
           </p>
@@ -151,16 +172,13 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                   <div key={item.key}>
                     <button
                       onClick={() => toggleGroup(item.key)}
-                      className={`
-                        w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors
-                        ${anyChildActive
-                          ? "text-zinc-900 font-medium"
-                          : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
-                      `}
+                      className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
+                        anyChildActive ? "text-zinc-900 font-medium" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+                      }`}
                     >
                       <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
                       <span className="flex-1 text-left">{item.label}</span>
-                      {item.badge && <Badge badge={item.badge} />}
+                      {item.badge && <BadgeEl badge={item.badge} />}
                       {isOpen
                         ? <ChevronDown className="size-3.5 text-zinc-400 flex-shrink-0" />
                         : <ChevronRight className="size-3.5 text-zinc-400 flex-shrink-0" />}
@@ -174,15 +192,12 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                               key={child.path}
                               to={child.path}
                               onClick={onNavigate}
-                              className={`
-                                flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-colors
-                                ${active
-                                  ? "bg-blue-50 text-blue-600 font-medium"
-                                  : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
-                              `}
+                              className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-colors ${
+                                active ? "bg-zinc-900 text-white font-medium" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+                              }`}
                             >
                               <span className="flex-1">{child.label}</span>
-                              {child.badge && <Badge badge={child.badge} />}
+                              {child.badge && <BadgeEl badge={child.badge} />}
                             </Link>
                           );
                         })}
@@ -193,39 +208,18 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               }
 
               const active = isActive(item.path!);
-              if (item.highlight) {
-                return (
-                  <Link
-                    key={item.key}
-                    to={item.path!}
-                    onClick={onNavigate}
-                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
-                      active
-                        ? "bg-violet-100 text-violet-700 font-medium"
-                        : "text-violet-500 hover:text-violet-700 hover:bg-violet-50"
-                    }`}
-                  >
-                    <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
-                    <span className="flex-1">{item.label}</span>
-                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-500 uppercase tracking-wide">AI</span>
-                  </Link>
-                );
-              }
               return (
                 <Link
                   key={item.key}
                   to={item.path!}
                   onClick={onNavigate}
-                  className={`
-                    flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors
-                    ${active
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
-                  `}
+                  className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
+                    active ? "bg-zinc-900 text-white font-medium" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+                  }`}
                 >
-                  <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
+                  <Icon className="size-4 flex-shrink-0" strokeWidth={active ? 2 : 1.5} />
                   <span className="flex-1">{item.label}</span>
-                  {item.badge && <Badge badge={item.badge} />}
+                  {item.badge && <BadgeEl badge={item.badge} />}
                 </Link>
               );
             })}
@@ -248,6 +242,7 @@ export function StudioLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [visitorPickerOpen, setVisitorPickerOpen] = useState(false);
   const [visitorGuide, setVisitorGuide] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -256,104 +251,124 @@ export function StudioLayout() {
 
   const mobileTabItems = [
     { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { path: "/guides", icon: Headphones, label: "Content" },
-    { path: "/translations", icon: Languages, label: "Localize" },
+    { path: "/guides", icon: Headphones, label: "Guides" },
     { path: "/marketing", icon: Megaphone, label: "Growth" },
+    { path: "/settings", icon: Settings, label: "Settings" },
   ];
+
+  const sidebarWidth = collapsed ? "lg:w-[64px]" : "lg:w-[220px]";
+  const mainPadding = collapsed ? "lg:pl-[64px]" : "lg:pl-[220px]";
 
   return (
     <div className="min-h-screen bg-zinc-50">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-[220px] lg:flex-col border-r border-zinc-200 bg-white">
-        <div className="flex flex-col flex-1 min-h-0">
-          {/* Logo */}
-          <div className="px-4 py-4 border-b border-zinc-100">
-            <Link to="/" className="flex items-center gap-2.5">
+      <aside className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r border-zinc-200 bg-white transition-all duration-300 ease-in-out ${sidebarWidth}`}>
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+
+          {/* Logo + toggle */}
+          <div className={`flex items-center border-b border-zinc-100 h-14 flex-shrink-0 relative ${collapsed ? "justify-center px-0" : "px-4 gap-2.5"}`}>
+            <Link to="/" className="flex items-center gap-2.5 min-w-0">
               <div className="size-6 rounded bg-[#D33333] flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-[10px] font-bold">M</span>
               </div>
-              <span className="font-semibold text-[13px] text-zinc-900 truncate">
-                {mockMuseum.name}
-              </span>
+              {!collapsed && (
+                <span className="font-semibold text-[13px] text-zinc-900 truncate">
+                  {mockMuseum.name}
+                </span>
+              )}
             </Link>
+            {!collapsed && (
+              <button
+                onClick={() => setCollapsed(true)}
+                className="ml-auto p-1 text-zinc-300 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors"
+                title="Collapse sidebar"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+            )}
           </div>
 
-          {/* AI Assistant — featured entry */}
-          <div className="px-3 pt-3 pb-1">
-            <Link
-              to="/documents"
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all ${
-                isActive("/documents")
-                  ? "bg-violet-600 text-white shadow-md shadow-violet-200"
-                  : "bg-violet-50 text-violet-700 hover:bg-violet-100"
-              }`}
+          {/* Expand button (collapsed state) */}
+          {collapsed && (
+            <button
+              onClick={() => setCollapsed(false)}
+              className="mx-auto mt-2 mb-1 p-1.5 text-zinc-300 hover:text-zinc-700 hover:bg-zinc-100 rounded-md transition-colors"
+              title="Expand sidebar"
             >
-              <Sparkles className="size-4 flex-shrink-0" strokeWidth={1.5} />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold leading-tight">AI Assistant</p>
-                <p className={`text-[10px] leading-tight mt-0.5 ${isActive("/documents") ? "text-violet-200" : "text-violet-400"}`}>Co-Curator</p>
-              </div>
-            </Link>
-          </div>
-
-          <SidebarNav />
-
-          {/* Visitor Mode */}
-          <div className="px-3 py-3">
-            <button onClick={() => setVisitorPickerOpen(true)} className="w-full flex items-center gap-2.5 px-3 py-2 bg-zinc-900 hover:bg-zinc-700 text-white rounded-lg text-[13px] font-semibold transition-colors">
-              <Smartphone className="size-4 flex-shrink-0" strokeWidth={1.5} />
-              <span>Visitor Mode</span>
+              <ChevronRight className="size-4" />
             </button>
-          </div>
+          )}
 
-          {/* Bottom */}
-          <div className="px-2 py-3 border-t border-zinc-100 space-y-0.5">
+          <SidebarNav collapsed={collapsed} />
+
+          {/* Bottom items */}
+          <div className={`px-2 py-2 border-t border-zinc-100 space-y-0.5 flex-shrink-0 ${collapsed ? "flex flex-col items-center" : ""}`}>
             {bottomItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
+              if (collapsed) {
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    title={item.label}
+                    className={`p-2.5 rounded-lg transition-colors ${active ? "bg-zinc-900 text-white" : "text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"}`}
+                  >
+                    <Icon className="size-[18px]" strokeWidth={active ? 2 : 1.5} />
+                  </Link>
+                );
+              }
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`
-                    flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors
-                    ${active
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"}
-                  `}
+                  className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] transition-colors ${
+                    active ? "bg-zinc-900 text-white font-medium" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+                  }`}
                 >
-                  <Icon className="size-4 flex-shrink-0" strokeWidth={1.5} />
+                  <Icon className="size-4 flex-shrink-0" strokeWidth={active ? 2 : 1.5} />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
-            <button className="flex items-center gap-2.5 px-2 py-1.5 w-full text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 rounded-md transition-colors text-[13px]">
-              <LogOut className="size-4 flex-shrink-0" strokeWidth={1.5} />
-              <span>Log out</span>
-            </button>
-            <Link
-              to="/superadmin"
-              className="flex items-center gap-2.5 px-2 py-1.5 text-zinc-300 hover:text-zinc-500 hover:bg-zinc-50 rounded-md transition-colors text-[11px]"
-            >
-              <span className="size-4 flex-shrink-0 flex items-center justify-center">
-                <span className="size-1.5 rounded-full bg-zinc-300" />
-              </span>
-              <span>SuperAdmin</span>
-            </Link>
+            {collapsed ? (
+              <button title="Log out" className="p-2.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors">
+                <LogOut className="size-[18px]" strokeWidth={1.5} />
+              </button>
+            ) : (
+              <button className="flex items-center gap-2.5 px-2 py-1.5 w-full text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 rounded-md transition-colors text-[13px]">
+                <LogOut className="size-4 flex-shrink-0" strokeWidth={1.5} />
+                <span>Log out</span>
+              </button>
+            )}
+            {!collapsed && (
+              <Link
+                to="/superadmin"
+                className="flex items-center gap-2.5 px-2 py-1.5 text-zinc-300 hover:text-zinc-500 hover:bg-zinc-50 rounded-md transition-colors text-[11px]"
+              >
+                <span className="size-4 flex-shrink-0 flex items-center justify-center">
+                  <span className="size-1.5 rounded-full bg-zinc-300" />
+                </span>
+                <span>SuperAdmin</span>
+              </Link>
+            )}
           </div>
 
-          {/* User card — pinned footer */}
+          {/* User card */}
           <Link
             to="/profile"
-            className="flex items-center gap-3 px-4 py-3 border-t border-zinc-100 hover:bg-zinc-50 transition-colors"
+            className={`flex items-center border-t border-zinc-100 hover:bg-zinc-50 transition-colors flex-shrink-0 ${collapsed ? "justify-center py-3" : "gap-3 px-4 py-3"}`}
+            title={collapsed ? currentUser.name : undefined}
           >
             <div className="size-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[10px] flex-shrink-0">
               {currentUser.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-semibold text-zinc-800 truncate leading-tight">{currentUser.name}</p>
-              <p className="text-[10px] text-zinc-400 truncate">{currentUser.email}</p>
-            </div>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-zinc-800 truncate leading-tight">{currentUser.name}</p>
+                <p className="text-[10px] text-zinc-400 truncate">{currentUser.email}</p>
+              </div>
+            )}
           </Link>
         </div>
       </aside>
@@ -412,10 +427,10 @@ export function StudioLayout() {
             const active = isActive(item.path);
             return (
               <Link
-                key={item.path}
+                key={item.label}
                 to={item.path}
                 className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg flex-1 transition-colors ${
-                  active ? "text-blue-600" : "text-zinc-400"
+                  active ? "text-zinc-900" : "text-zinc-400"
                 }`}
               >
                 <Icon className="size-5" strokeWidth={active ? 2 : 1.5} />
@@ -427,7 +442,7 @@ export function StudioLayout() {
       </nav>
 
       {/* Main Content */}
-      <main className="lg:pl-[220px] pt-14 pb-20 lg:pt-0 lg:pb-0 bg-white min-h-screen">
+      <main className={`${mainPadding} pt-14 pb-20 lg:pt-0 lg:pb-0 bg-white min-h-screen transition-all duration-300 ease-in-out`}>
         <Outlet />
       </main>
 
@@ -462,7 +477,6 @@ export function StudioLayout() {
         </div>
       )}
 
-      {/* Visitor Mode — guide preview */}
       {visitorGuide && (
         <GuidePreviewModal guideName={visitorGuide} onClose={() => setVisitorGuide(null)} />
       )}

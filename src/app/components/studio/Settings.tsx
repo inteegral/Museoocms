@@ -21,12 +21,14 @@ import {
   Smartphone,
   QrCode,
   Download,
-  FileText
+  FileText,
+  Shield,
+  Accessibility
 } from "lucide-react";
 import { AppearanceEditor } from "./AppearanceEditor";
 import { PageShell } from "./PageShell";
 
-type SettingsTab = "general" | "team" | "billing" | "integrations" | "security" | "notifications";
+type SettingsTab = "general" | "team" | "billing" | "integrations" | "security" | "notifications" | "privacy" | "accessibility";
 
 interface TeamMember {
   id: string;
@@ -72,9 +74,7 @@ const roleConfig = {
 };
 
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<
-    "general" | "team" | "billing" | "integrations" | "security" | "notifications"
-  >("general");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "editor">("editor");
@@ -93,6 +93,39 @@ export function Settings() {
     analytics: true,
     updates: false,
   });
+
+  // Privacy settings
+  const [dpoName, setDpoName] = useState("");
+  const [dpoEmail, setDpoEmail] = useState("");
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState("");
+  const [cookiePolicyUrl, setCookiePolicyUrl] = useState("");
+  const [cookieBannerEnabled, setCookieBannerEnabled] = useState(true);
+  const [analyticsOptIn, setAnalyticsOptIn] = useState(true);
+  const [granularConsent, setGranularConsent] = useState(false);
+  const [euDataResidency, setEuDataResidency] = useState(true);
+  const [breachContactEmail, setBreachContactEmail] = useState("");
+  const [dataSubjectEmail, setDataSubjectEmail] = useState("");
+  const [retentionLogs, setRetentionLogs] = useState("90");
+  const [retentionAnalytics, setRetentionAnalytics] = useState("365");
+  const [retentionSurveys, setRetentionSurveys] = useState("180");
+  const [retentionReviews, setRetentionReviews] = useState("730");
+  const [legalBasis, setLegalBasis] = useState<"legitimate" | "consent" | "both">("legitimate");
+
+  // Accessibility settings
+  const [wcagLevel, setWcagLevel] = useState<"A" | "AA" | "AAA">("AA");
+  const [enforceAltText, setEnforceAltText] = useState(true);
+  const [requireTranscripts, setRequireTranscripts] = useState(false);
+  const [contrastChecking, setContrastChecking] = useState(true);
+  const [warnAriaLabels, setWarnAriaLabels] = useState(true);
+  const [defaultFontSize, setDefaultFontSize] = useState<"S" | "M" | "L">("M");
+  const [highContrastOption, setHighContrastOption] = useState(true);
+  const [reducedMotionOption, setReducedMotionOption] = useState(true);
+  const [dyslexiaFont, setDyslexiaFont] = useState(false);
+  const [screenReaderOptimization, setScreenReaderOptimization] = useState(false);
+  const [autoTranscripts, setAutoTranscripts] = useState(false);
+  const [a11yStatementLastUpdated, setA11yStatementLastUpdated] = useState("2025-06-28");
+  const [a11yKnownLimitations, setA11yKnownLimitations] = useState("");
+  const [a11yFeedbackEmail, setA11yFeedbackEmail] = useState("");
 
   // Billing data
   const currentPlan = "free";
@@ -158,6 +191,8 @@ export function Settings() {
     { id: "integrations", label: "API & Integrations", icon: Code },
     { id: "security", label: "Security", icon: Lock },
     { id: "notifications", label: "Notifications", icon: Bell },
+    { id: "privacy", label: "Privacy", icon: Shield },
+    { id: "accessibility", label: "Accessibility", icon: Accessibility },
   ];
 
   return (
@@ -713,6 +748,318 @@ export function Settings() {
                         </button>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Privacy Settings */}
+            {activeTab === "privacy" && (
+              <div className="space-y-6">
+                {/* Data Controller & DPO */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Data Controller & DPO</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">Required identification under GDPR Art. 13–14</p>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">DPO Name</label>
+                      <input type="text" value={dpoName} onChange={(e) => setDpoName(e.target.value)} placeholder="Optional — required if Art. 37 applies" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">DPO Email</label>
+                      <input type="email" value={dpoEmail} onChange={(e) => setDpoEmail(e.target.value)} placeholder="dpo@museum.it" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-3">Legal Basis for Processing</label>
+                      <div className="flex gap-3">
+                        {(["legitimate", "consent", "both"] as const).map((basis) => (
+                          <button
+                            key={basis}
+                            onClick={() => setLegalBasis(basis)}
+                            className={`flex-1 py-2.5 text-[13px] font-semibold rounded-lg border transition-all ${legalBasis === basis ? "bg-zinc-900 text-white border-zinc-900" : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400"}`}
+                          >
+                            {basis === "legitimate" ? "Legitimate Interest" : basis === "consent" ? "Consent" : "Both"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Retention */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Data Retention</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">GDPR Art. 5(1)(e) — storage limitation principle</p>
+                  <div className="space-y-4">
+                    {[
+                      { label: "Access Logs", value: retentionLogs, setter: setRetentionLogs, options: [["30","30 days"],["90","90 days"],["180","6 months"],["365","1 year"]] },
+                      { label: "Analytics Data", value: retentionAnalytics, setter: setRetentionAnalytics, options: [["180","6 months"],["365","1 year"],["730","2 years"],["0","Indefinite"]] },
+                      { label: "Survey Responses", value: retentionSurveys, setter: setRetentionSurveys, options: [["90","90 days"],["180","6 months"],["365","1 year"],["730","2 years"]] },
+                      { label: "Reviews", value: retentionReviews, setter: setRetentionReviews, options: [["365","1 year"],["730","2 years"],["0","Indefinite"]] },
+                    ].map((row) => (
+                      <div key={row.label} className="flex items-center justify-between py-2">
+                        <span className="text-[14px] font-medium text-zinc-900">{row.label}</span>
+                        <select
+                          value={row.value}
+                          onChange={(e) => row.setter(e.target.value)}
+                          className="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                        >
+                          {row.options.map(([val, label]) => (
+                            <option key={val} value={val}>{label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Consent Management */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Consent Management</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">ePrivacy Directive & Garante italiano cookie guidelines</p>
+                  <div className="space-y-0 mb-6">
+                    {[
+                      { label: "Cookie / Tracking Banner", desc: "Show consent banner to visitors before any non-essential tracking", value: cookieBannerEnabled, setter: setCookieBannerEnabled },
+                      { label: "Analytics Opt-in Required", desc: "Visitors must explicitly consent before analytics data is collected", value: analyticsOptIn, setter: setAnalyticsOptIn },
+                      { label: "Granular Consent Categories", desc: "Allow visitors to accept/reject individual cookie categories separately", value: granularConsent, setter: setGranularConsent },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center justify-between py-4 border-b border-zinc-100 last:border-0">
+                        <div>
+                          <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">{item.label}</div>
+                          <div className="text-[12px] text-zinc-500">{item.desc}</div>
+                        </div>
+                        <button
+                          onClick={() => item.setter(!item.value)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${item.value ? "bg-zinc-900" : "bg-zinc-300"}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.value ? "translate-x-6" : "translate-x-1"}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">Privacy Policy URL</label>
+                      <input type="url" value={privacyPolicyUrl} onChange={(e) => setPrivacyPolicyUrl(e.target.value)} placeholder="https://museum.it/privacy" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">Cookie Policy URL</label>
+                      <input type="url" value={cookiePolicyUrl} onChange={(e) => setCookiePolicyUrl(e.target.value)} placeholder="https://museum.it/cookies" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visitor Rights */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Visitor Rights</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">GDPR Art. 15–22 — access, erasure, portability, objection</p>
+                  <div className="mb-5">
+                    <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">Data Subject Requests Contact Email</label>
+                    <input type="email" value={dataSubjectEmail} onChange={(e) => setDataSubjectEmail(e.target.value)} placeholder="privacy@museum.it" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex gap-3">
+                      <AlertTriangle className="size-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-[13px] text-blue-800">Under GDPR Art. 12, you must respond to verified data subject requests <strong>within 30 days</strong>. Ensure this address is actively monitored.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* International Data Transfers */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">International Data Transfers</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">GDPR Chapter V — transfers outside the EU/EEA</p>
+                  <div className="flex items-center justify-between py-4">
+                    <div>
+                      <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">All data processed within the EU/EEA</div>
+                      <div className="text-[12px] text-zinc-500">Infrastructure, storage, and processing remain in EU/EEA data centres</div>
+                    </div>
+                    <button
+                      onClick={() => setEuDataResidency(!euDataResidency)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${euDataResidency ? "bg-zinc-900" : "bg-zinc-300"}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${euDataResidency ? "translate-x-6" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+                  {!euDataResidency && (
+                    <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex gap-3">
+                        <AlertTriangle className="size-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-[13px] text-amber-800">Transfers outside the EU/EEA require a valid transfer mechanism: adequacy decision, Standard Contractual Clauses (SCCs), or binding corporate rules (GDPR Art. 44–49).</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Breach Notification */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Breach Notification</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">GDPR Art. 33 — notification to supervisory authority</p>
+                  <div className="mb-5">
+                    <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">Security / DPO Contact Email</label>
+                    <input type="email" value={breachContactEmail} onChange={(e) => setBreachContactEmail(e.target.value)} placeholder="security@museum.it" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex gap-3">
+                      <AlertTriangle className="size-4 text-red-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-[13px] text-red-800">In the event of a personal data breach, you must notify the <strong>Garante per la protezione dei dati personali</strong> within <strong>72 hours</strong> of becoming aware (GDPR Art. 33).</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Accessibility Settings */}
+            {activeTab === "accessibility" && (
+              <div className="space-y-6">
+                {/* Conformance Target */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <div className="flex items-start justify-between mb-1">
+                    <h2 className="text-[18px] font-semibold text-zinc-950">Conformance Target</h2>
+                    <span className={`text-[12px] font-semibold px-3 py-1 rounded-full ${wcagLevel === "AAA" ? "bg-emerald-100 text-emerald-700" : wcagLevel === "AA" ? "bg-blue-100 text-blue-700" : "bg-zinc-100 text-zinc-600"}`}>
+                      WCAG 2.1 Level {wcagLevel}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-zinc-500 mb-6">European Accessibility Act (Dir. 2019/882/EU) requires Level AA from 28 June 2025</p>
+                  <div className="inline-flex bg-zinc-100 rounded-lg p-1 gap-1 mb-5">
+                    {(["A", "AA", "AAA"] as const).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setWcagLevel(level)}
+                        className={`px-6 py-2 text-[13px] font-semibold rounded-md transition-all ${wcagLevel === level ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-600 hover:text-zinc-900"}`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                  {wcagLevel === "A" && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex gap-3">
+                        <AlertTriangle className="size-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-[13px] text-amber-800">Level A alone does not meet EAA requirements (effective 28 June 2025). Upgrade to Level AA to ensure legal compliance for digital services open to the public.</p>
+                      </div>
+                    </div>
+                  )}
+                  {wcagLevel === "AAA" && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                      <div className="flex gap-3">
+                        <Check className="size-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-[13px] text-emerald-800">Level AAA exceeds EAA requirements. Note: full AAA conformance may not be achievable for all content types.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Content Requirements */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Content Requirements</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">Accessibility checks enforced before content is published</p>
+                  <div className="space-y-0">
+                    {[
+                      { label: "Require alt text on all images", desc: "WCAG 1.1.1 — non-text content must have a text alternative", value: enforceAltText, setter: setEnforceAltText },
+                      { label: "Require transcripts before publish", desc: "WCAG 1.2.1 — audio-only content needs a text transcript", value: requireTranscripts, setter: setRequireTranscripts },
+                      { label: "Automatic contrast ratio check", desc: "WCAG 1.4.3 — minimum 4.5:1 ratio for normal text", value: contrastChecking, setter: setContrastChecking },
+                      { label: "Warn on missing ARIA labels", desc: "WCAG 4.1.2 — interactive elements must have accessible names", value: warnAriaLabels, setter: setWarnAriaLabels },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center justify-between py-4 border-b border-zinc-100 last:border-0">
+                        <div>
+                          <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">{item.label}</div>
+                          <div className="text-[12px] text-zinc-500">{item.desc}</div>
+                        </div>
+                        <button
+                          onClick={() => item.setter(!item.value)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${item.value ? "bg-zinc-900" : "bg-zinc-300"}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.value ? "translate-x-6" : "translate-x-1"}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Visitor App Experience */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Visitor App Experience</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">Default accessibility options offered to visitors (they can override)</p>
+                  <div className="mb-6">
+                    <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-3">Default Font Size</label>
+                    <div className="inline-flex bg-zinc-100 rounded-lg p-1 gap-1">
+                      {(["S", "M", "L"] as const).map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => setDefaultFontSize(size)}
+                          className={`px-6 py-2 text-[13px] font-semibold rounded-md transition-all ${defaultFontSize === size ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-600 hover:text-zinc-900"}`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-0">
+                    {[
+                      { label: "High Contrast Mode", desc: "Offer high-contrast theme option to visitors", value: highContrastOption, setter: setHighContrastOption },
+                      { label: "Reduced Motion", desc: "Respect prefers-reduced-motion; offer toggle in visitor app", value: reducedMotionOption, setter: setReducedMotionOption },
+                      { label: "Dyslexia-friendly Font", desc: "Offer OpenDyslexic font as an option (aids readability per WCAG 1.4.8)", value: dyslexiaFont, setter: setDyslexiaFont },
+                      { label: "Screen Reader Optimisation", desc: "Enhanced ARIA markup and focus management for assistive technology", value: screenReaderOptimization, setter: setScreenReaderOptimization },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center justify-between py-4 border-b border-zinc-100 last:border-0">
+                        <div>
+                          <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">{item.label}</div>
+                          <div className="text-[12px] text-zinc-500">{item.desc}</div>
+                        </div>
+                        <button
+                          onClick={() => item.setter(!item.value)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${item.value ? "bg-zinc-900" : "bg-zinc-300"}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.value ? "translate-x-6" : "translate-x-1"}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Audio Transcripts */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-6">Audio Transcripts</h2>
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">Auto-generate transcripts for new POIs</div>
+                      <div className="text-[12px] text-zinc-500">WCAG 1.2.1 — all audio content must have a text transcript</div>
+                    </div>
+                    <button
+                      onClick={() => setAutoTranscripts(!autoTranscripts)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${autoTranscripts ? "bg-zinc-900" : "bg-zinc-300"}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoTranscripts ? "translate-x-6" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+                  <div className="mt-4 bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                    <p className="text-[13px] text-zinc-600">Transcripts also improve SEO, support hearing-impaired visitors, and are required under WCAG 2.1 SC 1.2.1 for audio-only content.</p>
+                  </div>
+                </div>
+
+                {/* Accessibility Statement */}
+                <div className="bg-white border border-zinc-200 rounded-xl p-8" style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                  <h2 className="text-[18px] font-semibold text-zinc-950 mb-1">Accessibility Statement</h2>
+                  <p className="text-[13px] text-zinc-500 mb-6">Mandatory for public sector bodies (Dir. 2016/2102 & Legge Stanca L. 4/2004); recommended for all under the EAA</p>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">Statement Last Updated</label>
+                      <input type="date" value={a11yStatementLastUpdated} onChange={(e) => setA11yStatementLastUpdated(e.target.value)} className="px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">Known Limitations</label>
+                      <textarea value={a11yKnownLimitations} onChange={(e) => setA11yKnownLimitations(e.target.value)} rows={3} placeholder="List any known accessibility issues and planned remediation timelines…" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all resize-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-semibold text-zinc-700 uppercase tracking-wide mb-2">Feedback / Complaint Email</label>
+                      <input type="email" value={a11yFeedbackEmail} onChange={(e) => setA11yFeedbackEmail(e.target.value)} placeholder="accessibility@museum.it" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
+                      <p className="text-[12px] text-zinc-500 mt-1.5">Mandatory for public bodies under Dir. 2016/2102 Art. 7(1)(b) — must be publicly accessible</p>
+                    </div>
+                    <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm">
+                      <FileText className="size-4" />
+                      Generate Statement
+                    </button>
                   </div>
                 </div>
               </div>
