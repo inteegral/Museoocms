@@ -13,8 +13,6 @@ import {
   Smartphone,
   Check,
   X,
-  Mic,
-  CreditCard,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -125,22 +123,6 @@ const ONBOARDING_STEPS = [
     desc: "Define the stops and narrative for your tour.",
     done: true,
     action: { label: "View guides", to: "/guides" },
-  },
-  {
-    id: "audio",
-    icon: Mic,
-    title: "Generate audio for your stops",
-    desc: "Professional narration in 40+ languages, in minutes.",
-    done: false,
-    action: { label: "Generate audio", to: "/voice-talent" },
-  },
-  {
-    id: "payments",
-    icon: CreditCard,
-    title: "Set up payments and go live",
-    desc: "Start earning from your visitors.",
-    done: false,
-    action: { label: "Set up", to: "/monetization" },
   },
 ];
 

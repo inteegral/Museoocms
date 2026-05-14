@@ -71,6 +71,9 @@ export const mockGuides = [
     createdAt: "15 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1580974852861-c381510bc98d?w=800&q=80",
     expositionType: "permanent" as const,
+    accessMode: "paid" as const,
+    codesTotal: 200,
+    codesUsed: 143,
   },
   {
     id: "guide-2",
@@ -86,6 +89,9 @@ export const mockGuides = [
     expositionType: "temporary" as const,
     startDate: "2026-04-01",
     endDate: "2026-06-30",
+    accessMode: "free" as const,
+    accessesLimit: 500,
+    accessesUsed: 127,
   },
   {
     id: "guide-3",
@@ -99,6 +105,9 @@ export const mockGuides = [
     createdAt: "22 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",
     expositionType: "permanent" as const,
+    accessMode: "free" as const,
+    accessesLimit: 200,
+    accessesUsed: 89,
   },
 ];
 

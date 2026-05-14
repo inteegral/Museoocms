@@ -355,7 +355,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
   const voiceId = voiceAssignments[guideId]?.[lang] ?? null;
   const voice = voiceId ? allVoices.find(v => v.id === voiceId) ?? null : null;
   const filteredPOIs = pois.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-  const complete = pois.filter(p => p.translations[lang]?.status === "approved" && p.translations[lang]?.audioStatus === "ready").length;
+  const complete = pois.filter(p => p.translations[lang]?.status === "approved").length;
 
   const patch = (update: Partial<Translation>) => {
     if (!poiId) return;
@@ -460,7 +460,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
 
     return (
       <PageShell>
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto">
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
@@ -535,8 +535,8 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
             </div>
           )}
 
-          {/* 3-column editor */}
-          <div className="grid grid-cols-[1fr_1.2fr_0.8fr] gap-5 items-start">
+          {/* 2-column editor */}
+          <div className="grid grid-cols-[1fr_1.2fr] gap-10 items-start">
 
             {/* Col 1: Source */}
             <div className="flex flex-col gap-2">
@@ -545,7 +545,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
                 <span className="text-[12px] font-semibold text-zinc-500">Original</span>
                 <span className="ml-auto text-[11px] text-zinc-400">{poi.sourceText.length} chars</span>
               </div>
-              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-[13px] text-zinc-600 leading-relaxed min-h-[220px]">{poi.sourceText}</div>
+              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-[13px] text-zinc-600 leading-relaxed min-h-[280px]">{poi.sourceText}</div>
             </div>
 
             {/* Col 2: Translation */}
@@ -563,7 +563,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
               {showReviewerPicker ? (
                 <ReviewerPicker lang={lang} onSelect={requestExpertReview} onClose={() => setShowReviewerPicker(false)} />
               ) : isEmpty ? (
-                <div className="flex flex-col items-center justify-center min-h-[220px] rounded-xl border-2 border-dashed border-violet-200 bg-violet-50/40 gap-4 p-6 text-center">
+                <div className="flex flex-col items-center justify-center min-h-[280px] rounded-xl border-2 border-dashed border-violet-200 bg-violet-50/40 gap-4 p-6 text-center">
                   <div className="size-12 rounded-2xl bg-violet-100 flex items-center justify-center">
                     <Sparkles className="size-6 text-violet-600" />
                   </div>
@@ -606,7 +606,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
                   <textarea value={editingText} onChange={e => { setEditingText(e.target.value); patch({ text: e.target.value }); }}
                     disabled={isApproved || isExpertReview}
                     placeholder={`${lang} translation…`}
-                    className={`w-full p-4 border rounded-xl text-[13px] text-zinc-900 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:cursor-not-allowed transition-all min-h-[220px] ${textareaBg} ${textareaBorder}`} />
+                    className={`w-full p-4 border rounded-xl text-[13px] text-zinc-900 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:cursor-not-allowed transition-all min-h-[280px] ${textareaBg} ${textareaBorder}`} />
                   {/* Action bar */}
                   {!isApproved && !isExpertReview && (
                     <div className="flex items-center justify-end gap-2 pt-1 flex-wrap">
@@ -636,19 +636,6 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
               )}
             </div>
 
-            {/* Col 3: Voice */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 mb-0">
-                <Mic className="size-3.5 text-zinc-400" strokeWidth={1.5} />
-                <span className="text-[12px] font-semibold text-zinc-500">Voice Over · {lang}</span>
-              </div>
-              <VoicePanel textApproved={isApproved} audioStatus={trans?.audioStatus} voice={voice} lang={lang}
-                showPicker={showVoicePicker} voiceSearch={voiceSearch}
-                onAdvance={() => patch({ audioStatus: "review" })} onApprove={() => patch({ audioStatus: "ready" })}
-                onReopen={() => patch({ audioStatus: "review" })} onChooseVoice={() => setShowVoicePicker(true)}
-                onClosePicker={() => setShowVoicePicker(false)} onVoiceSearch={setVoiceSearch}
-                onAssignVoice={assignVoice} onPlayToggle={togglePlay} playing={playingVoice} />
-            </div>
           </div>
         </div>
       </PageShell>
@@ -706,7 +693,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
             const t = p.translations[lang];
             const ts = textSlot(t?.status ?? "draft", t?.text ?? "");
             const as_ = audioSlot(t?.audioStatus ?? "none");
-            const isDone = ts === "done" && as_ === "done";
+            const isDone = ts === "done";
             const isExpertState = t?.status === "expert-review" || t?.status === "expert-done";
             const isAI = t?.aiDrafted && t?.status !== "approved" && !isExpertState;
 

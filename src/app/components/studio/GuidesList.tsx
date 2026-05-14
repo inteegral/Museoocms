@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { Plus, LayoutGrid, List, PenLine, Copy, Sparkles, GitFork, AlignLeft, X, Smartphone, ChevronRight, Calendar } from "lucide-react";
+import { Plus, LayoutGrid, List, PenLine, Copy, Sparkles, GitFork, AlignLeft, X, Smartphone, ChevronRight, Calendar, Ticket, Unlock } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockGuides } from "../../data/mockData";
 import { useState } from "react";
@@ -38,6 +38,62 @@ const NEW_GUIDE_PATHS = [
   },
 ];
 
+type MockGuide = (typeof mockGuides)[number];
+
+const LANG_COLOR: Record<string, string> = {
+  it: "#16a34a",
+  en: "#2563eb",
+  fr: "#7c3aed",
+  de: "#d97706",
+  es: "#dc2626",
+};
+
+function LangDot({ lang }: { lang: string }) {
+  const color = LANG_COLOR[lang] ?? "#71717a";
+  return (
+    <span
+      className="size-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0"
+      style={{ backgroundColor: color }}
+    >
+      {lang.toUpperCase()}
+    </span>
+  );
+}
+
+function AccessBadge({ guide }: { guide: MockGuide }) {
+  const isPaid = guide.accessMode === "paid";
+  const used  = isPaid ? (guide.codesUsed    ?? 0) : (guide.accessesUsed   ?? 0);
+  const total = isPaid ? (guide.codesTotal   ?? 0) : (guide.accessesLimit  ?? 0);
+  const remaining = total - used;
+  const pct = total ? Math.round((used / total) * 100) : 0;
+  const isLow = total ? remaining / total < 0.15 : false;
+  const barColor = isLow ? "#f59e0b" : isPaid ? "#8b5cf6" : "#10b981";
+  const unit = "accesses";
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold self-start ${
+        isPaid
+          ? "bg-violet-50 text-violet-700 border border-violet-100"
+          : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+      }`}>
+        {isPaid
+          ? <Ticket className="size-2.5" strokeWidth={2} />
+          : <Unlock className="size-2.5" strokeWidth={2} />}
+        {isPaid ? "Paid access" : "Free access"}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <div className="w-14 h-1.5 bg-zinc-100 rounded-full overflow-hidden flex-shrink-0">
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+        </div>
+        <span className={`text-[10px] font-medium tabular-nums ${isLow ? "text-amber-600" : "text-zinc-400"}`}>
+          {remaining.toLocaleString()} / {total.toLocaleString()} {unit}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
@@ -52,7 +108,7 @@ const statusConfig = {
 };
 
 
-function GridCard({ guide, onPreview }: { guide: typeof mockGuides[0]; onPreview: () => void }) {
+function GridCard({ guide, onPreview }: { guide: MockGuide; onPreview: () => void }) {
   const es = statusConfig[guide.editorialStatus];
   return (
     <div className="group bg-white rounded-2xl border border-zinc-100 overflow-hidden hover:border-zinc-200 hover:shadow-lg transition-all duration-300 flex flex-col" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
@@ -89,17 +145,22 @@ function GridCard({ guide, onPreview }: { guide: typeof mockGuides[0]; onPreview
               <span className={`size-1.5 rounded-full flex-shrink-0 ${es.dot}`} />
               {es.label}
             </span>
-            <p className="text-[11px] text-zinc-400 tracking-wide">
-              {guide.languages.map(l => l.toUpperCase()).join(" · ")}
-              <span className="mx-1.5 text-zinc-200">·</span>
-              {guide.poiCount} POIs
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="flex items-center gap-0.5">
+                {guide.languages.map(l => <LangDot key={l} lang={l} />)}
+              </div>
+              <span className="text-zinc-200 text-[11px]">·</span>
+              <span className="text-[11px] text-zinc-400">{guide.poiCount} POIs</span>
+            </div>
+            <p className="flex items-center gap-1 mt-1 text-[11px] text-zinc-400">
+              <Calendar className="size-3 flex-shrink-0" />
+              {guide.expositionType === "temporary" && guide.startDate && guide.endDate
+                ? `${fmtDate(guide.startDate)} – ${fmtDate(guide.endDate)}`
+                : "Permanent collection"}
             </p>
-            {guide.expositionType === "temporary" && guide.startDate && guide.endDate && (
-              <p className="flex items-center gap-1 mt-1.5 text-[11px] text-zinc-400">
-                <Calendar className="size-3 flex-shrink-0" />
-                {fmtDate(guide.startDate)} – {fmtDate(guide.endDate)}
-              </p>
-            )}
+            <div className="mt-2">
+              <AccessBadge guide={guide} />
+            </div>
           </div>
           <Link
             to={`/guides/${guide.id}`}
@@ -113,7 +174,7 @@ function GridCard({ guide, onPreview }: { guide: typeof mockGuides[0]; onPreview
   );
 }
 
-function ListRow({ guide, onPreview }: { guide: typeof mockGuides[0]; onPreview: () => void }) {
+function ListRow({ guide, onPreview }: { guide: MockGuide; onPreview: () => void }) {
   const es = statusConfig[guide.editorialStatus];
   return (
     <div className="group flex items-center gap-5 px-5 py-3.5 bg-white rounded-2xl border border-zinc-100 hover:border-zinc-200 hover:shadow-sm transition-all duration-200" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.03)" }}>
@@ -144,18 +205,20 @@ function ListRow({ guide, onPreview }: { guide: typeof mockGuides[0]; onPreview:
           {es.label}
         </span>
         <span className="text-zinc-200">·</span>
-        <span className="tracking-wide">{guide.languages.map(l => l.toUpperCase()).join(" · ")}</span>
+        <span className="flex items-center gap-0.5">
+          {guide.languages.map(l => <LangDot key={l} lang={l} />)}
+        </span>
         <span className="text-zinc-200">·</span>
         <span><span className="font-semibold text-zinc-600">{guide.poiCount}</span> POIs</span>
-        {guide.expositionType === "temporary" && guide.startDate && guide.endDate && (
-          <>
-            <span className="text-zinc-200">·</span>
-            <span className="flex items-center gap-1">
-              <Calendar className="size-3 flex-shrink-0" />
-              {fmtDate(guide.startDate)} – {fmtDate(guide.endDate)}
-            </span>
-          </>
-        )}
+        <span className="text-zinc-200">·</span>
+        <span className="flex items-center gap-1">
+          <Calendar className="size-3 flex-shrink-0" />
+          {guide.expositionType === "temporary" && guide.startDate && guide.endDate
+            ? `${fmtDate(guide.startDate)} – ${fmtDate(guide.endDate)}`
+            : "Permanent"}
+        </span>
+        <span className="text-zinc-200">·</span>
+        <AccessBadge guide={guide} />
       </div>
 
       {/* Actions */}
