@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Play, Pause, Map as MapIcon, ChevronLeft, MapPin, RotateCcw, RotateCw, Sparkles, Send, ArrowDown } from "lucide-react";
-import { mockPOIs } from "../../data/mockData";
+import { X, Play, Pause, Map as MapIcon, ChevronLeft, MapPin, RotateCcw, RotateCw, Sparkles, Send, ArrowDown, Calendar } from "lucide-react";
+import { mockPOIs, mockEvents } from "../../data/mockData";
 
 interface GuidePreviewModalProps {
   guideName: string;
+  guideId?: string;
   onClose: () => void;
 }
 
@@ -403,8 +404,9 @@ function POICard({
 }
 
 // ── GuidePhonePreview — exported so ReviewMode can embed it ───────────────────
-export function GuidePhonePreview({ guideName, onActivePOIChange, onScrollRef, annotationLayer }: {
+export function GuidePhonePreview({ guideName, guideId, onActivePOIChange, onScrollRef, annotationLayer }: {
   guideName: string;
+  guideId?: string;
   onActivePOIChange?: (index: number) => void;
   onScrollRef?: (el: HTMLDivElement | null) => void;
   annotationLayer?: React.ReactNode;
@@ -434,6 +436,14 @@ export function GuidePhonePreview({ guideName, onActivePOIChange, onScrollRef, a
   const totalSeconds = 150;
   const elapsed      = Math.floor((progress / 100) * totalSeconds);
   const activeLang   = LANGUAGES.find(l => l.code === selectedLang)!;
+
+  const linkedEvents = mockEvents.filter(e => e.status !== "past");
+
+  function fmtEventDate(start: string, end: string) {
+    const s = new Date(start).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: start === end ? "numeric" : undefined });
+    if (start === end) return s;
+    return `${s} – ${new Date(end).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+  }
 
   const scrollToPOIs = () => {
     if (firstPOIRef.current && scrollRef.current) {
@@ -888,6 +898,26 @@ export function GuidePhonePreview({ guideName, onActivePOIChange, onScrollRef, a
                   </div>
                 </div>
               )}
+              {/* Also on at the museum */}
+              {linkedEvents.length > 0 && (
+                <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid #F0F0F0" }}>
+                  <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.14em", color: "#a1a1aa", fontFamily: "Inter, system-ui, sans-serif", marginBottom: 12 }}>Also on at the museum</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {linkedEvents.map(event => (
+                      <div key={event.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                        {event.imageUrl && <img src={event.imageUrl} alt="" style={{ width: 52, height: 52, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: "inline-block", fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", padding: "1px 6px", borderRadius: 99, marginBottom: 4, fontFamily: "Inter, system-ui, sans-serif", background: event.status === "upcoming" ? "#EFF6FF" : event.status === "ongoing" ? "#ECFDF5" : "#F4F4F5", color: event.status === "upcoming" ? "#3b82f6" : event.status === "ongoing" ? "#10b981" : "#a1a1aa" }}>
+                            {event.status}
+                          </span>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: "#18181b", margin: "0 0 2px", lineHeight: 1.3, fontFamily: "Inter, system-ui, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{event.title}</p>
+                          <p style={{ fontSize: 10, color: "#a1a1aa", fontFamily: "Inter, system-ui, sans-serif", margin: 0 }}>{fmtEventDate(event.startDate, event.endDate)}{event.location ? ` · ${event.location}` : ""}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             {annotationLayer}
           </div>
@@ -1069,7 +1099,7 @@ export function GuidePhonePreview({ guideName, onActivePOIChange, onScrollRef, a
 }
 
 // ── GuidePreviewModal — thin wrapper around GuidePhonePreview ─────────────────
-export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps) {
+export function GuidePreviewModal({ guideName, guideId, onClose }: GuidePreviewModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
       <button onClick={onClose} className="absolute top-6 right-6 size-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-50">
@@ -1079,7 +1109,7 @@ export function GuidePreviewModal({ guideName, onClose }: GuidePreviewModalProps
         <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold mb-0.5" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>Visitor Preview</p>
         <p className="text-[13px] text-white/60" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>{guideName}</p>
       </div>
-      <GuidePhonePreview guideName={guideName} />
+      <GuidePhonePreview guideName={guideName} guideId={guideId} />
     </div>
   );
 }

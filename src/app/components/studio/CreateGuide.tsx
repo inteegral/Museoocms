@@ -221,11 +221,19 @@ export function CreateGuide() {
     setTimeout(() => setGenStep(2), 1400);
     setTimeout(() => setGenStep(3), 2000);
     setTimeout(() => {
+      const librarySources = config.useAllDocs
+        ? mockDocuments.map((d) => ({ name: d.filename, type: "library" as const }))
+        : config.selectedDocIds.map((id) => {
+            const doc = mockDocuments.find((d) => d.id === id);
+            return { name: doc?.filename ?? id, type: "library" as const };
+          });
+      const uploadedSources = config.files.map((f) => ({ name: f.name, type: "uploaded" as const }));
       navigate("/guides/guide-1", {
         state: {
           generatedName: config.name,
           generatedDescription: config.description,
           generatedPOIs: mockPOIs.slice(0, 5),
+          sources: [...librarySources, ...uploadedSources],
         },
       });
     }, 2700);
@@ -399,28 +407,40 @@ export function CreateGuide() {
                 </div>
               </div>
 
-              {/* Library */}
+              {/* Sources — library + upload */}
               <div className="bg-white rounded-xl border border-zinc-200 px-5 py-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-sm font-medium text-zinc-800">Document library <span className="text-zinc-400 font-normal text-xs ml-1">optional</span></p>
+                    <p className="text-sm font-medium text-zinc-800">Sources <span className="text-zinc-400 font-normal text-xs ml-1">optional</span></p>
                     <p className="text-xs text-zinc-400 mt-0.5">
                       {config.useAllDocs
                         ? `All ${mockDocuments.length} documents selected`
-                        : config.selectedDocIds.length > 0
-                          ? `${config.selectedDocIds.length} of ${mockDocuments.length} selected`
-                          : "No documents selected"}
+                        : (() => {
+                            const total = config.selectedDocIds.length + config.files.length;
+                            return total > 0 ? `${total} source${total > 1 ? "s" : ""} added` : "No sources added";
+                          })()}
                     </p>
                   </div>
-                  <button
-                    onClick={() => setShowDocModal(true)}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50 transition-all"
-                  >
-                    Browse
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowDocModal(true)}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50 transition-all"
+                    >
+                      <FileText className="size-3.5" /> Browse
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50 transition-all"
+                    >
+                      <Upload className="size-3.5" /> Upload
+                    </button>
+                    <input ref={fileInputRef} type="file" accept="application/pdf" multiple className="hidden" onChange={handleFilesInput} />
+                  </div>
                 </div>
+
+                {/* Selected library docs */}
                 {!config.useAllDocs && config.selectedDocIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-3">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
                     {config.selectedDocIds.map((id) => {
                       const doc = mockDocuments.find((d) => d.id === id);
                       if (!doc) return null;
@@ -438,28 +458,10 @@ export function CreateGuide() {
                     })}
                   </div>
                 )}
-              </div>
 
-              {/* Upload */}
-              <div className="bg-white rounded-xl border border-zinc-200 px-5 py-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-sm font-medium text-zinc-800">Upload new files <span className="text-zinc-400 font-normal text-xs ml-1">optional</span></p>
-                    <p className="text-xs text-zinc-400 mt-0.5">PDF only · max 10 MB per file</p>
-                  </div>
-                </div>
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleFilesDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-zinc-200 rounded-lg py-6 px-4 text-center cursor-pointer hover:border-zinc-300 hover:bg-zinc-50 transition-all"
-                >
-                  <Upload className="size-5 text-zinc-300 mx-auto mb-1.5" />
-                  <p className="text-xs text-zinc-500">Drag files here or <span className="underline">click to browse</span></p>
-                  <input ref={fileInputRef} type="file" accept="application/pdf" multiple className="hidden" onChange={handleFilesInput} />
-                </div>
+                {/* Uploaded files */}
                 {config.files.length > 0 && (
-                  <div className="mt-3 space-y-1.5">
+                  <div className="space-y-1.5">
                     {config.files.map((f, i) => (
                       <div key={i} className="flex items-center gap-2.5 px-3 py-2 bg-zinc-50 rounded-lg">
                         <FileText className="size-3.5 text-zinc-400 flex-shrink-0" />
@@ -470,6 +472,18 @@ export function CreateGuide() {
                         </button>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Drag & drop zone — only when no files yet */}
+                {config.files.length === 0 && config.selectedDocIds.length === 0 && !config.useAllDocs && (
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleFilesDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-zinc-100 rounded-lg py-4 px-4 text-center cursor-pointer hover:border-zinc-200 hover:bg-zinc-50 transition-all"
+                  >
+                    <p className="text-xs text-zinc-400">or drag PDF files here</p>
                   </div>
                 )}
               </div>

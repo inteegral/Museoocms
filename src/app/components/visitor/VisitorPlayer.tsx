@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router";
-import { Play, Pause, ChevronDown, ChevronUp, Globe, ArrowLeft } from "lucide-react";
-import { mockMuseum, mockPOIs, languages } from "../../data/mockData";
+import { Play, Pause, ChevronDown, ChevronUp, Globe, ArrowLeft, MapPin, Calendar } from "lucide-react";
+import { mockMuseum, mockPOIs, mockEvents, languages } from "../../data/mockData";
 import MainLogoVariant from "../../../imports/MainLogoVariant5";
 
 export function VisitorPlayer() {
@@ -26,6 +26,23 @@ export function VisitorPlayer() {
     museum: mockMuseum,
     pois: mockPOIs.slice(0, 5),
     availableLanguages: ["it", "en"],
+  };
+
+  const linkedEvents = mockEvents.filter((e) => e.linkedGuides.includes(guideId ?? ""));
+  const featuredEvents = linkedEvents.filter((e) => e.status !== "past");
+  const allLinkedEvents = linkedEvents;
+
+  function fmtEventDate(start: string, end: string) {
+    const s = new Date(start).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: start === end ? "numeric" : undefined });
+    if (start === end) return s;
+    const e = new Date(end).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    return `${s} – ${e}`;
+  }
+
+  const STATUS_STYLE = {
+    upcoming: "bg-blue-500/20 text-blue-200",
+    ongoing:  "bg-emerald-500/20 text-emerald-200",
+    past:     "bg-white/10 text-white/50",
   };
 
   const selectedLang = languages.find((l) => l.code === selectedLanguage);
@@ -156,6 +173,30 @@ export function VisitorPlayer() {
             </div>
           </div>
 
+          {/* Featured event card — upcoming/ongoing only */}
+          {featuredEvents.length > 0 && (
+            <div className="px-6 pt-6">
+              {featuredEvents.map((event) => (
+                <div key={event.id} className="relative rounded-2xl overflow-hidden mb-3" style={{ boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)' }}>
+                  {event.imageUrl && (
+                    <img src={event.imageUrl} alt="" className="w-full h-36 object-cover" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-950/40 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <span className={`inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full mb-2 ${STATUS_STYLE[event.status]}`}>
+                      {event.status === "upcoming" ? "Upcoming" : "Ongoing"}
+                    </span>
+                    <p className="text-white font-semibold text-[15px] leading-tight mb-1">{event.title}</p>
+                    <div className="flex items-center gap-3 text-white/60 text-[11px]">
+                      <span className="flex items-center gap-1"><Calendar className="size-3" />{fmtEventDate(event.startDate, event.endDate)}</span>
+                      {event.location && <span className="flex items-center gap-1"><MapPin className="size-3" />{event.location}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* POI List */}
           <div ref={poisListRef} className="p-6 space-y-3 scroll-mt-0">
             <h2 className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-4">
@@ -190,6 +231,38 @@ export function VisitorPlayer() {
               </button>
             ))}
           </div>
+
+          {/* Also on at the museum */}
+          {allLinkedEvents.length > 0 && (
+            <div className="px-6 pb-6 border-t border-zinc-100 pt-6">
+              <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-4">Also on at the museum</h2>
+              <div className="space-y-3">
+                {allLinkedEvents.map((event) => (
+                  <div key={event.id} className="flex gap-3 items-start">
+                    {event.imageUrl && (
+                      <img src={event.imageUrl} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                          event.status === "upcoming" ? "bg-blue-50 text-blue-600"
+                          : event.status === "ongoing" ? "bg-emerald-50 text-emerald-600"
+                          : "bg-zinc-100 text-zinc-400"
+                        }`}>
+                          {event.status}
+                        </span>
+                      </div>
+                      <p className="text-[13px] font-semibold text-zinc-900 leading-tight truncate">{event.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-zinc-400">
+                        <span className="flex items-center gap-1"><Calendar className="size-3" />{fmtEventDate(event.startDate, event.endDate)}</span>
+                        {event.location && <span className="flex items-center gap-1"><MapPin className="size-3" />{event.location}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Footer Info */}
           <div className="p-6 text-center border-t border-zinc-200">

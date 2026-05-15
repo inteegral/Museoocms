@@ -68,10 +68,11 @@ function POIItem({ poi, onRemove, onEdit, index, movePOI }: {
       ref={(node) => drag(drop(node))}
       className={`
         group relative flex items-center gap-4 py-5 pr-5 pl-16 bg-white rounded-lg border transition-all cursor-move
-        ${isDragging ? "opacity-40 scale-95 border-zinc-200" : isActive ? "border-zinc-200 hover:border-zinc-300" : "border-zinc-200 hover:border-zinc-300"}
+        ${isDragging ? "opacity-40 scale-95 border-zinc-200" : "border-zinc-200 hover:border-zinc-300"}
       `}
       style={{
-        boxShadow: isDragging ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.04)'
+        boxShadow: isDragging ? 'none' : '0 1px 3px 0 rgba(0, 0, 0, 0.04)',
+        borderLeft: isDragging ? undefined : `3px solid ${hasContent ? '#18181b' : '#e4e4e7'}`,
       }}
     >
       {/* Toggle attivazione POI */}
@@ -132,7 +133,7 @@ function POIItem({ poi, onRemove, onEdit, index, movePOI }: {
 function GuideEditorContent() {
   const { id } = useParams();
   const location = useLocation();
-  const incoming = location.state as { generatedName?: string; generatedDescription?: string; generatedPOIs?: POI[] } | null;
+  const incoming = location.state as { generatedName?: string; generatedDescription?: string; generatedPOIs?: POI[]; sources?: { name: string; type: "library" | "uploaded" }[] } | null;
   const currentUser = teamMembers.find((m) => m.id === CURRENT_USER_ID)!;
   const guide = mockGuides.find((g) => g.id === id);
   const [selectedPOIs, setSelectedPOIs] = useState<POI[]>(incoming?.generatedPOIs ?? mockPOIs.slice(0, guide?.poiCount || 0));
@@ -184,9 +185,11 @@ function GuideEditorContent() {
     { id: "review",      label: "Review",       hint: "Final check before publishing to visitors." },
   ];
   const [productionPhase, setProductionPhase] = useState<ProductionPhase>(
-    (guide?.productionPhase as ProductionPhase | undefined) ?? "scripting"
+    incoming ? "scripting" : (guide?.productionPhase as ProductionPhase | undefined) ?? "scripting"
   );
   const [pendingPhase, setPendingPhase] = useState<{ phase: ProductionPhase; direction: "forward" | "back" } | null>(null);
+  const sources = incoming?.sources ?? [];
+  const [showSources, setShowSources] = useState(false);
 
   const phaseIndex = PHASES.findIndex(p => p.id === productionPhase);
   const nextPhase = PHASES[phaseIndex + 1] ?? null;
@@ -568,7 +571,7 @@ function GuideEditorContent() {
                 <div>
                   <h2 className="text-[15px] font-semibold text-zinc-900">Events</h2>
                   <p className="text-[12px] text-zinc-400 mt-0.5">
-                    Announce events within this guide
+                    Link global events to promote inside this guide. <Link to="/events" className="underline underline-offset-2 hover:text-zinc-600 transition-colors">Manage events →</Link>
                   </p>
                 </div>
                 <button
@@ -576,7 +579,7 @@ function GuideEditorContent() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 text-[12px] font-semibold text-zinc-600 rounded-lg hover:bg-zinc-50 hover:border-zinc-300 transition-all"
                 >
                   <Plus className="size-3.5" />
-                  Add Event
+                  Link Event
                 </button>
               </div>
 
@@ -587,7 +590,7 @@ function GuideEditorContent() {
                       <Calendar className="size-5 text-zinc-300" />
                     </div>
                     <p className="text-[13px] text-zinc-500 mb-0.5">No events linked</p>
-                    <p className="text-[11px] text-zinc-400">Link an event to promote it inside this guide</p>
+                    <p className="text-[11px] text-zinc-400">Create events in <Link to="/events" className="underline underline-offset-2 hover:text-zinc-600 transition-colors">Events</Link>, then link them here</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1119,7 +1122,7 @@ function GuideEditorContent() {
 
       {/* Guide Preview Modal */}
       {showPreview && (
-        <GuidePreviewModal guideName={title} onClose={() => setShowPreview(false)} />
+        <GuidePreviewModal guideName={title} guideId={id} onClose={() => setShowPreview(false)} />
       )}
 
       {/* Cover Gallery Modal */}
@@ -1615,6 +1618,64 @@ function GuideEditorContent() {
           </div>
         );
       })()}
+
+      {/* Context floating pill */}
+      {sources.length > 0 && (
+        <button
+          onClick={() => setShowSources((v) => !v)}
+          className={`fixed bottom-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-lg text-[13px] font-medium transition-all duration-200 ${
+            showSources
+              ? "bg-zinc-800 text-white scale-95"
+              : "bg-white text-zinc-700 hover:bg-zinc-50 hover:scale-105 border border-zinc-200"
+          }`}
+          style={{ right: "88px" }}
+          title="Context"
+        >
+          <FileText className="size-4 flex-shrink-0" strokeWidth={1.5} />
+          Context
+        </button>
+      )}
+
+      {/* Sources drawer */}
+      {showSources && sources.length > 0 && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowSources(false)} />
+          <div className="fixed top-0 right-0 h-full w-72 z-50 bg-white border-l border-zinc-200 flex flex-col shadow-xl" style={{ boxShadow: '-4px 0 24px 0 rgba(0,0,0,0.08)' }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-zinc-400" />
+                <p className="text-sm font-semibold text-zinc-900">Sources</p>
+              </div>
+              <button onClick={() => setShowSources(false)} className="text-zinc-300 hover:text-zinc-500 transition-colors">
+                <X className="size-4" />
+              </button>
+            </div>
+            <p className="px-5 py-3 text-[11px] text-zinc-400 border-b border-zinc-100">
+              Documents used to generate this guide's content.
+            </p>
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+              {sources.map((s, i) => (
+                <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-50 transition-colors">
+                  <FileText className="size-3.5 text-zinc-400 flex-shrink-0" />
+                  <span className="text-xs text-zinc-700 flex-1 truncate">{s.name}</span>
+                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                    s.type === "library"
+                      ? "bg-blue-50 text-blue-600"
+                      : "bg-amber-50 text-amber-600"
+                  }`}>
+                    {s.type === "library" ? "library" : "uploaded"}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-4 border-t border-zinc-100">
+              <Link to="/guides/new" className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors underline underline-offset-2">
+                Edit sources
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
     </PageShell>
   );
 }
