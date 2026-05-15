@@ -123,7 +123,7 @@ const mockPronunciations: Pronunciation[] = [
     word: "Aphrodite",
     ipa: "/æˈfrɒd.ɪ.ti/",
     simplified: "af-ROD-it-ee",
-    foundIn: ["Venus de Milo"],
+    foundIn: ["Apollo Statue"],
     status: "pending",
   },
   {
@@ -131,7 +131,7 @@ const mockPronunciations: Pronunciation[] = [
     word: "Hellenistic",
     ipa: "/ˌhel.əˈnɪs.tɪk/",
     simplified: "hel-uh-NIS-tik",
-    foundIn: ["Venus de Milo"],
+    foundIn: ["Attic Amphora"],
     status: "pending",
   },
   {

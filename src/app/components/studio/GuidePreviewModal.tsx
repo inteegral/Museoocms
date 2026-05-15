@@ -67,7 +67,7 @@ function FloorPlan() {
       {doors.map(([x1,y1,x2,y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f0ece4" strokeWidth="4" />)}
       {colPositions.map(([cx,cy], i) => <rect key={i} x={cx-5} y={cy-5} width="10" height="10" fill="#c8bfb0" stroke="#7a6e60" strokeWidth="1" />)}
       {[
-        { x: 63,  y: 78,  n: "I",   sub: "Venus de Milo"    },
+        { x: 63,  y: 78,  n: "I",   sub: "Attic Amphora"    },
         { x: 184, y: 78,  n: "II",  sub: "Apollo Statue"     },
         { x: 306, y: 78,  n: "III", sub: "Attic Amphora"     },
         { x: 63,  y: 210, n: "IV",  sub: "Roman Mosaic"      },

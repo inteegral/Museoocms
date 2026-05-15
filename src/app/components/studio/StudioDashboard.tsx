@@ -71,15 +71,15 @@ const GUIDE_PERF_SERIES = [
 // Top 5 POIs per guide — always 5 entries
 const POI_BY_GUIDE: Record<string, { key: string; rank: number; duration: string; avgDuration: string; totalListens: number }[]> = {
   "all":     [
-    { key: "Venus",   rank: 1, duration: "3:30", avgDuration: "2:21", totalListens: 42 },
+    { key: "Amphora", rank: 1, duration: "2:20", avgDuration: "2:21", totalListens: 42 },
     { key: "Mosaic",  rank: 2, duration: "3:10", avgDuration: "2:05", totalListens: 38 },
-    { key: "Forum",   rank: 3, duration: "2:45", avgDuration: "1:52", totalListens: 31 },
-    { key: "Amphora", rank: 4, duration: "2:20", avgDuration: "1:38", totalListens: 27 },
-    { key: "Helmet",  rank: 5, duration: "2:05", avgDuration: "1:20", totalListens: 22 },
+    { key: "Apollo",  rank: 3, duration: "2:50", avgDuration: "1:52", totalListens: 31 },
+    { key: "Helmet",  rank: 4, duration: "2:05", avgDuration: "1:38", totalListens: 27 },
+    { key: "Forum",   rank: 5, duration: "2:45", avgDuration: "1:20", totalListens: 22 },
   ],
   "guide-1": [
-    { key: "Venus",   rank: 1, duration: "3:30", avgDuration: "2:31", totalListens: 28 },
-    { key: "Amphora", rank: 2, duration: "2:20", avgDuration: "1:55", totalListens: 24 },
+    { key: "Amphora", rank: 1, duration: "2:20", avgDuration: "2:31", totalListens: 28 },
+    { key: "Apollo",  rank: 2, duration: "2:50", avgDuration: "1:55", totalListens: 24 },
     { key: "Apollo",  rank: 3, duration: "2:50", avgDuration: "1:41", totalListens: 19 },
     { key: "Athena",  rank: 4, duration: "3:05", avgDuration: "1:28", totalListens: 15 },
     { key: "Bacchus", rank: 5, duration: "2:15", avgDuration: "1:10", totalListens: 11 },

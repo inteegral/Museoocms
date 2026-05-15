@@ -12,15 +12,6 @@ export const mockMuseum = {
 
 export const mockPOIs = [
   {
-    id: "poi-1",
-    title: "Venus de Milo",
-    body: "Welcome to the Venus de Milo, one of the most iconic sculptures of ancient Greek art. This marble statue dates from the Hellenistic period, around 130–100 BC, and represents Aphrodite, the Greek goddess of love and beauty...",
-    imageUrl: "https://images.unsplash.com/photo-1580974852861-c381510bc98d?w=800&q=80",
-    orderIndex: 0,
-    translations: ["it", "en", "fr"],
-    voices: ["it", "en"],
-  },
-  {
     id: "poi-2",
     title: "Attic Amphora",
     body: "This black-figure Attic amphora is a masterpiece of Greek pottery from the 6th century BC. The depicted scenes illustrate episodes from Greek mythology, with particular attention to anatomical detail and narrative composition...",
@@ -65,8 +56,8 @@ export const mockGuides = [
     description: "A journey through the permanent collections",
     status: "published" as const,
     editorialStatus: "complete" as const,
-    poiCount: 8,
-    poiIds: ["poi-1", "poi-2", "poi-3", "poi-4", "poi-5"],
+    poiCount: 7,
+    poiIds: ["poi-2", "poi-3", "poi-4", "poi-5"],
     languages: ["it", "en"],
     createdAt: "15 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1580974852861-c381510bc98d?w=800&q=80",
@@ -81,8 +72,8 @@ export const mockGuides = [
     description: "The most important works in 30 minutes",
     status: "draft" as const,
     editorialStatus: "under-revision" as const,
-    poiCount: 5,
-    poiIds: ["poi-1", "poi-3", "poi-5"],
+    poiCount: 4,
+    poiIds: ["poi-3", "poi-5"],
     languages: ["it"],
     createdAt: "20 gen 2024",
     thumbnail: "https://images.unsplash.com/photo-1579541671172-43429ce17aca?w=800&q=80",
@@ -179,8 +170,8 @@ export const mockAnalytics = {
   ],
   // Top POI per ascolti
   topPOIs: [
-    { name: "Venus de Milo", plays: 42, avgTime: "2m 30s" },
-    { name: "Attic Amphora", plays: 38, avgTime: "1m 45s" },
+    { name: "Attic Amphora", plays: 42, avgTime: "1m 45s" },
+    { name: "Apollo Statue", plays: 38, avgTime: "2m 00s" },
     { name: "Roman Mosaic", plays: 35, avgTime: "2m 10s" },
     { name: "Corinthian Helmet", plays: 31, avgTime: "1m 30s" },
     { name: "Apollo Statue", plays: 28, avgTime: "2m 00s" },

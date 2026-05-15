@@ -43,9 +43,9 @@ const INITIAL_HUNTS: Hunt[] = [
     completions: 47,
     questions: [
       {
-        id: "q-1", poiId: "poi-1", poiTitle: "Venus de Milo",
-        question: "From which period does the Venus de Milo date?",
-        options: ["5th century BC", "Hellenistic period (130–100 BC)", "Roman period 1st century AD", "Byzantine 4th century"],
+        id: "q-1", poiId: "poi-5", poiTitle: "Apollo Statue",
+        question: "What ideal does the Apollo Statue embody in classical Greek sculpture?",
+        options: ["Military power", "Beauty and divine perfection", "Maritime trade", "Agricultural prosperity"],
         correct: 1,
       },
       {

@@ -52,14 +52,14 @@ const PLAN_DURATIONS = ["30 min", "45 min", "1 hour", "90 min"] as const;
 const MOCK_PROPOSALS: Record<string, PlanPOI[]> = {
   family: [
     { id: "pp1", title: "The Story Wall", rationale: "Interactive intro that hooks younger visitors from the first moment.", duration: "4 min", note: "" },
-    { id: "pp2", title: "Venus de Milo", rationale: "The 'missing arms' mystery is a perfect conversation starter for kids.", duration: "5 min", note: "" },
+    { id: "pp2", title: "Attic Amphora", rationale: "Decorated with mythological scenes — perfect for sparking children's imagination.", duration: "5 min", note: "" },
     { id: "pp3", title: "Corinthian Helmet", rationale: "A tactile reproduction is available — children can touch a replica.", duration: "6 min", note: "" },
     { id: "pp4", title: "Roman Mosaic", rationale: "Puzzle-like visuals engage younger audiences naturally.", duration: "5 min", note: "" },
     { id: "pp5", title: "Apollo Statue", rationale: "Close with a myth — Apollo's stories are accessible and memorable.", duration: "5 min", note: "" },
   ],
   default: [
     { id: "pp1", title: "Museum Entrance Hall", rationale: "Sets the historical context and prepares visitors for the journey ahead.", duration: "5 min", note: "" },
-    { id: "pp2", title: "Venus de Milo", rationale: "Iconic centerpiece with high emotional and visual impact.", duration: "8 min", note: "" },
+    { id: "pp2", title: "Apollo Statue", rationale: "Iconic centerpiece with high emotional and visual impact.", duration: "8 min", note: "" },
     { id: "pp3", title: "Attic Amphora", rationale: "Showcases Greek pottery craftsmanship with narrative depth.", duration: "7 min", note: "" },
     { id: "pp4", title: "Roman Mosaic", rationale: "Bridges the Greek and Roman periods in a natural narrative arc.", duration: "6 min", note: "" },
     { id: "pp5", title: "Apollo Statue", rationale: "Strong closing piece that embodies the classical ideal of beauty.", duration: "6 min", note: "" },
@@ -151,7 +151,6 @@ const TONE_VARIANTS: Partial<Record<string, Partial<Record<Audience, string>>>> 
 };
 
 const POI_GUIDE_MAP: Record<string, string> = {
-  "poi-1": "guide-1",
   "poi-2": "guide-1",
   "poi-3": "guide-2",
   "poi-4": "guide-2",
