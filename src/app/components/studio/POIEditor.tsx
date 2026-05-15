@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, Mic, Globe, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check } from "lucide-react";
+import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, Mic, Globe, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check, UserCircle2 } from "lucide-react";
 import { mockGuides, mockPOIs, mockDocuments } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
 
@@ -213,6 +213,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
   const [formData, setFormData] = useState(poi);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [showAssigneePicker, setShowAssigneePicker] = useState(false);
 
   // Co-curator
   const [showCoCurator, setShowCoCurator] = useState(false);
@@ -373,30 +374,49 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                   </div>
                   <div>
                     <label className="block text-[12px] font-medium text-zinc-600 mb-1.5">Assigned to</label>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {assignableMembers.map(member => {
-                        const active = formData.assignee === member.id;
-                        return (
+                    {formData.assignee ? (() => {
+                      const member = assignableMembers.find(m => m.id === formData.assignee);
+                      if (!member) return null;
+                      return (
+                        <div className="flex items-center gap-2.5 px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg w-fit">
+                          <img src={`https://i.pravatar.cc/40?u=${member.email}`} alt={member.name} className="size-6 rounded-full object-cover flex-shrink-0" />
+                          <span className="text-[13px] font-medium text-zinc-800">{member.name}</span>
                           <button
-                            key={member.id}
-                            onClick={() => setFormData({ ...formData, assignee: active ? undefined : member.id })}
-                            title={member.name}
-                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[12px] font-medium transition-all ${
-                              active
-                                ? "border-zinc-900 bg-zinc-900 text-white"
-                                : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
-                            }`}
+                            onClick={() => setFormData({ ...formData, assignee: undefined })}
+                            className="text-zinc-300 hover:text-zinc-600 transition-colors ml-1"
                           >
-                            <img
-                              src={`https://i.pravatar.cc/40?u=${member.email}`}
-                              alt={member.name}
-                              className={`size-5 rounded-full object-cover flex-shrink-0 ${active ? "ring-1 ring-white/40" : ""}`}
-                            />
-                            {member.name.split(" ")[0]}
+                            <X className="size-3.5" />
                           </button>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })() : (
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowAssigneePicker(p => !p)}
+                          className="flex items-center gap-2 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-[12px] font-medium text-zinc-500 hover:border-zinc-400 transition-all"
+                        >
+                          <UserCircle2 className="size-4 text-zinc-300" />
+                          Assign to…
+                        </button>
+                        {showAssigneePicker && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setShowAssigneePicker(false)} />
+                            <div className="absolute top-full mt-1.5 left-0 bg-white border border-zinc-200 rounded-xl shadow-xl z-20 py-1.5 min-w-[180px]">
+                              {assignableMembers.map(member => (
+                                <button
+                                  key={member.id}
+                                  onClick={() => { setFormData({ ...formData, assignee: member.id }); setShowAssigneePicker(false); }}
+                                  className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-zinc-50 transition-colors"
+                                >
+                                  <img src={`https://i.pravatar.cc/40?u=${member.email}`} alt={member.name} className="size-6 rounded-full object-cover flex-shrink-0" />
+                                  <span className="text-[13px] text-zinc-700">{member.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
