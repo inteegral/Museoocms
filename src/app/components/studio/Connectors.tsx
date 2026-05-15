@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Check, ChevronRight, Zap } from "lucide-react";
+import { X, Check, ChevronRight, Zap, Search, ChevronDown } from "lucide-react";
 import { PageShell } from "./PageShell";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -859,17 +859,20 @@ export function Connectors() {
     () => Object.fromEntries(CONNECTORS.map(c => [c.id, c.status]))
   );
   const [statusFilter, setStatusFilter] = useState<"all" | "connected" | "available">("all");
-  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [categorySelect, setCategorySelect] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [configuring, setConfiguring] = useState<Connector | null>(null);
 
   const connectedCount = Object.values(statuses).filter(s => s === "connected").length;
   const availableCount = CONNECTORS.filter(c => statuses[c.id] === "available").length;
+  const q = searchQuery.trim().toLowerCase();
 
   const visible = CONNECTORS.filter(c => {
     const s = statuses[c.id];
     if (statusFilter === "connected" && s !== "connected") return false;
     if (statusFilter === "available" && s === "connected") return false;
-    if (categoryFilter.length > 0 && !categoryFilter.includes(c.category)) return false;
+    if (categorySelect && c.category !== categorySelect) return false;
+    if (q && !c.name.toLowerCase().includes(q) && !c.description.toLowerCase().includes(q)) return false;
     return true;
   });
 
@@ -883,12 +886,6 @@ export function Connectors() {
     if (!configuring) return;
     setStatuses(prev => ({ ...prev, [configuring.id]: "available" }));
     setConfiguring(null);
-  };
-
-  const toggleCategory = (cat: string) => {
-    setCategoryFilter(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
   };
 
   const categoriesVisible = Array.from(new Set(visible.map(c => c.category)));
@@ -919,7 +916,7 @@ export function Connectors() {
 
         {/* Filter bar */}
         <div className="flex flex-col gap-3 mb-8">
-          {/* Status filter */}
+          {/* Row 1: status pills */}
           <div className="flex items-center gap-1.5 p-1 bg-zinc-100 rounded-xl w-fit">
             {(["all", "connected", "available"] as const).map(f => (
               <button
@@ -940,32 +937,37 @@ export function Connectors() {
             ))}
           </div>
 
-          {/* Category chips */}
-          <div className="flex flex-wrap gap-1.5">
-            {ALL_CATEGORIES.map(cat => {
-              const active = categoryFilter.includes(cat);
-              return (
-                <button
-                  key={cat}
-                  onClick={() => toggleCategory(cat)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all border ${
-                    active
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400 hover:text-zinc-700"
-                  }`}
-                >
-                  {cat}
+          {/* Row 2: search + category dropdown */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search connectors…"
+                className="w-full pl-9 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-300 hover:text-zinc-500 transition-colors">
+                  <X className="size-3.5" />
                 </button>
-              );
-            })}
-            {categoryFilter.length > 0 && (
-              <button
-                onClick={() => setCategoryFilter([])}
-                className="px-3 py-1 rounded-full text-[11px] font-medium text-zinc-400 hover:text-zinc-600 transition-colors"
+              )}
+            </div>
+
+            <div className="relative">
+              <select
+                value={categorySelect}
+                onChange={e => setCategorySelect(e.target.value)}
+                className="appearance-none pl-3 pr-8 py-2 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all cursor-pointer hover:border-zinc-300"
               >
-                Clear ×
-              </button>
-            )}
+                <option value="">All categories</option>
+                {ALL_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
+            </div>
           </div>
         </div>
 
