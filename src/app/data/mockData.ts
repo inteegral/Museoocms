@@ -284,6 +284,11 @@ export const mockPacks = [
   },
 ];
 
+export const mockHunts = [
+  { id: "hunt-1", title: "Greek Art Challenge",   guideId: "guide-1", status: "active" as const, completions: 47 },
+  { id: "hunt-2", title: "Family Discovery Game", guideId: "guide-3", status: "draft"  as const, completions: 0  },
+];
+
 export const mockSurveys = [
   { id: "1", name: "Post-Visit Experience Survey" },
   { id: "2", name: "Audio Quality Feedback" },

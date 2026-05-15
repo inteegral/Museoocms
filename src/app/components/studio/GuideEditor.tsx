@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "react-router";
-import { ArrowLeft, Plus, GripVertical, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye, Ticket, Unlock } from "lucide-react";
+import { ArrowLeft, Plus, GripVertical, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye, Ticket, Unlock, Trophy } from "lucide-react";
 import confetti from "canvas-confetti";
-import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents } from "../../data/mockData";
+import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents, mockHunts } from "../../data/mockData";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { POIEditor } from "./POIEditor";
@@ -170,6 +170,10 @@ function GuideEditorContent() {
   const [showPreview, setShowPreview] = useState(false);
   const [thumbnail, setThumbnail] = useState<string>(guide?.thumbnail ?? "");
   const [showCoverGallery, setShowCoverGallery] = useState(false);
+  const [huntStatuses, setHuntStatuses] = useState<Record<string, "active" | "draft">>(() =>
+    Object.fromEntries(mockHunts.map(h => [h.id, h.status]))
+  );
+  const guideHunts = mockHunts.filter(h => h.guideId === id);
 
   const movePOI = (dragIndex: number, hoverIndex: number) => {
     const newPOIs = [...selectedPOIs];
@@ -843,7 +847,7 @@ function GuideEditorContent() {
             </div>
 
             {/* Survey */}
-            <div className="p-5">
+            <div className="p-5 border-b border-zinc-200">
               <div className="flex items-center gap-1.5 mb-3">
                 <ClipboardList className="size-3.5 text-zinc-400" strokeWidth={1.5} />
                 <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Survey</p>
@@ -869,6 +873,48 @@ function GuideEditorContent() {
                 </p>
               )}
             </div>
+
+            {/* Hunt */}
+            {guideHunts.length > 0 && (
+              <div className="p-5">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Trophy className="size-3.5 text-zinc-400" strokeWidth={1.5} />
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Hunt</p>
+                </div>
+                <div className="space-y-2">
+                  {guideHunts.map(hunt => {
+                    const isActive = huntStatuses[hunt.id] === "active";
+                    return (
+                      <div key={hunt.id} className="flex items-center gap-3 px-3 py-2.5 bg-white border border-zinc-200 rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-medium text-zinc-800 truncate">{hunt.title}</p>
+                          <p className="text-[10px] text-zinc-400">{hunt.completions} completions</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setHuntStatuses(prev => ({ ...prev, [hunt.id]: isActive ? "draft" : "active" }))}
+                          style={{
+                            position: "relative", width: 36, height: 20, borderRadius: 10,
+                            background: isActive ? "#D33333" : "#e4e4e7",
+                            border: "none", cursor: "pointer", padding: 0,
+                            transition: "background 0.2s ease", flexShrink: 0,
+                          }}
+                        >
+                          <div style={{
+                            position: "absolute", top: 3,
+                            left: isActive ? 19 : 3,
+                            width: 14, height: 14, borderRadius: "50%",
+                            background: "white",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
+                            transition: "left 0.2s ease",
+                          }} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
