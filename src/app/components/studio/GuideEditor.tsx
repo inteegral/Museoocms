@@ -174,6 +174,7 @@ function GuideEditorContent() {
     Object.fromEntries(mockHunts.map(h => [h.id, h.status]))
   );
   const guideHunts = mockHunts.filter(h => h.guideId === id);
+  const [pendingAccessType, setPendingAccessType] = useState<"free" | "paid" | null>(null);
 
   const movePOI = (dragIndex: number, hoverIndex: number) => {
     const newPOIs = [...selectedPOIs];
@@ -697,44 +698,32 @@ function GuideEditorContent() {
                 <div>
                   <label className="block text-[12px] font-medium text-zinc-500 mb-1.5">Access Type</label>
                   <div className="space-y-1.5">
-                    <button
-                      onClick={() => setAccessType("free")}
-                      className={`w-full p-3 rounded-lg border transition-all text-left ${
-                        accessType === "free" ? "border-zinc-900 bg-white" : "border-zinc-200 bg-white hover:border-zinc-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${accessType === "free" ? "border-zinc-900" : "border-zinc-300"}`}>
-                          {accessType === "free" && <div className="size-2 rounded-full bg-zinc-900" />}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <LockOpen className="size-3.5 text-zinc-600" />
-                            <span className="text-[13px] font-semibold text-zinc-900">Free Access</span>
+                    {(["free", "paid"] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          if (type === accessType) return;
+                          if (status === "published") { setPendingAccessType(type); }
+                          else { setAccessType(type); }
+                        }}
+                        className={`w-full p-3 rounded-lg border transition-all text-left ${
+                          accessType === type ? "border-zinc-900 bg-white" : "border-zinc-200 bg-white hover:border-zinc-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${accessType === type ? "border-zinc-900" : "border-zinc-300"}`}>
+                            {accessType === type && <div className="size-2 rounded-full bg-zinc-900" />}
                           </div>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">Universal QR code</p>
-                        </div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setAccessType("paid")}
-                      className={`w-full p-3 rounded-lg border transition-all text-left ${
-                        accessType === "paid" ? "border-zinc-900 bg-white" : "border-zinc-200 bg-white hover:border-zinc-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={`size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${accessType === "paid" ? "border-zinc-900" : "border-zinc-300"}`}>
-                          {accessType === "paid" && <div className="size-2 rounded-full bg-zinc-900" />}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <DollarSign className="size-3.5 text-zinc-600" />
-                            <span className="text-[13px] font-semibold text-zinc-900">Paid Access</span>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              {type === "free" ? <LockOpen className="size-3.5 text-zinc-600" /> : <DollarSign className="size-3.5 text-zinc-600" />}
+                              <span className="text-[13px] font-semibold text-zinc-900">{type === "free" ? "Free Access" : "Paid Access"}</span>
+                            </div>
+                            <p className="text-[11px] text-zinc-400 mt-0.5">{type === "free" ? "Universal QR code" : "Unique QR per visitor"}</p>
                           </div>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">Unique QR per visitor</p>
                         </div>
-                      </div>
-                    </button>
+                      </button>
+                    ))}
                   </div>
                   {accessType === "paid" && (
                     <p className="text-[11px] text-blue-600 mt-2 leading-relaxed">
@@ -1307,6 +1296,50 @@ function GuideEditorContent() {
           </div>
         </div>
       )}
+      {/* Access type change confirmation — published guides only */}
+      {pendingAccessType && (
+        <div className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="size-10 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="size-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[15px] font-semibold text-zinc-900 mb-1">Change access on published guide</p>
+                  <p className="text-[13px] text-zinc-500 leading-relaxed">
+                    This guide is live. Switching to <span className="font-semibold">{pendingAccessType}</span> access will take effect immediately for all visitors.
+                  </p>
+                </div>
+              </div>
+              {pendingAccessType === "paid" ? (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 text-[12px] text-amber-800 leading-relaxed">
+                  Visitors using the current universal QR will lose access. Unique codes will be required.
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5 text-[12px] text-blue-800 leading-relaxed">
+                  The guide will become freely accessible to anyone with the universal QR. Existing paid codes will stop being required.
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setPendingAccessType(null)}
+                  className="flex-1 py-2.5 border border-zinc-200 text-[13px] font-semibold text-zinc-700 rounded-xl hover:bg-zinc-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { setAccessType(pendingAccessType); setPendingAccessType(null); }}
+                  className="flex-1 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all"
+                >
+                  Yes, change it
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Final Review sub-modal */}
       {showFinalReview && (
         <div

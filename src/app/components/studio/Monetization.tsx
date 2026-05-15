@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   QrCode, Download, Plus, Check, X, ChevronDown,
   Package, FileDown, Truck, Clock, CheckCircle2,
-  Globe, Eye, EyeOff, RotateCcw, Copy, Tag, Info,
+  Globe, Eye, EyeOff, RotateCcw, Copy, Tag, Info, AlertTriangle,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 
@@ -19,7 +19,7 @@ interface Order {
 }
 
 interface GuideEntry {
-  id: string; name: string; access: "free" | "paid";
+  id: string; name: string; access: "free" | "paid"; status: "draft" | "published";
 }
 
 interface AccessCode {
@@ -28,10 +28,10 @@ interface AccessCode {
 }
 
 const MOCK_GUIDES: GuideEntry[] = [
-  { id: "1", name: "Renaissance Masterpieces", access: "free" },
-  { id: "2", name: "Ancient Egypt Collection",  access: "paid" },
-  { id: "3", name: "Modern Art Gallery",        access: "free" },
-  { id: "4", name: "Sculpture Garden Tour",     access: "paid" },
+  { id: "1", name: "Renaissance Masterpieces", access: "free", status: "published" },
+  { id: "2", name: "Ancient Egypt Collection",  access: "paid", status: "published" },
+  { id: "3", name: "Modern Art Gallery",        access: "free", status: "draft"     },
+  { id: "4", name: "Sculpture Garden Tour",     access: "paid", status: "published" },
 ];
 
 const MOCK_ORDERS: Order[] = [
@@ -120,6 +120,7 @@ export function Monetization() {
   const [guides, setGuides] = useState<GuideEntry[]>(MOCK_GUIDES);
   const [editingAccess, setEditingAccess] = useState<GuideEntry | null>(null);
   const [editAccess,    setEditAccess]    = useState<"free" | "paid">("free");
+  const [confirmAccessChange, setConfirmAccessChange] = useState<{ guide: GuideEntry; newAccess: "free" | "paid" } | null>(null);
 
   // Distribution channels
   const [showInloco,  setShowInloco]  = useState(false);
@@ -174,8 +175,19 @@ export function Monetization() {
 
   function saveEditAccess() {
     if (!editingAccess) return;
-    setGuides(guides.map(g => g.id === editingAccess.id ? { ...g, access: editAccess } : g));
-    setEditingAccess(null);
+    if (editAccess !== editingAccess.access && editingAccess.status === "published") {
+      setConfirmAccessChange({ guide: editingAccess, newAccess: editAccess });
+      setEditingAccess(null);
+    } else {
+      setGuides(guides.map(g => g.id === editingAccess.id ? { ...g, access: editAccess } : g));
+      setEditingAccess(null);
+    }
+  }
+
+  function applyAccessChange() {
+    if (!confirmAccessChange) return;
+    setGuides(guides.map(g => g.id === confirmAccessChange.guide.id ? { ...g, access: confirmAccessChange.newAccess } : g));
+    setConfirmAccessChange(null);
   }
 
   function handlePlaceOrder() {
@@ -685,6 +697,53 @@ export function Monetization() {
                 className="flex-1 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all">
                 Save
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Access Change Confirmation */}
+      {confirmAccessChange && (
+        <div className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="size-10 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="size-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[15px] font-semibold text-zinc-900 mb-1">Change access on published guide</p>
+                  <p className="text-[13px] text-zinc-500 leading-relaxed">
+                    <span className="font-medium text-zinc-700">{confirmAccessChange.guide.name}</span> is currently live.
+                    Switching to <span className="font-semibold">{confirmAccessChange.newAccess}</span> will take effect immediately for all visitors.
+                  </p>
+                </div>
+              </div>
+
+              {confirmAccessChange.newAccess === "paid" ? (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 text-[12px] text-amber-800 leading-relaxed">
+                  Visitors using the current universal QR will lose access. Unique codes will be required.
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5 text-[12px] text-blue-800 leading-relaxed">
+                  The guide will become freely accessible to anyone with the universal QR. Existing paid codes will stop being required.
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmAccessChange(null)}
+                  className="flex-1 py-2.5 border border-zinc-200 text-[13px] font-semibold text-zinc-700 rounded-xl hover:bg-zinc-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={applyAccessChange}
+                  className="flex-1 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all"
+                >
+                  Yes, change it
+                </button>
+              </div>
             </div>
           </div>
         </div>
