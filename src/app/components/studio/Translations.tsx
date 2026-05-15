@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import {
   Search, Sparkles, CheckCircle2, Mic, Play, Pause,
   X, ChevronDown, FileText, ArrowRight, RotateCcw,
@@ -371,6 +372,15 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
     setShowVoicePicker(false); setShowReviewerPicker(false);
   };
   const closePOI = () => { setPoiId(null); setShowVoicePicker(false); setShowReviewerPicker(false); };
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const name = searchParams.get("poi");
+    if (!name) return;
+    const match = pois.find(p => p.name.toLowerCase().includes(name.toLowerCase())) ?? pois[0];
+    if (match) openPOI(match);
+    setSearchParams({}, { replace: true });
+  }, []);
   const changeGuide = (id: string) => { const g = guides.find(x => x.id === id)!; setGuideId(id); setLang(g.targetLanguages[0]); setPoiId(null); };
   const changeLang = (l: string) => { setLang(l); if (poi) setEditingText(poi.translations[l]?.text ?? ""); };
   const togglePlay = (id: string) => { setPlayingVoice(prev => { if (prev === id) return null; setTimeout(() => setPlayingVoice(null), 3000); return id; }); };

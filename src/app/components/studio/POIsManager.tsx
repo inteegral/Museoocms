@@ -25,6 +25,7 @@ interface POI {
   isGeolocated?: boolean;
   assignedToGuides?: string[];
   assignee?: string;
+  assigneeNote?: string;
 }
 
 const AVATAR_COLORS = ["bg-violet-100 text-violet-700","bg-sky-100 text-sky-700","bg-emerald-100 text-emerald-700","bg-amber-100 text-amber-700","bg-rose-100 text-rose-700","bg-zinc-100 text-zinc-600"];

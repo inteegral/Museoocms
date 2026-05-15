@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, Mic, Globe, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check, UserCircle2 } from "lucide-react";
+import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check, Globe, Mic } from "lucide-react";
 import { mockGuides, mockPOIs, mockDocuments } from "../../data/mockData";
-import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
 
 type POIStatus = "idea" | "in-progress" | "under-revision" | "complete";
 
@@ -20,6 +19,7 @@ interface POI {
   isGeolocated?: boolean;
   assignedToGuides?: string[];
   assignee?: string;
+  assigneeNote?: string;
 }
 
 interface POIEditorProps {
@@ -49,11 +49,6 @@ function estimateDuration(text: string) {
 
 const WAVEFORM = [3,5,8,5,10,7,4,9,6,11,8,5,12,9,6,10,7,4,8,5,9,6,11,7,4,8,5,10,6,9,7,5,11,8,4,9,6,10,5,8,7,11,6,4,9,8,5,10,7,6];
 
-const AVATAR_COLORS = ["bg-violet-100 text-violet-700","bg-sky-100 text-sky-700","bg-emerald-100 text-emerald-700","bg-amber-100 text-amber-700","bg-rose-100 text-rose-700","bg-zinc-100 text-zinc-600"];
-function avatarColor(name: string) { return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]; }
-function memberInitials(name: string) { return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase(); }
-const assignableMembers = teamMembers.filter(m => m.status === "active" && m.id !== CURRENT_USER_ID);
-
 const LANG_META: Record<string, { name: string; flag: string }> = {
   it: { name: "Italiano", flag: "🇮🇹" },
   en: { name: "English",  flag: "🇬🇧" },
@@ -64,6 +59,7 @@ const LANG_META: Record<string, { name: string; flag: string }> = {
   zh: { name: "中文",      flag: "🇨🇳" },
   ja: { name: "日本語",    flag: "🇯🇵" },
 };
+
 
 function AudioPlayer({ label, dark = false, duration }: { label?: string; dark?: boolean; duration: string }) {
   const [playing, setPlaying] = useState(false);
@@ -213,7 +209,8 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
   const [formData, setFormData] = useState(poi);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
-  const [showAssigneePicker, setShowAssigneePicker] = useState(false);
+  const [selectedTranslationLang, setSelectedTranslationLang] = useState<string | null>(null);
+  const [selectedVoicingLang, setSelectedVoicingLang] = useState<string | null>(null);
 
   // Co-curator
   const [showCoCurator, setShowCoCurator] = useState(false);
@@ -372,52 +369,6 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                       placeholder="e.g. Sculpture, Painting, Architecture…"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[12px] font-medium text-zinc-600 mb-1.5">Assigned to</label>
-                    {formData.assignee ? (() => {
-                      const member = assignableMembers.find(m => m.id === formData.assignee);
-                      if (!member) return null;
-                      return (
-                        <div className="flex items-center gap-2.5 px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg w-fit">
-                          <img src={`https://i.pravatar.cc/40?u=${member.email}`} alt={member.name} className="size-6 rounded-full object-cover flex-shrink-0" />
-                          <span className="text-[13px] font-medium text-zinc-800">{member.name}</span>
-                          <button
-                            onClick={() => setFormData({ ...formData, assignee: undefined })}
-                            className="text-zinc-300 hover:text-zinc-600 transition-colors ml-1"
-                          >
-                            <X className="size-3.5" />
-                          </button>
-                        </div>
-                      );
-                    })() : (
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowAssigneePicker(p => !p)}
-                          className="flex items-center gap-2 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-[12px] font-medium text-zinc-500 hover:border-zinc-400 transition-all"
-                        >
-                          <UserCircle2 className="size-4 text-zinc-300" />
-                          Assign to…
-                        </button>
-                        {showAssigneePicker && (
-                          <>
-                            <div className="fixed inset-0 z-10" onClick={() => setShowAssigneePicker(false)} />
-                            <div className="absolute top-full mt-1.5 left-0 bg-white border border-zinc-200 rounded-xl shadow-xl z-20 py-1.5 min-w-[180px]">
-                              {assignableMembers.map(member => (
-                                <button
-                                  key={member.id}
-                                  onClick={() => { setFormData({ ...formData, assignee: member.id }); setShowAssigneePicker(false); }}
-                                  className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-zinc-50 transition-colors"
-                                >
-                                  <img src={`https://i.pravatar.cc/40?u=${member.email}`} alt={member.name} className="size-6 rounded-full object-cover flex-shrink-0" />
-                                  <span className="text-[13px] text-zinc-700">{member.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 <div className="border-t border-zinc-100" />
@@ -439,12 +390,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                     </div>
                   </div>
                   {wordCount > 0 && duration && (
-                    <div className="space-y-2">
-                      <AudioPlayer dark duration={duration} label="TTS preview · voice not yet assigned" />
-                      {formData.voices && formData.voices.length > 0 && formData.voices.map(lang => (
-                        <AudioPlayer key={lang} duration={duration} label={lang.toUpperCase()} />
-                      ))}
-                    </div>
+                    <AudioPlayer dark duration={duration} label="TTS preview · voice not yet assigned" />
                   )}
                 </div>
 
@@ -487,18 +433,33 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                 <div className="border-t border-zinc-100" />
 
                 {/* Translation */}
-                <div id="poi-translation" className="space-y-4">
+                <div id="poi-translation" className="space-y-3">
                   <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Translation</p>
                   {inGuideContext ? (
                     targetLangs.length === 0 ? (
-                      <p className="text-[12px] text-zinc-400">No translation languages configured. Add languages from the audio guide settings to enable translations.</p>
+                      <p className="text-[12px] text-zinc-400">No additional languages in this guide.</p>
                     ) : (
-                      <div className="space-y-3">
-                        {targetLangs.map(lang => {
-                          const meta = LANG_META[lang] ?? { name: lang.toUpperCase(), flag: "🌐" };
-                          const hasTranslation = formData.translations?.includes(lang);
+                      <>
+                        <div className="flex items-center gap-2">
+                          {targetLangs.map(lang => {
+                            const meta = LANG_META[lang] ?? { name: lang.toUpperCase(), flag: "🌐" };
+                            const hasTranslation = formData.translations?.includes(lang);
+                            const isSelected = selectedTranslationLang === lang;
+                            return (
+                              <button key={lang} onClick={() => setSelectedTranslationLang(isSelected ? null : lang)} className="flex flex-col items-center gap-1" title={meta.name}>
+                                <span className={`size-9 rounded-full flex items-center justify-center text-[18px] border-2 transition-all ${isSelected ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"}`}>
+                                  {meta.flag}
+                                </span>
+                                <span className={`size-1.5 rounded-full transition-colors ${hasTranslation ? "bg-emerald-400" : "bg-zinc-300"}`} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedTranslationLang && (() => {
+                          const meta = LANG_META[selectedTranslationLang] ?? { name: selectedTranslationLang.toUpperCase(), flag: "🌐" };
+                          const hasTranslation = formData.translations?.includes(selectedTranslationLang);
                           return (
-                            <div key={lang} className="border border-zinc-200 rounded-xl overflow-hidden">
+                            <div className="border border-zinc-200 rounded-xl overflow-hidden">
                               <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
                                 <div className="flex items-center gap-2">
                                   <span className="text-[14px]">{meta.flag}</span>
@@ -509,34 +470,28 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                                 </span>
                               </div>
                               <div className="p-4">
-                                <textarea
-                                  rows={4}
-                                  defaultValue={hasTranslation ? `[${meta.name} translation of the script]` : ""}
-                                  placeholder="Translation will appear here after guide production…"
-                                  className="w-full px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-700 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none leading-relaxed"
-                                />
+                                <textarea rows={4} defaultValue={hasTranslation ? `[${meta.name} translation of the script]` : ""} placeholder="Translation will appear here after guide production…" className="w-full px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-700 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none leading-relaxed" />
                               </div>
                             </div>
                           );
-                        })}
-                      </div>
+                        })()}
+                      </>
                     )
                   ) : (
                     <div className="flex items-start gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
                       <Globe className="size-4 text-zinc-300 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-[13px] font-medium text-zinc-600">Available in guide context</p>
-                        <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">
-                          Open this POI from an audio guide to manage translations for that guide's languages.
-                        </p>
+                        <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">Open this POI from an audio guide to manage translations for that guide's languages.</p>
                         {(formData.translations?.length ?? 0) > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            <span className="text-[10px] text-zinc-400 w-full">Already translated:</span>
-                            {formData.translations?.map(l => (
-                              <span key={l} className="px-1.5 py-0.5 bg-zinc-200 rounded text-[10px] font-semibold text-zinc-500 uppercase">{l}</span>
-                            ))}
+                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            {formData.translations?.map(l => {
+                              const m = LANG_META[l] ?? { flag: "🌐", name: l };
+                              return <span key={l} title={m.name} className="size-7 rounded-full border border-zinc-200 flex items-center justify-center text-[14px]">{m.flag}</span>;
+                            })}
                           </div>
                         )}
+                        <a href="#" className="text-[11px] text-zinc-400 hover:text-zinc-700 underline underline-offset-2 transition-colors mt-2 inline-block">Manage translations →</a>
                       </div>
                     </div>
                   )}
@@ -545,20 +500,43 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                 <div className="border-t border-zinc-100" />
 
                 {/* Voicing */}
-                <div id="poi-voicing" className="space-y-4">
+                <div id="poi-voicing" className="space-y-3">
                   <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Voicing</p>
                   {inGuideContext ? (
-                    <div className="space-y-3">
-                      {(guideLanguages ?? []).map((lang, i) => {
-                        const meta = LANG_META[lang] ?? { name: lang.toUpperCase(), flag: "🌐" };
-                        const hasVoice = formData.voices?.includes(lang);
+                    <>
+                      <div className="flex items-center gap-2">
+                        {(guideLanguages ?? []).map((lang, i) => {
+                          const meta = LANG_META[lang] ?? { name: lang.toUpperCase(), flag: "🌐" };
+                          const hasVoice = formData.voices?.includes(lang);
+                          const isSelected = selectedVoicingLang === lang;
+                          return (
+                            <button key={lang} onClick={() => setSelectedVoicingLang(isSelected ? null : lang)} className="flex flex-col items-center gap-1" title={meta.name}>
+                              <div className="relative">
+                                <span className={`size-9 rounded-full flex items-center justify-center text-[18px] border-2 transition-all ${isSelected ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-400"}`}>
+                                  {meta.flag}
+                                </span>
+                                {i === 0 && (
+                                  <span className="absolute -top-1 -right-1 size-3 rounded-full bg-zinc-900 border-2 border-white flex items-center justify-center">
+                                    <span className="text-[5px] text-white font-bold leading-none">P</span>
+                                  </span>
+                                )}
+                              </div>
+                              <span className={`size-1.5 rounded-full transition-colors ${hasVoice ? "bg-emerald-400" : "bg-zinc-300"}`} />
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {selectedVoicingLang && (() => {
+                        const meta = LANG_META[selectedVoicingLang] ?? { name: selectedVoicingLang.toUpperCase(), flag: "🌐" };
+                        const hasVoice = formData.voices?.includes(selectedVoicingLang);
+                        const isPrimary = (guideLanguages ?? [])[0] === selectedVoicingLang;
                         return (
-                          <div key={lang} className="border border-zinc-200 rounded-xl overflow-hidden">
+                          <div className="border border-zinc-200 rounded-xl overflow-hidden">
                             <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
                               <div className="flex items-center gap-2">
                                 <span className="text-[14px]">{meta.flag}</span>
                                 <span className="text-[12px] font-semibold text-zinc-700">{meta.name}</span>
-                                {i === 0 && <span className="text-[10px] font-medium text-zinc-400 bg-zinc-200 px-1.5 py-0.5 rounded">Primary</span>}
+                                {isPrimary && <span className="text-[10px] font-medium text-zinc-400 bg-zinc-200 px-1.5 py-0.5 rounded">Primary</span>}
                               </div>
                               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${hasVoice ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}>
                                 {hasVoice ? "Ready" : "Not generated"}
@@ -568,29 +546,28 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                               {hasVoice && duration ? (
                                 <AudioPlayer duration={duration} label={`${meta.name} · voice assigned`} />
                               ) : (
-                                <p className="text-[12px] text-zinc-400">Not generated yet · voice is set at audio guide level</p>
+                                <p className="text-[12px] text-zinc-400">No voice assigned yet · managed from the audio guide</p>
                               )}
                             </div>
                           </div>
                         );
-                      })}
-                    </div>
+                      })()}
+                    </>
                   ) : (
                     <div className="flex items-start gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
                       <Mic className="size-4 text-zinc-300 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-[13px] font-medium text-zinc-600">Available in guide context</p>
-                        <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">
-                          Voice assignment and TTS generation are scoped to an audio guide. Open from a guide to manage voicing.
-                        </p>
+                        <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">Voice assignment and TTS generation are scoped to an audio guide. Open from a guide to manage voicing.</p>
                         {(formData.voices?.length ?? 0) > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            <span className="text-[10px] text-zinc-400 w-full">Voices generated:</span>
-                            {formData.voices?.map(l => (
-                              <span key={l} className="px-1.5 py-0.5 bg-zinc-200 rounded text-[10px] font-semibold text-zinc-500 uppercase">{l}</span>
-                            ))}
+                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            {formData.voices?.map(l => {
+                              const m = LANG_META[l] ?? { flag: "🌐", name: l };
+                              return <span key={l} title={m.name} className="size-7 rounded-full border border-zinc-200 flex items-center justify-center text-[14px]">{m.flag}</span>;
+                            })}
                           </div>
                         )}
+                        <a href="#" className="text-[11px] text-zinc-400 hover:text-zinc-700 underline underline-offset-2 transition-colors mt-2 inline-block">Manage voicing →</a>
                       </div>
                     </div>
                   )}

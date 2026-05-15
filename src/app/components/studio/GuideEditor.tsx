@@ -401,17 +401,27 @@ function GuideEditorContent() {
                 {PHASES.map((phase, i) => {
                   const isCurrent = phase.id === productionPhase;
                   const isPast = i < phaseIndex;
+                  const modalKey = phase.id === "translating" ? "translations" as const : phase.id === "voicing" ? "voicing" as const : null;
+                  const isClickable = modalKey && (isCurrent || isPast);
+                  const pillClass = `flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
+                    isCurrent  ? "bg-zinc-900 text-white" :
+                    isPast     ? "bg-zinc-100 text-zinc-400 line-through decoration-zinc-300" :
+                                 "bg-zinc-50 text-zinc-300"
+                  }`;
                   return (
                     <div key={phase.id} className="flex items-center gap-1">
                       {i > 0 && <div className={`w-5 h-px flex-shrink-0 ${isPast ? "bg-zinc-400" : "bg-zinc-200"}`} />}
-                      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                        isCurrent  ? "bg-zinc-900 text-white" :
-                        isPast     ? "bg-zinc-100 text-zinc-400 line-through decoration-zinc-300" :
-                                     "bg-zinc-50 text-zinc-300"
-                      }`}>
-                        {isPast && <Check className="size-2.5 flex-shrink-0" strokeWidth={3} />}
-                        {phase.label}
-                      </div>
+                      {isClickable ? (
+                        <button onClick={() => setActiveModal(modalKey)} className={`${pillClass} hover:opacity-75`}>
+                          {isPast && <Check className="size-2.5 flex-shrink-0" strokeWidth={3} />}
+                          {phase.label}
+                        </button>
+                      ) : (
+                        <div className={pillClass}>
+                          {isPast && <Check className="size-2.5 flex-shrink-0" strokeWidth={3} />}
+                          {phase.label}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1585,7 +1595,14 @@ function GuideEditorContent() {
                     Cancel
                   </button>
                   <button
-                    onClick={() => { setProductionPhase(pendingPhase.phase); setPendingPhase(null); }}
+                    onClick={() => {
+                      setProductionPhase(pendingPhase.phase);
+                      setPendingPhase(null);
+                      if (!pendingPhase.direction || pendingPhase.direction === "forward") {
+                        if (pendingPhase.phase === "translating") setActiveModal("translations");
+                        if (pendingPhase.phase === "voicing") setActiveModal("voicing");
+                      }
+                    }}
                     className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${
                       isBack ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-zinc-900 hover:bg-zinc-700 text-white"
                     }`}
