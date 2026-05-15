@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { Plus, MapPin, ChevronDown, FileText, Mic, Globe, BookOpen, AlertTriangle, X } from "lucide-react";
+import { Plus, MapPin, ChevronDown, FileText, BookOpen, AlertTriangle, X } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -147,54 +147,32 @@ const statusConfig = {
 function POIBadges({ poi }: { poi: POI }) {
   const hasScript = !!poi.audioScript;
   const scriptOk = poi.scriptValidated;
-  const voiceCount = poi.voices?.length ?? 0;
-  const transCount = poi.translations?.length ?? 0;
   const guideCount = poi.assignedToGuides?.length ?? 0;
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {/* Script */}
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
-        scriptOk
-          ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-          : hasScript
-          ? "bg-amber-50 border-amber-200 text-amber-700"
-          : "bg-zinc-50 border-zinc-200 text-zinc-400"
-      }`}>
-        <FileText className="size-3" />
-        {scriptOk ? "Validated" : hasScript ? "Draft" : "No script"}
-      </span>
+    <div className="flex items-center gap-2">
+      {/* Script dot + label */}
+      <div className="flex items-center gap-1.5">
+        <span className={`size-1.5 rounded-full flex-shrink-0 ${
+          scriptOk ? "bg-emerald-400" : hasScript ? "bg-amber-400" : "bg-zinc-300"
+        }`} />
+        <span className={`text-[11px] font-medium ${
+          scriptOk ? "text-emerald-600" : hasScript ? "text-amber-600" : "text-zinc-400"
+        }`}>
+          {scriptOk ? "Validated" : hasScript ? "Draft" : "No script"}
+        </span>
+      </div>
 
-      {/* Voices */}
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
-        voiceCount > 0
-          ? "bg-blue-50 border-blue-200 text-blue-700"
-          : "bg-zinc-50 border-zinc-200 text-zinc-400"
-      }`}>
-        <Mic className="size-3" />
-        {voiceCount > 0 ? voiceCount : "—"}
-      </span>
-
-      {/* Translations */}
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
-        transCount > 0
-          ? "bg-violet-50 border-violet-200 text-violet-700"
-          : "bg-zinc-50 border-zinc-200 text-zinc-400"
-      }`}>
-        <Globe className="size-3" />
-        {transCount > 0 ? transCount : "—"}
-      </span>
+      {/* Divider */}
+      <span className="w-px h-3 bg-zinc-200 flex-shrink-0" />
 
       {/* Guides */}
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
-        guideCount > 0
-          ? "bg-zinc-900 border-zinc-900 text-white"
-          : "bg-zinc-50 border-zinc-200 text-zinc-400"
-      }`}>
-        <BookOpen className="size-3" />
-        {guideCount > 0 ? guideCount : "—"}
-      </span>
-
+      <div className="flex items-center gap-1.5">
+        <BookOpen className={`size-3 flex-shrink-0 ${guideCount > 0 ? "text-zinc-500" : "text-zinc-300"}`} />
+        <span className={`text-[11px] font-medium tabular-nums ${guideCount > 0 ? "text-zinc-600" : "text-zinc-300"}`}>
+          {guideCount > 0 ? `${guideCount} ${guideCount === 1 ? "guide" : "guides"}` : "Not used"}
+        </span>
+      </div>
     </div>
   );
 }
