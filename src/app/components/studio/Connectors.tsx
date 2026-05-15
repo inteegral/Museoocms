@@ -693,15 +693,10 @@ const CONNECTORS: Connector[] = [
   },
 ];
 
-const CATEGORIES = Array.from(new Set(CONNECTORS.map(c => c.category)));
+const ALL_CATEGORIES = Array.from(new Set(CONNECTORS.map(c => c.category)));
 
 // ── Config Modal ──────────────────────────────────────────────────────────────
-function ConfigModal({
-  connector,
-  onClose,
-  onSave,
-  onDisconnect,
-}: {
+function ConfigModal({ connector, onClose, onSave, onDisconnect }: {
   connector: Connector;
   onClose: () => void;
   onSave: () => void;
@@ -712,41 +707,44 @@ function ConfigModal({
 
   return (
     <div
-      className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
+        {/* Colored accent bar */}
+        <div className="h-1 w-full" style={{ background: connector.color }} />
+
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-zinc-100">
+        <div className="flex items-center gap-4 px-6 pt-5 pb-4 border-b border-zinc-100">
           <div
-            className="size-9 rounded-xl flex items-center justify-center text-white text-[12px] font-bold flex-shrink-0"
-            style={{ background: connector.color }}
+            className="size-11 rounded-xl flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0"
+            style={{ background: connector.color, boxShadow: `0 4px 12px ${connector.color}40` }}
           >
             {connector.initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-zinc-900">{connector.name}</p>
-            <p className="text-[11px] text-zinc-400">{connector.description}</p>
+            <p className="text-[15px] font-semibold text-zinc-900 leading-tight">{connector.name}</p>
+            <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">{connector.description}</p>
           </div>
-          <button onClick={onClose} className="size-7 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors">
-            <X className="size-3.5 text-zinc-500" />
+          <button onClick={onClose} className="size-7 flex items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition-all flex-shrink-0">
+            <X className="size-3.5" />
           </button>
         </div>
 
-        {/* Fields */}
+        {/* Body */}
         <div className="px-6 py-5 space-y-4">
           {isConnected && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100">
-              <span className="size-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+              <span className="size-2 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />
               <span className="text-[12px] text-emerald-700 font-medium">Connected and active</span>
             </div>
           )}
           {connector.configFields.map(field => (
             <div key={field.key}>
-              <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">
+              <label className="block text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5">
                 {field.label}
               </label>
               <input
@@ -754,33 +752,24 @@ function ConfigModal({
                 value={values[field.key] ?? ""}
                 onChange={e => setValues(prev => ({ ...prev, [field.key]: e.target.value }))}
                 placeholder={field.placeholder}
-                className="w-full px-3 py-2.5 rounded-lg border border-zinc-200 text-[13px] font-mono text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-[13px] font-mono text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 bg-zinc-50/50 transition-all"
               />
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 flex items-center gap-2">
+        <div className="px-6 pb-5 flex items-center gap-2 border-t border-zinc-100 pt-4">
           {isConnected && (
-            <button
-              onClick={onDisconnect}
-              className="px-4 py-2 text-[13px] font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-            >
+            <button onClick={onDisconnect} className="px-4 py-2 text-[12px] font-medium text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
               Disconnect
             </button>
           )}
           <div className="flex-1" />
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[13px] text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
-          >
+          <button onClick={onClose} className="px-4 py-2 text-[13px] text-zinc-500 hover:text-zinc-700 border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-all">
             Cancel
           </button>
-          <button
-            onClick={onSave}
-            className="px-5 py-2 text-[13px] font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors"
-          >
+          <button onClick={onSave} className="px-5 py-2 text-[13px] font-semibold text-white rounded-xl transition-all hover:opacity-90 active:scale-95" style={{ background: connector.color }}>
             {isConnected ? "Save changes" : "Connect"}
           </button>
         </div>
@@ -790,10 +779,7 @@ function ConfigModal({
 }
 
 // ── Connector Card ────────────────────────────────────────────────────────────
-function ConnectorCard({
-  connector,
-  onConfigure,
-}: {
+function ConnectorCard({ connector, onConfigure }: {
   connector: Connector;
   onConfigure: () => void;
 }) {
@@ -801,52 +787,68 @@ function ConnectorCard({
   const isSoon = connector.status === "coming-soon";
 
   return (
-    <div className={`bg-white border rounded-xl p-5 flex flex-col gap-4 transition-all ${
-      isSoon ? "opacity-60 cursor-default" : "border-zinc-200 hover:border-zinc-300 hover:shadow-sm cursor-pointer"
-    } ${isConnected ? "border-zinc-200 ring-1 ring-emerald-100" : ""}`}>
-      {/* Top row */}
-      <div className="flex items-start justify-between gap-3">
-        <div
-          className="size-10 rounded-xl flex items-center justify-center text-white text-[12px] font-bold flex-shrink-0"
-          style={{ background: connector.color }}
-        >
-          {connector.initials}
+    <div
+      onClick={!isSoon ? onConfigure : undefined}
+      className={`group relative bg-white rounded-2xl border flex flex-col overflow-hidden transition-all duration-200 ${
+        isSoon
+          ? "border-zinc-100 opacity-50 cursor-default"
+          : isConnected
+            ? "border-zinc-200 hover:border-zinc-300 cursor-pointer hover:shadow-md"
+            : "border-zinc-200 hover:border-zinc-300 cursor-pointer hover:shadow-md"
+      }`}
+      style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}
+    >
+      {/* Colored top border */}
+      <div className="h-0.5 w-full flex-shrink-0" style={{ background: isSoon ? "#e4e4e7" : connector.color }} />
+
+      <div className="p-5 flex flex-col gap-4 flex-1">
+        {/* Logo row */}
+        <div className="flex items-start justify-between gap-2">
+          <div
+            className="size-11 rounded-xl flex items-center justify-center text-white text-[12px] font-bold flex-shrink-0 transition-transform group-hover:scale-105"
+            style={{
+              background: isSoon ? "#d4d4d8" : connector.color,
+              boxShadow: isSoon ? "none" : `0 4px 12px ${connector.color}30`,
+            }}
+          >
+            {connector.initials}
+          </div>
+          <div className="flex-shrink-0 mt-0.5">
+            {isConnected ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                <span className="size-1.5 rounded-full bg-emerald-400" />
+                Connected
+              </span>
+            ) : isSoon ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 text-zinc-400">
+                Soon
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-50 text-zinc-400 border border-zinc-100">
+                Available
+              </span>
+            )}
+          </div>
         </div>
-        {isConnected ? (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 flex-shrink-0">
-            <span className="size-1.5 rounded-full bg-emerald-500 inline-block" />
-            Connected
-          </span>
-        ) : isSoon ? (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 text-zinc-400 border border-zinc-200 flex-shrink-0">
-            Soon
-          </span>
-        ) : null}
-      </div>
 
-      {/* Name + description */}
-      <div className="flex-1">
-        <p className="text-[14px] font-semibold text-zinc-900 mb-0.5">{connector.name}</p>
-        <p className="text-[12px] text-zinc-400 leading-snug">{connector.description}</p>
-      </div>
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[14px] font-semibold text-zinc-900 leading-tight mb-1">{connector.name}</p>
+          <p className="text-[11px] text-zinc-400 leading-relaxed">{connector.description}</p>
+        </div>
 
-      {/* Action */}
-      {!isSoon && (
-        <button
-          onClick={onConfigure}
-          className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold transition-all ${
-            isConnected
-              ? "bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200"
-              : "bg-zinc-900 text-white hover:bg-zinc-800"
-          }`}
-        >
-          {isConnected ? (
-            <><Check className="size-3.5" />Configure</>
-          ) : (
-            <><Zap className="size-3.5" />Connect</>
+        {/* Footer row */}
+        <div className="flex items-center justify-between pt-1 border-t border-zinc-50">
+          <span className="text-[10px] font-medium text-zinc-300 uppercase tracking-wide">{connector.category}</span>
+          {!isSoon && (
+            <span className={`text-[11px] font-semibold transition-all ${
+              isConnected ? "text-zinc-400 group-hover:text-zinc-600" : "text-zinc-400 group-hover:text-zinc-900"
+            }`}>
+              {isConnected ? "Configure →" : "Connect →"}
+            </span>
           )}
-        </button>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -856,15 +858,18 @@ export function Connectors() {
   const [statuses, setStatuses] = useState<Record<string, Connector["status"]>>(
     () => Object.fromEntries(CONNECTORS.map(c => [c.id, c.status]))
   );
-  const [filter, setFilter] = useState<"all" | "connected" | "available">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "connected" | "available">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [configuring, setConfiguring] = useState<Connector | null>(null);
 
   const connectedCount = Object.values(statuses).filter(s => s === "connected").length;
+  const availableCount = CONNECTORS.filter(c => statuses[c.id] === "available").length;
 
   const visible = CONNECTORS.filter(c => {
     const s = statuses[c.id];
-    if (filter === "connected") return s === "connected";
-    if (filter === "available") return s === "available" || s === "coming-soon";
+    if (statusFilter === "connected" && s !== "connected") return false;
+    if (statusFilter === "available" && s === "connected") return false;
+    if (categoryFilter.length > 0 && !categoryFilter.includes(c.category)) return false;
     return true;
   });
 
@@ -880,53 +885,102 @@ export function Connectors() {
     setConfiguring(null);
   };
 
+  const toggleCategory = (cat: string) => {
+    setCategoryFilter(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
   const categoriesVisible = Array.from(new Set(visible.map(c => c.category)));
 
   return (
     <PageShell>
       <div className="max-w-5xl mx-auto">
+
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl flex items-center justify-center bg-zinc-100">
-              <Zap className="size-5 text-zinc-600" />
-            </div>
-            <div>
-              <h1 className="text-[22px] font-semibold text-zinc-900 tracking-tight">Connectors</h1>
-              <p className="text-[13px] text-zinc-400 mt-0.5">Integrate your tools and services</p>
-            </div>
+          <div>
+            <h1 className="text-[24px] font-semibold text-zinc-900 tracking-tight">Connectors</h1>
+            <p className="text-[13px] text-zinc-400 mt-1">Connect your tools and services to Museoo</p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-white border border-zinc-200 rounded-xl">
-            <span className="size-2 rounded-full bg-emerald-400 inline-block" />
-            <span className="text-[12px] font-medium text-zinc-700">{connectedCount} connected</span>
+          {/* Stat chips */}
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 px-3.5 py-2 bg-white border border-zinc-200 rounded-xl">
+              <span className="size-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-[12px] font-semibold text-zinc-700">{connectedCount}</span>
+              <span className="text-[12px] text-zinc-400">connected</span>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-2 bg-white border border-zinc-200 rounded-xl">
+              <span className="text-[12px] font-semibold text-zinc-700">{CONNECTORS.length}</span>
+              <span className="text-[12px] text-zinc-400">total</span>
+            </div>
           </div>
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl w-fit mb-8">
-          {(["all", "connected", "available"] as const).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all capitalize ${
-                filter === f ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+        {/* Filter bar */}
+        <div className="flex flex-col gap-3 mb-8">
+          {/* Status filter */}
+          <div className="flex items-center gap-1.5 p-1 bg-zinc-100 rounded-xl w-fit">
+            {(["all", "connected", "available"] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className={`px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all capitalize ${
+                  statusFilter === f
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-600"
+                }`}
+              >
+                {f === "all"
+                  ? `All · ${CONNECTORS.length}`
+                  : f === "connected"
+                    ? `Connected · ${connectedCount}`
+                    : `Available · ${availableCount}`}
+              </button>
+            ))}
+          </div>
+
+          {/* Category chips */}
+          <div className="flex flex-wrap gap-1.5">
+            {ALL_CATEGORIES.map(cat => {
+              const active = categoryFilter.includes(cat);
+              return (
+                <button
+                  key={cat}
+                  onClick={() => toggleCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all border ${
+                    active
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400 hover:text-zinc-700"
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+            {categoryFilter.length > 0 && (
+              <button
+                onClick={() => setCategoryFilter([])}
+                className="px-3 py-1 rounded-full text-[11px] font-medium text-zinc-400 hover:text-zinc-600 transition-colors"
+              >
+                Clear ×
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Sections by category */}
+        {/* Grid by category */}
         <div className="space-y-10">
           {categoriesVisible.map(category => {
             const items = visible.filter(c => c.category === category);
             return (
               <div key={category}>
-                <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-4">
-                  {category}
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">{category}</h2>
+                  <div className="flex-1 h-px bg-zinc-100" />
+                  <span className="text-[11px] text-zinc-300">{items.length}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {items.map(connector => (
                     <ConnectorCard
                       key={connector.id}
@@ -941,7 +995,6 @@ export function Connectors() {
         </div>
       </div>
 
-      {/* Config modal */}
       {configuring && (
         <ConfigModal
           connector={configuring}
