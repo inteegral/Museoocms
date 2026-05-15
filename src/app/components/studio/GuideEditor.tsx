@@ -926,6 +926,8 @@ function GuideEditorContent() {
           onClose={() => setEditingPOI(null)}
           onSave={savePOI}
           onDelete={() => { removePOI(editingPOI.id); setEditingPOI(null); }}
+          guideId={id}
+          guideLanguages={selectedLanguages}
         />
       )}
 
@@ -936,6 +938,8 @@ function GuideEditorContent() {
           onClose={() => setCreatingPOI(false)}
           onSave={handleNewPOISave}
           onDelete={() => setCreatingPOI(false)}
+          guideId={id}
+          guideLanguages={selectedLanguages}
         />
       )}
 

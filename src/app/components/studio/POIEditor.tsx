@@ -25,6 +25,8 @@ interface POIEditorProps {
   onClose: () => void;
   onSave: (updatedPOI: POI) => void;
   onDelete: (poiId: string) => void;
+  guideId?: string;
+  guideLanguages?: string[];
 }
 
 const statusConfig = {
@@ -44,6 +46,17 @@ function estimateDuration(text: string) {
 }
 
 const WAVEFORM = [3,5,8,5,10,7,4,9,6,11,8,5,12,9,6,10,7,4,8,5,9,6,11,7,4,8,5,10,6,9,7,5,11,8,4,9,6,10,5,8,7,11,6,4,9,8,5,10,7,6];
+
+const LANG_META: Record<string, { name: string; flag: string }> = {
+  it: { name: "Italiano", flag: "🇮🇹" },
+  en: { name: "English",  flag: "🇬🇧" },
+  fr: { name: "Français", flag: "🇫🇷" },
+  de: { name: "Deutsch",  flag: "🇩🇪" },
+  es: { name: "Español",  flag: "🇪🇸" },
+  pt: { name: "Português",flag: "🇵🇹" },
+  zh: { name: "中文",      flag: "🇨🇳" },
+  ja: { name: "日本語",    flag: "🇯🇵" },
+};
 
 function AudioPlayer({ label, dark = false, duration }: { label?: string; dark?: boolean; duration: string }) {
   const [playing, setPlaying] = useState(false);
@@ -189,7 +202,7 @@ function MediaPicker({ current, onSelect, onClose }: {
   );
 }
 
-export function POIEditor({ poi, onClose, onSave, onDelete }: POIEditorProps) {
+export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLanguages }: POIEditorProps) {
   const [formData, setFormData] = useState(poi);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -206,6 +219,16 @@ export function POIEditor({ poi, onClose, onSave, onDelete }: POIEditorProps) {
   const assignedGuides = formData.assignedToGuides
     ? mockGuides.filter(g => formData.assignedToGuides!.includes(g.id))
     : [];
+
+  const inGuideContext = !!guideId && (guideLanguages?.length ?? 0) > 0;
+  const targetLangs = guideLanguages ? guideLanguages.slice(1) : [];
+
+  const translationDone = inGuideContext
+    ? targetLangs.every(l => formData.translations?.includes(l))
+    : !!(formData.translations && formData.translations.length > 0);
+  const voicingDone = inGuideContext
+    ? (guideLanguages ?? []).every(l => formData.voices?.includes(l))
+    : !!(formData.voices && formData.voices.length > 0);
 
   const currentStatus = statusConfig[formData.status];
   const wordCount = formData.audioScript?.trim().split(/\s+/).filter(Boolean).length ?? 0;
@@ -288,10 +311,16 @@ export function POIEditor({ poi, onClose, onSave, onDelete }: POIEditorProps) {
           {/* ── Workflow bar ── */}
           {(() => {
             const steps = [
-              { id: "script",      label: "Script",      done: !!formData.audioScript,                                       langs: null,                        onClick: () => document.getElementById("poi-script")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
-              { id: "translation", label: "Translation", done: !!(formData.translations && formData.translations.length > 0), langs: formData.translations ?? [], onClick: () => {} },
-              { id: "voicing",     label: "Voicing",     done: !!(formData.voices && formData.voices.length > 0),             langs: formData.voices ?? [],       onClick: () => {} },
-              { id: "in-guides",   label: "In guides",   done: assignedGuides.length > 0,                                    langs: null,                        onClick: () => {} },
+              { id: "script",      label: "Script",      done: !!formData.audioScript,  locked: false, langs: null,
+                onClick: () => document.getElementById("poi-script")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
+              { id: "translation", label: "Translation", done: translationDone,          locked: !inGuideContext,
+                langs: inGuideContext ? targetLangs : (formData.translations ?? []),
+                onClick: () => document.getElementById("poi-translation")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
+              { id: "voicing",     label: "Voicing",     done: voicingDone,              locked: !inGuideContext,
+                langs: inGuideContext ? (guideLanguages ?? []) : (formData.voices ?? []),
+                onClick: () => document.getElementById("poi-voicing")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
+              { id: "in-guides",   label: "In guides",   done: assignedGuides.length > 0 || !!guideId, locked: false, langs: null,
+                onClick: () => document.getElementById("poi-in-guides")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
             ];
             const nextStep = steps.find(s => !s.done);
             return (
@@ -299,12 +328,16 @@ export function POIEditor({ poi, onClose, onSave, onDelete }: POIEditorProps) {
                 {steps.map((step, i) => (
                   <div key={step.id} className="flex items-center gap-2">
                     {i > 0 && <div className="w-5 h-px bg-zinc-200" />}
-                    <button onClick={step.onClick} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
-                      <div className={`size-2 rounded-full flex-shrink-0 ${step.done ? "bg-zinc-800" : step.id === nextStep?.id ? "bg-zinc-400" : "bg-zinc-200"}`} />
-                      <span className={`text-[12px] whitespace-nowrap ${step.done ? "text-zinc-400" : step.id === nextStep?.id ? "text-zinc-800 font-semibold" : "text-zinc-400"}`}>
+                    <button
+                      onClick={step.locked ? undefined : step.onClick}
+                      className={`flex items-center gap-1.5 transition-opacity ${step.locked ? "cursor-default opacity-40" : "hover:opacity-70"}`}
+                      title={step.locked ? "Open this POI from a guide to manage this step" : undefined}
+                    >
+                      <div className={`size-2 rounded-full flex-shrink-0 ${step.locked ? "bg-zinc-200" : step.done ? "bg-zinc-800" : step.id === nextStep?.id ? "bg-zinc-400" : "bg-zinc-200"}`} />
+                      <span className={`text-[12px] whitespace-nowrap ${step.locked ? "text-zinc-300" : step.done ? "text-zinc-400" : step.id === nextStep?.id ? "text-zinc-800 font-semibold" : "text-zinc-400"}`}>
                         {step.label}
                       </span>
-                      {step.langs && step.langs.length > 0 && (
+                      {!step.locked && step.langs && step.langs.length > 0 && (
                         <div className="flex items-center gap-0.5 ml-0.5">
                           {step.langs.map(lang => (
                             <span key={lang} className="px-1.5 py-0.5 bg-zinc-100 rounded text-[10px] font-semibold text-zinc-500 uppercase">{lang}</span>
@@ -445,6 +478,172 @@ export function POIEditor({ poi, onClose, onSave, onDelete }: POIEditorProps) {
                       </div>
                     </div>
                   )}
+                </div>
+
+                <div className="border-t border-zinc-100" />
+
+                {/* Translation */}
+                <div id="poi-translation" className="space-y-4">
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Translation</p>
+                  {inGuideContext ? (
+                    targetLangs.length === 0 ? (
+                      <p className="text-[12px] text-zinc-400">No additional languages in this guide. Add languages to enable translations.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {targetLangs.map(lang => {
+                          const meta = LANG_META[lang] ?? { name: lang.toUpperCase(), flag: "🌐" };
+                          const hasTranslation = formData.translations?.includes(lang);
+                          return (
+                            <div key={lang} className="border border-zinc-200 rounded-xl overflow-hidden">
+                              <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[14px]">{meta.flag}</span>
+                                  <span className="text-[12px] font-semibold text-zinc-700">{meta.name}</span>
+                                </div>
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${hasTranslation ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}>
+                                  {hasTranslation ? "Translated" : "Not translated"}
+                                </span>
+                              </div>
+                              <div className="p-4">
+                                <textarea
+                                  rows={4}
+                                  defaultValue={hasTranslation ? `[${meta.name} translation of the script]` : ""}
+                                  placeholder="Translation will appear here after generation…"
+                                  className="w-full px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-700 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none leading-relaxed"
+                                />
+                                {!hasTranslation && (
+                                  <button className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[11px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                                    <Sparkles className="size-3" />
+                                    Generate translation
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex items-start gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+                      <Globe className="size-4 text-zinc-300 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[13px] font-medium text-zinc-600">Available in guide context</p>
+                        <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">
+                          Open this POI from an audio guide to manage translations for that guide's languages.
+                        </p>
+                        {(formData.translations?.length ?? 0) > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            <span className="text-[10px] text-zinc-400 w-full">Already translated:</span>
+                            {formData.translations?.map(l => (
+                              <span key={l} className="px-1.5 py-0.5 bg-zinc-200 rounded text-[10px] font-semibold text-zinc-500 uppercase">{l}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-zinc-100" />
+
+                {/* Voicing */}
+                <div id="poi-voicing" className="space-y-4">
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Voicing</p>
+                  {inGuideContext ? (
+                    <div className="space-y-3">
+                      {(guideLanguages ?? []).map((lang, i) => {
+                        const meta = LANG_META[lang] ?? { name: lang.toUpperCase(), flag: "🌐" };
+                        const hasVoice = formData.voices?.includes(lang);
+                        return (
+                          <div key={lang} className="border border-zinc-200 rounded-xl overflow-hidden">
+                            <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[14px]">{meta.flag}</span>
+                                <span className="text-[12px] font-semibold text-zinc-700">{meta.name}</span>
+                                {i === 0 && <span className="text-[10px] font-medium text-zinc-400 bg-zinc-200 px-1.5 py-0.5 rounded">Primary</span>}
+                              </div>
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${hasVoice ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}>
+                                {hasVoice ? "Ready" : "Not generated"}
+                              </span>
+                            </div>
+                            <div className="p-4">
+                              {hasVoice && duration ? (
+                                <AudioPlayer duration={duration} label={`${meta.name} · voice assigned`} />
+                              ) : (
+                                <div className="flex items-center justify-between">
+                                  <p className="text-[12px] text-zinc-400">No voice assigned yet</p>
+                                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 text-[11px] font-semibold text-zinc-600 rounded-lg hover:bg-zinc-50 transition-all">
+                                    <Mic className="size-3" />
+                                    Assign voice
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+                      <Mic className="size-4 text-zinc-300 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[13px] font-medium text-zinc-600">Available in guide context</p>
+                        <p className="text-[12px] text-zinc-400 mt-0.5 leading-relaxed">
+                          Voice assignment and TTS generation are scoped to an audio guide. Open from a guide to manage voicing.
+                        </p>
+                        {(formData.voices?.length ?? 0) > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            <span className="text-[10px] text-zinc-400 w-full">Voices generated:</span>
+                            {formData.voices?.map(l => (
+                              <span key={l} className="px-1.5 py-0.5 bg-zinc-200 rounded text-[10px] font-semibold text-zinc-500 uppercase">{l}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-zinc-100" />
+
+                {/* In Guides */}
+                <div id="poi-in-guides" className="space-y-3">
+                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">In Guides</p>
+                  {(() => {
+                    const currentGuide = guideId ? mockGuides.find(g => g.id === guideId) : null;
+                    const otherGuides = assignedGuides.filter(g => g.id !== guideId);
+                    if (!currentGuide && otherGuides.length === 0) {
+                      return <p className="text-[12px] text-zinc-400">Not assigned to any guide yet.</p>;
+                    }
+                    return (
+                      <div className="space-y-2">
+                        {currentGuide && (
+                          <div className="flex items-center gap-3 p-3 bg-zinc-50 border-2 border-zinc-900 rounded-xl">
+                            {currentGuide.thumbnail && <img src={currentGuide.thumbnail} alt={currentGuide.title} className="size-8 rounded-lg object-cover flex-shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[12px] font-semibold text-zinc-900 truncate">{currentGuide.title}</p>
+                              <p className="text-[10px] text-zinc-400">Current guide · {(currentGuide.languages ?? []).join(", ").toUpperCase()}</p>
+                            </div>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${currentGuide.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}>
+                              {currentGuide.status}
+                            </span>
+                          </div>
+                        )}
+                        {otherGuides.map(g => (
+                          <div key={g.id} className="flex items-center gap-3 p-3 border border-zinc-200 rounded-xl">
+                            {g.thumbnail && <img src={g.thumbnail} alt={g.title} className="size-8 rounded-lg object-cover flex-shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[12px] font-medium text-zinc-700 truncate">{g.title}</p>
+                              <p className="text-[10px] text-zinc-400">{(g.languages ?? []).join(", ").toUpperCase()}</p>
+                            </div>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${g.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}>
+                              {g.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
               </div>
