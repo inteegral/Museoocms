@@ -387,9 +387,11 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                                 : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
                             }`}
                           >
-                            <span className={`size-5 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 ${active ? "bg-white/20 text-white" : avatarColor(member.name)}`}>
-                              {memberInitials(member.name)}
-                            </span>
+                            <img
+                              src={`https://i.pravatar.cc/40?u=${member.email}`}
+                              alt={member.name}
+                              className={`size-5 rounded-full object-cover flex-shrink-0 ${active ? "ring-1 ring-white/40" : ""}`}
+                            />
                             {member.name.split(" ")[0]}
                           </button>
                         );

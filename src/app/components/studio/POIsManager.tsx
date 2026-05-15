@@ -242,9 +242,12 @@ function POICard({
             const member = teamMembers.find(m => m.id === poi.assignee);
             if (!member?.name) return null;
             return (
-              <div title={member.name} className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${avatarColor(member.name)}`}>
-                {initials(member.name)}
-              </div>
+              <img
+                src={`https://i.pravatar.cc/40?u=${member.email}`}
+                alt={member.name}
+                title={member.name}
+                className="size-6 rounded-full object-cover flex-shrink-0 ring-1 ring-white"
+              />
             );
           })()}
         </div>
