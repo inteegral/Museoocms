@@ -244,7 +244,7 @@ export function TenantOnboarding() {
               )}
               {isDone && (
                 <button
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/guides")}
                   className="flex items-center gap-2 bg-[#D33333] text-white text-sm px-5 py-2.5 rounded-lg hover:bg-[#b52b2b] transition-colors"
                 >
                   Create first audio guide <ArrowRight className="w-4 h-4" />
