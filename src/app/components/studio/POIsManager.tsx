@@ -27,21 +27,6 @@ interface POI {
 
 const mockPOIs: POI[] = [
   {
-    id: "1",
-    title: "Main Entrance",
-    description: "Welcome to the museum, historical introduction to the palazzo",
-    status: "complete",
-    category: "Architecture",
-    imageUrl: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3c2?w=400",
-    audioScript: "Welcome to our museum...",
-    scriptValidated: true,
-    translations: ["en", "fr", "de"],
-    voices: ["it", "en"],
-    updatedAt: "2 hours ago",
-    isGeolocated: true,
-    assignedToGuides: ["guide-1", "guide-2"],
-  },
-  {
     id: "2",
     title: "Renaissance Gallery",
     description: "Key works from the Renaissance period",

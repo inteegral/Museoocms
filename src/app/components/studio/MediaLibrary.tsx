@@ -41,7 +41,6 @@ const mockMediaItems: MediaItem[] = [
     dimensions: { width: 1920, height: 1080 },
     uploadedAt: "2 hours ago",
     usedIn: [
-      { id: "poi-1", name: "Museum Entrance Hall" },
       { id: "poi-7", name: "North Wing Lobby" },
     ],
     tags: ["architecture", "entrance"],
