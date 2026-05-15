@@ -261,7 +261,7 @@ function KanbanColumn({
   return (
     <div
       ref={drop}
-      className={`flex-1 min-w-[260px] max-w-[320px] flex flex-col transition-all duration-200 ${isOver ? "ring-2 ring-zinc-900/20 ring-offset-2 rounded-xl" : ""}`}
+      className={`flex-1 min-w-[220px] flex flex-col transition-all duration-200 ${isOver ? "ring-2 ring-zinc-900/20 ring-offset-2 rounded-xl" : ""}`}
     >
       {/* Column Header */}
       <div className="flex items-center gap-2 mb-3 px-1">
@@ -378,7 +378,7 @@ function POIsManagerContent() {
 
   return (
     <PageShell>
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
