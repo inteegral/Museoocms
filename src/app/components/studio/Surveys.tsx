@@ -1,14 +1,10 @@
 import {
   ClipboardList, Plus, X, Trash2, Edit, Check,
-  GripVertical, Type, CheckSquare, Star, ChevronDown, Headphones, BarChart2,
+  GripVertical, CheckSquare, Star, ChevronDown, Headphones, BarChart2,
 } from "lucide-react";
 import { useState } from "react";
 import { PageShell } from "./PageShell";
 
-const SAMPLE_TEXT_RESPONSES = [
-  ["The Botticelli room was absolutely breathtaking — worth the whole visit.", "I loved how the audio guide connected the works across different rooms.", "The commentary on the Raphael paintings was insightful and well-paced.", "Incredible collection. The script for the sculpture section was especially rich."],
-  ["Audio quality was crystal clear throughout the entire tour.", "A few sections had slight background noise but overall excellent.", "The voice was warm and professional. Really enhanced the experience.", "Loved the tone — felt like a personal guide, not a generic recording."],
-];
 
 function seededRand(seed: number) {
   let s = seed;
@@ -52,7 +48,7 @@ const initialSurveys: Survey[] = [
     description: "Collect feedback about the overall visitor experience",
     questions: [
       { id: "q1", type: "rating", question: "How would you rate your overall experience?", required: true },
-      { id: "q2", type: "text", question: "What did you enjoy most about your visit?", required: true },
+      { id: "q2", type: "rating", question: "How would you rate the audio guide quality?", required: true },
       { id: "q3", type: "multiple_choice", question: "How did you hear about us?", required: false, options: ["Social Media", "Friend/Family", "Website", "Tourist Guide", "Other"] },
     ],
     guideName: "Renaissance Masterpieces",
@@ -67,7 +63,7 @@ const initialSurveys: Survey[] = [
     questions: [
       { id: "q1", type: "rating", question: "Rate the audio quality", required: true },
       { id: "q2", type: "rating", question: "Rate the voice clarity", required: true },
-      { id: "q3", type: "text", question: "Any technical issues encountered?", required: false },
+      { id: "q3", type: "multiple_choice", question: "Did you encounter any technical issues?", required: false, options: ["No issues", "Audio cut out", "App crashed", "Poor connectivity"] },
     ],
     createdAt: "2024-03-15",
     responses: 89,
@@ -331,9 +327,6 @@ export function Surveys() {
                               <span className="text-[11px] text-zinc-400">{q.ratingMaxLabel || "5"}</span>
                             </div>
                           )}
-                          {q.type === "text" && (
-                            <span className="mt-1.5 inline-block text-[10px] font-medium text-zinc-400">{q.textMultiline ? "Multiline" : "Single line"}</span>
-                          )}
                           {q.type === "multiple_choice" && q.options && (
                             <div className="mt-1.5 space-y-1">
                               <span className="text-[10px] font-medium text-zinc-400">{q.multipleSelection ? "Multi-select" : "Single select"}</span>
@@ -363,8 +356,7 @@ export function Surveys() {
                       <div className="flex gap-2">
                         {([
                           { type: "rating" as const, label: "Rating", icon: Star },
-                          { type: "text" as const, label: "Text", icon: Type },
-                          { type: "multiple_choice" as const, label: "Multiple", icon: CheckSquare },
+                          { type: "multiple_choice" as const, label: "Multiple Choice", icon: CheckSquare },
                         ]).map(({ type, label, icon: Icon }) => (
                           <button
                             key={type}
@@ -409,31 +401,6 @@ export function Surveys() {
                             placeholder="e.g. Excellent"
                             className="flex-1 px-3 py-2 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900"
                           />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Text config */}
-                    {editingQuestion.type === "text" && (
-                      <div>
-                        <label className="block text-[12px] font-semibold text-zinc-600 mb-2">Input type</label>
-                        <div className="flex gap-2">
-                          {([
-                            { value: false, label: "Single line" },
-                            { value: true,  label: "Multiline"  },
-                          ] as const).map(({ value, label }) => (
-                            <button
-                              key={label}
-                              onClick={() => setEditingQuestion({ ...editingQuestion, textMultiline: value })}
-                              className={`flex-1 px-3 py-2 text-[12px] font-semibold rounded-lg border transition-all ${
-                                (editingQuestion.textMultiline ?? false) === value
-                                  ? "bg-zinc-900 text-white border-zinc-900"
-                                  : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          ))}
                         </div>
                       </div>
                     )}
@@ -604,26 +571,6 @@ export function Surveys() {
                               );
                             })}
                           </div>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  if (q.type === "text") {
-                    const pool = SAMPLE_TEXT_RESPONSES[idx % SAMPLE_TEXT_RESPONSES.length];
-                    return (
-                      <div key={q.id} className="space-y-3">
-                        <div className="flex items-start gap-2">
-                          <span className="text-[11px] font-semibold text-zinc-400 mt-0.5">Q{idx + 1}</span>
-                          <p className="text-[13px] font-semibold text-zinc-800">{q.question}</p>
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-[11px] text-zinc-400">{sv.responses} open-ended responses · showing a sample</p>
-                          {pool.map((text, i) => (
-                            <div key={i} className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-lg">
-                              <p className="text-[13px] text-zinc-700 leading-relaxed">"{text}"</p>
-                            </div>
-                          ))}
                         </div>
                       </div>
                     );
