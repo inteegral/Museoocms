@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { OnboardingWizard } from "./OnboardingWizard";
 import { GuidePreviewModal } from "./GuidePreviewModal";
 import { AIAssistantDrawer } from "./AIAssistantDrawer";
 
@@ -244,6 +245,18 @@ export function StudioLayout() {
   const [visitorPickerOpen, setVisitorPickerOpen] = useState(false);
   const [visitorGuide, setVisitorGuide] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem("museoo_onboarded")) setShowOnboarding(true);
+  }, []);
+
+  const handleOnboardingComplete = (data: { museumName: string; language: string }) => {
+    localStorage.setItem("museoo_onboarded", "true");
+    localStorage.setItem("museoo_museum_name", data.museumName);
+    localStorage.setItem("museoo_language", data.language);
+    setShowOnboarding(false);
+  };
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -483,6 +496,10 @@ export function StudioLayout() {
       )}
 
       <AIAssistantDrawer />
+
+      {showOnboarding && (
+        <OnboardingWizard onComplete={handleOnboardingComplete} />
+      )}
     </div>
   );
 }

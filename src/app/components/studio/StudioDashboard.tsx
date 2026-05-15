@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   FileAudio,
@@ -107,23 +107,12 @@ const guideStats: Record<string, { accesses: number; visitors: number; takeUpRat
   "guide-3": { accesses:  0, visitors:   0, takeUpRate:  0.0, poiCount: 6 },
 };
 
-const ONBOARDING_STEPS = [
-  {
-    id: "account",
-    icon: FileText,
-    title: "Create your account",
-    desc: "Your museum is registered and ready.",
-    done: true,
-    action: null,
-  },
-  {
-    id: "itinerary",
-    icon: MapPin,
-    title: "Create your first itinerary",
-    desc: "Define the stops and narrative for your tour.",
-    done: true,
-    action: { label: "View guides", to: "/guides" },
-  },
+const GS_STEPS: { id: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; title: string; desc: string; action: { label: string; to: string } | null }[] = [
+  { id: "account",  icon: FileText,  title: "Create your account",           desc: "Your museum workspace is ready.",                           action: null },
+  { id: "guide",    icon: FileAudio, title: "Create your first audio guide", desc: "Set the title, languages and cover image.",                 action: { label: "Go to Guides", to: "/guides" } },
+  { id: "poi",      icon: MapPin,    title: "Add a point of interest",       desc: "Write a script and map the location.",                     action: { label: "Go to POIs",   to: "/pois" } },
+  { id: "team",     icon: BarChart3, title: "Invite a collaborator",         desc: "Delegate script writing to a team member.",                action: { label: "Go to Team",   to: "/team" } },
+  { id: "publish",  icon: FileAudio, title: "Publish your guide",            desc: "Make it available to your visitors.",                      action: { label: "Go to Guides", to: "/guides" } },
 ];
 
 export function StudioDashboard() {
@@ -132,8 +121,31 @@ export function StudioDashboard() {
   const [poiRange, setPoiRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
   const [topPoiRange, setTopPoiRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
   const [selectedGuideId, setSelectedGuideId] = useState<string>("all");
-  const [onboardingVisible, setOnboardingVisible] = useState(true);
+  const [onboardingVisible, setOnboardingVisible] = useState(() =>
+    localStorage.getItem("museoo_gs_dismissed") !== "true"
+  );
   const [onboardingExpanded, setOnboardingExpanded] = useState(true);
+  const [doneSteps, setDoneSteps] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("museoo_gs_steps");
+    return new Set(saved ? saved.split(",") : ["account"]);
+  });
+
+  useEffect(() => {
+    localStorage.setItem("museoo_gs_steps", [...doneSteps].join(","));
+  }, [doneSteps]);
+
+  const toggleStep = (id: string) => {
+    setDoneSteps(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const dismissOnboarding = () => {
+    localStorage.setItem("museoo_gs_dismissed", "true");
+    setOnboardingVisible(false);
+  };
   const navigate = useNavigate();
 
   const { totalAccesses, limit, totalVisitors, takeUpRate, previousPeriodAccesses } = mockAnalytics;
@@ -201,20 +213,20 @@ export function StudioDashboard() {
 
         {/* Onboarding checklist */}
         {onboardingVisible && (() => {
-          const doneCount = ONBOARDING_STEPS.filter(s => s.done).length;
-          const total = ONBOARDING_STEPS.length;
+          const doneCount = GS_STEPS.filter(s => doneSteps.has(s.id)).length;
+          const total = GS_STEPS.length;
           const pct = Math.round((doneCount / total) * 100);
+          const allDone = doneCount === total;
           return (
             <div className="mb-6 bg-white rounded-xl border border-zinc-200 overflow-hidden">
               {/* Header */}
               <div className="flex items-center gap-4 px-5 py-4">
-                {/* Circular progress */}
                 <div className="relative size-11 flex-shrink-0">
                   <svg className="size-11 -rotate-90" viewBox="0 0 44 44">
                     <circle cx="22" cy="22" r="18" fill="none" stroke="#f4f4f5" strokeWidth="3.5" />
                     <circle
                       cx="22" cy="22" r="18" fill="none"
-                      stroke="#3f3f46" strokeWidth="3.5"
+                      stroke={allDone ? "#10b981" : "#3f3f46"} strokeWidth="3.5"
                       strokeDasharray={`${2 * Math.PI * 18}`}
                       strokeDashoffset={`${2 * Math.PI * 18 * (1 - pct / 100)}`}
                       strokeLinecap="round"
@@ -226,9 +238,11 @@ export function StudioDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-zinc-900">
-                    {doneCount === total ? "You're all set!" : `${total - doneCount} step${total - doneCount > 1 ? "s" : ""} to go`}
+                    {allDone ? "🎉 You're all set!" : "Getting started"}
                   </p>
-                  <p className="text-xs text-zinc-400 mt-0.5">{doneCount} of {total} completed</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    {allDone ? "Your museum is ready for visitors." : `${doneCount} of ${total} steps completed`}
+                  </p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -238,7 +252,7 @@ export function StudioDashboard() {
                     {onboardingExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                   </button>
                   <button
-                    onClick={() => setOnboardingVisible(false)}
+                    onClick={dismissOnboarding}
                     className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors rounded-lg hover:bg-zinc-50"
                   >
                     <X className="size-4" />
@@ -246,61 +260,51 @@ export function StudioDashboard() {
                 </div>
               </div>
 
-              {/* Steps */}
               {onboardingExpanded && (
                 <div className="border-t border-zinc-100">
-                  {ONBOARDING_STEPS.map((step, i) => {
+                  {GS_STEPS.map((step, i) => {
                     const Icon = step.icon;
-                    const isLast = i === ONBOARDING_STEPS.length - 1;
-                    const isNext = !step.done && ONBOARDING_STEPS.slice(0, i).every(s => s.done);
+                    const done = doneSteps.has(step.id);
+                    const isNext = !done && GS_STEPS.slice(0, i).every(s => doneSteps.has(s.id));
+                    const isLast = i === GS_STEPS.length - 1;
                     return (
                       <div
                         key={step.id}
-                        className={`flex items-center gap-4 px-5 py-3.5 ${!isLast ? "border-b border-zinc-100" : ""} ${isNext ? "bg-zinc-50" : ""}`}
+                        className={`flex items-center gap-4 px-5 py-3.5 ${!isLast ? "border-b border-zinc-100" : ""} ${isNext ? "bg-zinc-50/60" : ""}`}
                       >
-                        {/* Status indicator */}
-                        <div className={`size-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                          step.done
-                            ? "bg-zinc-900"
-                            : isNext
-                              ? "border-2 border-zinc-400"
-                              : "border-2 border-zinc-200"
-                        }`}>
-                          {step.done
-                            ? <Check className="size-3.5 text-white" strokeWidth={2.5} />
-                            : <span className={`text-[11px] font-semibold ${isNext ? "text-zinc-500" : "text-zinc-300"}`}>{i + 1}</span>
-                          }
-                        </div>
+                        <button
+                          onClick={() => step.id !== "account" && toggleStep(step.id)}
+                          className={`size-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                            done ? "bg-zinc-900 border-zinc-900" : isNext ? "border-zinc-400 hover:border-zinc-600" : "border-zinc-200"
+                          } ${step.id !== "account" ? "cursor-pointer" : "cursor-default"}`}
+                        >
+                          {done && <Check className="size-3 text-white" strokeWidth={3} />}
+                        </button>
 
-                        {/* Icon + text */}
-                        <div className={`size-8 rounded-lg flex items-center justify-center flex-shrink-0 ${step.done ? "bg-zinc-100" : isNext ? "bg-zinc-100" : "bg-zinc-50"}`}>
-                          <Icon className={`size-4 ${step.done ? "text-zinc-400" : isNext ? "text-zinc-600" : "text-zinc-300"}`} strokeWidth={1.5} />
+                        <div className={`size-7 rounded-lg flex items-center justify-center flex-shrink-0 ${done ? "bg-zinc-100" : isNext ? "bg-zinc-100" : "bg-zinc-50"}`}>
+                          <Icon className={`size-3.5 ${done ? "text-zinc-400" : isNext ? "text-zinc-600" : "text-zinc-300"}`} strokeWidth={1.5} />
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className={`text-[13px] font-medium ${step.done ? "text-zinc-400 line-through decoration-zinc-300" : isNext ? "text-zinc-900" : "text-zinc-500"}`}>
+                          <p className={`text-[13px] font-medium leading-tight ${done ? "text-zinc-400 line-through decoration-zinc-300" : isNext ? "text-zinc-900" : "text-zinc-500"}`}>
                             {step.title}
                           </p>
-                          {!step.done && (
-                            <p className="text-[11px] text-zinc-400 mt-0.5">{step.desc}</p>
-                          )}
+                          {!done && <p className="text-[11px] text-zinc-400 mt-0.5">{step.desc}</p>}
                         </div>
 
-                        {/* Action */}
-                        {step.done ? (
-                          <span className="text-[11px] text-zinc-300 flex-shrink-0">Done</span>
-                        ) : step.action ? (
+                        {!done && step.action && (
                           <Link
                             to={step.action.to}
-                            className={`flex-shrink-0 px-3 py-1.5 text-xs rounded-lg border transition-all ${
-                              isNext
-                                ? "bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-700"
-                                : "border-zinc-200 text-zinc-400 hover:border-zinc-300"
+                            className={`flex-shrink-0 px-3 py-1.5 text-[11px] font-semibold rounded-lg border transition-all ${
+                              isNext ? "bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-700" : "border-zinc-200 text-zinc-400 hover:border-zinc-300"
                             }`}
                           >
                             {step.action.label}
                           </Link>
-                        ) : null}
+                        )}
+                        {done && step.id !== "account" && (
+                          <span className="text-[11px] text-zinc-300 flex-shrink-0">Done</span>
+                        )}
                       </div>
                     );
                   })}
