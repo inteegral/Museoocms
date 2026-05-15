@@ -18,6 +18,7 @@ interface POI {
   updatedAt: string;
   isGeolocated?: boolean;
   assignedToGuides?: string[];
+  assignee?: string;
 }
 
 interface POIEditorProps {
@@ -46,6 +47,13 @@ function estimateDuration(text: string) {
 }
 
 const WAVEFORM = [3,5,8,5,10,7,4,9,6,11,8,5,12,9,6,10,7,4,8,5,9,6,11,7,4,8,5,10,6,9,7,5,11,8,4,9,6,10,5,8,7,11,6,4,9,8,5,10,7,6];
+
+const TEAM = [
+  { id: "t1", name: "Sofia Russo",     initials: "SR", color: "bg-violet-100 text-violet-700" },
+  { id: "t2", name: "Marco Bianchi",   initials: "MB", color: "bg-sky-100 text-sky-700" },
+  { id: "t3", name: "Elena Conti",     initials: "EC", color: "bg-emerald-100 text-emerald-700" },
+  { id: "t4", name: "Andrea Ferretti", initials: "AF", color: "bg-amber-100 text-amber-700" },
+];
 
 const LANG_META: Record<string, { name: string; flag: string }> = {
   it: { name: "Italiano", flag: "🇮🇹" },
@@ -363,6 +371,31 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                       className="w-full px-3.5 py-2.5 bg-white border border-zinc-200 rounded-lg text-[14px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
                       placeholder="e.g. Sculpture, Painting, Architecture…"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-medium text-zinc-600 mb-1.5">Assigned to</label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {TEAM.map(member => {
+                        const active = formData.assignee === member.id;
+                        return (
+                          <button
+                            key={member.id}
+                            onClick={() => setFormData({ ...formData, assignee: active ? undefined : member.id })}
+                            title={member.name}
+                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[12px] font-medium transition-all ${
+                              active
+                                ? "border-zinc-900 bg-zinc-900 text-white"
+                                : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+                            }`}
+                          >
+                            <span className={`size-5 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 ${active ? "bg-white/20 text-white" : member.color}`}>
+                              {member.initials}
+                            </span>
+                            {member.name.split(" ")[0]}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 

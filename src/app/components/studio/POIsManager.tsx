@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { Plus, MapPin, ChevronDown, FileText, BookOpen, AlertTriangle, X } from "lucide-react";
+import { Plus, MapPin, ChevronDown, FileText, BookOpen, AlertTriangle, X, UserCircle2 } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -23,7 +23,15 @@ interface POI {
   updatedAt: string;
   isGeolocated?: boolean;
   assignedToGuides?: string[];
+  assignee?: string;
 }
+
+const TEAM = [
+  { id: "t1", name: "Sofia Russo",     initials: "SR", color: "bg-violet-100 text-violet-700" },
+  { id: "t2", name: "Marco Bianchi",   initials: "MB", color: "bg-sky-100 text-sky-700" },
+  { id: "t3", name: "Elena Conti",     initials: "EC", color: "bg-emerald-100 text-emerald-700" },
+  { id: "t4", name: "Andrea Ferretti", initials: "AF", color: "bg-amber-100 text-amber-700" },
+];
 
 const mockPOIs: POI[] = [
   {
@@ -40,6 +48,7 @@ const mockPOIs: POI[] = [
     updatedAt: "1 day ago",
     isGeolocated: true,
     assignedToGuides: ["guide-1"],
+    assignee: "t1",
   },
   {
     id: "3",
@@ -55,6 +64,7 @@ const mockPOIs: POI[] = [
     updatedAt: "3 days ago",
     isGeolocated: true,
     assignedToGuides: [],
+    assignee: "t2",
   },
   {
     id: "4",
@@ -95,6 +105,7 @@ const mockPOIs: POI[] = [
     updatedAt: "4 days ago",
     isGeolocated: false,
     assignedToGuides: ["guide-3"],
+    assignee: "t3",
   },
 ];
 
@@ -225,8 +236,17 @@ function POICard({
           <span className="text-[11px] px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 font-medium">{poi.category}</span>
         </div>
 
-        <div className="pt-2 border-t border-zinc-100">
+        <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2">
           <POIBadges poi={poi} />
+          {poi.assignee && (() => {
+            const member = TEAM.find(t => t.id === poi.assignee);
+            if (!member) return null;
+            return (
+              <div title={member.name} className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${member.color}`}>
+                {member.initials}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
