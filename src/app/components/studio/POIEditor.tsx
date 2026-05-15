@@ -458,15 +458,9 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                                 <textarea
                                   rows={4}
                                   defaultValue={hasTranslation ? `[${meta.name} translation of the script]` : ""}
-                                  placeholder="Translation will appear here after generation…"
+                                  placeholder="Translation will appear here after guide production…"
                                   className="w-full px-3 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-700 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none leading-relaxed"
                                 />
-                                {!hasTranslation && (
-                                  <button className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[11px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
-                                    <Sparkles className="size-3" />
-                                    Generate translation
-                                  </button>
-                                )}
                               </div>
                             </div>
                           );
@@ -520,13 +514,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                               {hasVoice && duration ? (
                                 <AudioPlayer duration={duration} label={`${meta.name} · voice assigned`} />
                               ) : (
-                                <div className="flex items-center justify-between">
-                                  <p className="text-[12px] text-zinc-400">No voice assigned yet</p>
-                                  <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 text-[11px] font-semibold text-zinc-600 rounded-lg hover:bg-zinc-50 transition-all">
-                                    <Mic className="size-3" />
-                                    Assign voice
-                                  </button>
-                                </div>
+                                <p className="text-[12px] text-zinc-400">Not generated yet · voice is set at guide level</p>
                               )}
                             </div>
                           </div>
