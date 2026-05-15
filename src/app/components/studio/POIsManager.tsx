@@ -6,6 +6,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { POIEditor } from "./POIEditor";
 import { mockGuides } from "../../data/mockData";
+import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
 
 type POIStatus = "idea" | "in-progress" | "under-revision" | "complete";
 
@@ -26,12 +27,11 @@ interface POI {
   assignee?: string;
 }
 
-const TEAM = [
-  { id: "t1", name: "Sofia Russo",     initials: "SR", color: "bg-violet-100 text-violet-700" },
-  { id: "t2", name: "Marco Bianchi",   initials: "MB", color: "bg-sky-100 text-sky-700" },
-  { id: "t3", name: "Elena Conti",     initials: "EC", color: "bg-emerald-100 text-emerald-700" },
-  { id: "t4", name: "Andrea Ferretti", initials: "AF", color: "bg-amber-100 text-amber-700" },
-];
+const AVATAR_COLORS = ["bg-violet-100 text-violet-700","bg-sky-100 text-sky-700","bg-emerald-100 text-emerald-700","bg-amber-100 text-amber-700","bg-rose-100 text-rose-700","bg-zinc-100 text-zinc-600"];
+function avatarColor(name: string) { return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]; }
+function initials(name: string) { return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase(); }
+
+const assignableMembers = teamMembers.filter(m => m.status === "active" && m.id !== CURRENT_USER_ID);
 
 const mockPOIs: POI[] = [
   {
@@ -48,7 +48,7 @@ const mockPOIs: POI[] = [
     updatedAt: "1 day ago",
     isGeolocated: true,
     assignedToGuides: ["guide-1"],
-    assignee: "t1",
+    assignee: "m3",
   },
   {
     id: "3",
@@ -64,7 +64,7 @@ const mockPOIs: POI[] = [
     updatedAt: "3 days ago",
     isGeolocated: true,
     assignedToGuides: [],
-    assignee: "t2",
+    assignee: "m4",
   },
   {
     id: "4",
@@ -105,7 +105,7 @@ const mockPOIs: POI[] = [
     updatedAt: "4 days ago",
     isGeolocated: false,
     assignedToGuides: ["guide-3"],
-    assignee: "t3",
+    assignee: "m1",
   },
 ];
 
@@ -239,11 +239,11 @@ function POICard({
         <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2">
           <POIBadges poi={poi} />
           {poi.assignee && (() => {
-            const member = TEAM.find(t => t.id === poi.assignee);
-            if (!member) return null;
+            const member = teamMembers.find(m => m.id === poi.assignee);
+            if (!member?.name) return null;
             return (
-              <div title={member.name} className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${member.color}`}>
-                {member.initials}
+              <div title={member.name} className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${avatarColor(member.name)}`}>
+                {initials(member.name)}
               </div>
             );
           })()}

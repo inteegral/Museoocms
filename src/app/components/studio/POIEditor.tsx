@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, Mic, Globe, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check } from "lucide-react";
 import { mockGuides, mockPOIs, mockDocuments } from "../../data/mockData";
+import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
 
 type POIStatus = "idea" | "in-progress" | "under-revision" | "complete";
 
@@ -48,12 +49,10 @@ function estimateDuration(text: string) {
 
 const WAVEFORM = [3,5,8,5,10,7,4,9,6,11,8,5,12,9,6,10,7,4,8,5,9,6,11,7,4,8,5,10,6,9,7,5,11,8,4,9,6,10,5,8,7,11,6,4,9,8,5,10,7,6];
 
-const TEAM = [
-  { id: "t1", name: "Sofia Russo",     initials: "SR", color: "bg-violet-100 text-violet-700" },
-  { id: "t2", name: "Marco Bianchi",   initials: "MB", color: "bg-sky-100 text-sky-700" },
-  { id: "t3", name: "Elena Conti",     initials: "EC", color: "bg-emerald-100 text-emerald-700" },
-  { id: "t4", name: "Andrea Ferretti", initials: "AF", color: "bg-amber-100 text-amber-700" },
-];
+const AVATAR_COLORS = ["bg-violet-100 text-violet-700","bg-sky-100 text-sky-700","bg-emerald-100 text-emerald-700","bg-amber-100 text-amber-700","bg-rose-100 text-rose-700","bg-zinc-100 text-zinc-600"];
+function avatarColor(name: string) { return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]; }
+function memberInitials(name: string) { return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase(); }
+const assignableMembers = teamMembers.filter(m => m.status === "active" && m.id !== CURRENT_USER_ID);
 
 const LANG_META: Record<string, { name: string; flag: string }> = {
   it: { name: "Italiano", flag: "🇮🇹" },
@@ -375,7 +374,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                   <div>
                     <label className="block text-[12px] font-medium text-zinc-600 mb-1.5">Assigned to</label>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {TEAM.map(member => {
+                      {assignableMembers.map(member => {
                         const active = formData.assignee === member.id;
                         return (
                           <button
@@ -388,8 +387,8 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                                 : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
                             }`}
                           >
-                            <span className={`size-5 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 ${active ? "bg-white/20 text-white" : member.color}`}>
-                              {member.initials}
+                            <span className={`size-5 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 ${active ? "bg-white/20 text-white" : avatarColor(member.name)}`}>
+                              {memberInitials(member.name)}
                             </span>
                             {member.name.split(" ")[0]}
                           </button>
