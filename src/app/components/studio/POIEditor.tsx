@@ -223,13 +223,6 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
   const inGuideContext = !!guideId && (guideLanguages?.length ?? 0) > 0;
   const targetLangs = guideLanguages ? guideLanguages.slice(1) : [];
 
-  const translationDone = inGuideContext
-    ? targetLangs.every(l => formData.translations?.includes(l))
-    : !!(formData.translations && formData.translations.length > 0);
-  const voicingDone = inGuideContext
-    ? (guideLanguages ?? []).every(l => formData.voices?.includes(l))
-    : !!(formData.voices && formData.voices.length > 0);
-
   const currentStatus = statusConfig[formData.status];
   const wordCount = formData.audioScript?.trim().split(/\s+/).filter(Boolean).length ?? 0;
   const duration = formData.audioScript ? estimateDuration(formData.audioScript) : null;
@@ -307,49 +300,6 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
               </button>
             </div>
           </div>
-
-          {/* ── Workflow bar ── */}
-          {(() => {
-            const steps = [
-              { id: "script",      label: "Script",      done: !!formData.audioScript,  locked: false, langs: null,
-                onClick: () => document.getElementById("poi-script")?.scrollIntoView({ behavior: "smooth", block: "center" }) },
-              { id: "translation", label: "Translation", done: translationDone,          locked: !inGuideContext,
-                langs: inGuideContext ? targetLangs : (formData.translations ?? []),
-                onClick: () => document.getElementById("poi-translation")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
-              { id: "voicing",     label: "Voicing",     done: voicingDone,              locked: !inGuideContext,
-                langs: inGuideContext ? (guideLanguages ?? []) : (formData.voices ?? []),
-                onClick: () => document.getElementById("poi-voicing")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
-              { id: "in-guides",   label: "In guides",   done: assignedGuides.length > 0 || !!guideId, locked: false, langs: null,
-                onClick: () => document.getElementById("poi-in-guides")?.scrollIntoView({ behavior: "smooth", block: "start" }) },
-            ];
-            const nextStep = steps.find(s => !s.done);
-            return (
-              <div className="px-6 py-3 border-b border-zinc-100 flex items-center gap-2 flex-shrink-0">
-                {steps.map((step, i) => (
-                  <div key={step.id} className="flex items-center gap-2">
-                    {i > 0 && <div className="w-5 h-px bg-zinc-200" />}
-                    <button
-                      onClick={step.locked ? undefined : step.onClick}
-                      className={`flex items-center gap-1.5 transition-opacity ${step.locked ? "cursor-default opacity-40" : "hover:opacity-70"}`}
-                      title={step.locked ? "Open this POI from a guide to manage this step" : undefined}
-                    >
-                      <div className={`size-2 rounded-full flex-shrink-0 ${step.locked ? "bg-zinc-200" : step.done ? "bg-zinc-800" : step.id === nextStep?.id ? "bg-zinc-400" : "bg-zinc-200"}`} />
-                      <span className={`text-[12px] whitespace-nowrap ${step.locked ? "text-zinc-300" : step.done ? "text-zinc-400" : step.id === nextStep?.id ? "text-zinc-800 font-semibold" : "text-zinc-400"}`}>
-                        {step.label}
-                      </span>
-                      {!step.locked && step.langs && step.langs.length > 0 && (
-                        <div className="flex items-center gap-0.5 ml-0.5">
-                          {step.langs.map(lang => (
-                            <span key={lang} className="px-1.5 py-0.5 bg-zinc-100 rounded text-[10px] font-semibold text-zinc-500 uppercase">{lang}</span>
-                          ))}
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
 
           {/* ── Body ── */}
           <div className="flex flex-1 min-h-0">
