@@ -29,6 +29,7 @@ import { SuperAdminTenantDetail } from "./components/superadmin/SuperAdminTenant
 import { SuperAdminPlans } from "./components/superadmin/SuperAdminPlans";
 import { SuperAdminBilling } from "./components/superadmin/SuperAdminBilling";
 import { ReviewMode } from "./components/studio/ReviewMode";
+import { Connectors } from "./components/studio/Connectors";
 
 export const router = createBrowserRouter([
   {
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
       { path: "hunt", Component: Hunt },
       { path: "marketing", Component: Marketing },
       { path: "monetization", Component: Monetization },
+      { path: "connectors", Component: Connectors },
       { path: "settings", Component: Settings },
       { path: "team", Component: Team },
       { path: "profile", Component: Profile },
