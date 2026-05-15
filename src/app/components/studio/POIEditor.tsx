@@ -514,7 +514,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                               {hasVoice && duration ? (
                                 <AudioPlayer duration={duration} label={`${meta.name} · voice assigned`} />
                               ) : (
-                                <p className="text-[12px] text-zinc-400">Not generated yet · voice is set at guide level</p>
+                                <p className="text-[12px] text-zinc-400">Not generated yet · voice is set at audio guide level</p>
                               )}
                             </div>
                           </div>
