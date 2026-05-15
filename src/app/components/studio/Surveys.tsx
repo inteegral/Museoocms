@@ -11,6 +11,10 @@ interface Question {
   question: string;
   required: boolean;
   options?: string[];
+  ratingMinLabel?: string;
+  ratingMaxLabel?: string;
+  textMultiline?: boolean;
+  multipleSelection?: boolean;
 }
 
 interface Survey {
@@ -92,6 +96,10 @@ export function Surveys() {
       question: editingQuestion.question,
       required: editingQuestion.required ?? false,
       options: editingQuestion.options,
+      ratingMinLabel: editingQuestion.ratingMinLabel,
+      ratingMaxLabel: editingQuestion.ratingMaxLabel,
+      textMultiline: editingQuestion.textMultiline,
+      multipleSelection: editingQuestion.multipleSelection,
     };
     setDraft({ ...draft, questions: [...(draft.questions ?? []), q] });
     setEditingQuestion(null);
@@ -299,11 +307,27 @@ export function Surveys() {
                             {q.required && <span className="px-1.5 py-0.5 bg-zinc-200 text-zinc-600 text-[10px] font-semibold rounded-full">Required</span>}
                           </div>
                           <p className="text-[13px] text-zinc-800">{q.question}</p>
-                          {q.options && (
-                            <div className="mt-1.5 flex flex-wrap gap-1">
-                              {q.options.map((opt, i) => (
-                                <span key={i} className="px-2 py-0.5 bg-white border border-zinc-200 text-zinc-500 text-[11px] rounded">{opt}</span>
-                              ))}
+                          {/* Inline config display */}
+                          {q.type === "rating" && (
+                            <div className="mt-1.5 flex items-center gap-1.5">
+                              <span className="text-[11px] text-zinc-400">{q.ratingMinLabel || "1"}</span>
+                              <div className="flex items-center gap-0.5">
+                                {[1,2,3,4,5].map(n => <Star key={n} className="size-2.5 text-amber-400 fill-amber-400" />)}
+                              </div>
+                              <span className="text-[11px] text-zinc-400">{q.ratingMaxLabel || "5"}</span>
+                            </div>
+                          )}
+                          {q.type === "text" && (
+                            <span className="mt-1.5 inline-block text-[10px] font-medium text-zinc-400">{q.textMultiline ? "Multiline" : "Single line"}</span>
+                          )}
+                          {q.type === "multiple_choice" && q.options && (
+                            <div className="mt-1.5 space-y-1">
+                              <span className="text-[10px] font-medium text-zinc-400">{q.multipleSelection ? "Multi-select" : "Single select"}</span>
+                              <div className="flex flex-wrap gap-1">
+                                {q.options.map((opt, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-white border border-zinc-200 text-zinc-500 text-[11px] rounded">{opt}</span>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -351,15 +375,88 @@ export function Surveys() {
                       />
                     </div>
 
-                    {editingQuestion.type === "multiple_choice" && (
+                    {/* Rating config */}
+                    {editingQuestion.type === "rating" && (
                       <div>
-                        <label className="block text-[12px] font-semibold text-zinc-600 mb-2">Options (comma-separated)</label>
-                        <input
-                          value={editingQuestion.options?.join(", ") ?? ""}
-                          onChange={e => setEditingQuestion({ ...editingQuestion, options: e.target.value.split(",").map(s => s.trim()) })}
-                          placeholder="Option 1, Option 2, Option 3"
-                          className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                        />
+                        <label className="block text-[12px] font-semibold text-zinc-600 mb-2">Scale labels <span className="font-normal text-zinc-400">— optional</span></label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={editingQuestion.ratingMinLabel ?? ""}
+                            onChange={e => setEditingQuestion({ ...editingQuestion, ratingMinLabel: e.target.value })}
+                            placeholder="e.g. Poor"
+                            className="flex-1 px-3 py-2 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                          />
+                          <div className="flex items-center gap-0.5 flex-shrink-0 px-1">
+                            {[1,2,3,4,5].map(n => <Star key={n} className="size-3 text-amber-400 fill-amber-400" />)}
+                          </div>
+                          <input
+                            value={editingQuestion.ratingMaxLabel ?? ""}
+                            onChange={e => setEditingQuestion({ ...editingQuestion, ratingMaxLabel: e.target.value })}
+                            placeholder="e.g. Excellent"
+                            className="flex-1 px-3 py-2 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Text config */}
+                    {editingQuestion.type === "text" && (
+                      <div>
+                        <label className="block text-[12px] font-semibold text-zinc-600 mb-2">Input type</label>
+                        <div className="flex gap-2">
+                          {([
+                            { value: false, label: "Single line" },
+                            { value: true,  label: "Multiline"  },
+                          ] as const).map(({ value, label }) => (
+                            <button
+                              key={label}
+                              onClick={() => setEditingQuestion({ ...editingQuestion, textMultiline: value })}
+                              className={`flex-1 px-3 py-2 text-[12px] font-semibold rounded-lg border transition-all ${
+                                (editingQuestion.textMultiline ?? false) === value
+                                  ? "bg-zinc-900 text-white border-zinc-900"
+                                  : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Multiple choice config */}
+                    {editingQuestion.type === "multiple_choice" && (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[12px] font-semibold text-zinc-600 mb-2">Selection</label>
+                          <div className="flex gap-2">
+                            {([
+                              { value: false, label: "Single select" },
+                              { value: true,  label: "Multi-select"  },
+                            ] as const).map(({ value, label }) => (
+                              <button
+                                key={label}
+                                onClick={() => setEditingQuestion({ ...editingQuestion, multipleSelection: value })}
+                                className={`flex-1 px-3 py-2 text-[12px] font-semibold rounded-lg border transition-all ${
+                                  (editingQuestion.multipleSelection ?? false) === value
+                                    ? "bg-zinc-900 text-white border-zinc-900"
+                                    : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[12px] font-semibold text-zinc-600 mb-2">Options <span className="font-normal text-zinc-400">— comma-separated</span></label>
+                          <input
+                            value={editingQuestion.options?.join(", ") ?? ""}
+                            onChange={e => setEditingQuestion({ ...editingQuestion, options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
+                            placeholder="Option 1, Option 2, Option 3"
+                            className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                          />
+                        </div>
                       </div>
                     )}
 
