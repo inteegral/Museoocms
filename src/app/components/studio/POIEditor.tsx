@@ -437,7 +437,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                   <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Translation</p>
                   {inGuideContext ? (
                     targetLangs.length === 0 ? (
-                      <p className="text-[12px] text-zinc-400">No additional languages in this guide. Add languages to enable translations.</p>
+                      <p className="text-[12px] text-zinc-400">No translation languages configured. Add languages from the audio guide settings to enable translations.</p>
                     ) : (
                       <div className="space-y-3">
                         {targetLangs.map(lang => {
