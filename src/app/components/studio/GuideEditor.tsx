@@ -176,6 +176,28 @@ function GuideEditorContent() {
   const guideHunts = mockHunts.filter(h => h.guideId === id);
   const [pendingAccessType, setPendingAccessType] = useState<"free" | "paid" | null>(null);
 
+  type ProductionPhase = "scripting" | "translating" | "voicing" | "review";
+  const PHASES: { id: ProductionPhase; label: string; hint: string }[] = [
+    { id: "scripting",   label: "Scripting",    hint: "Write and finalise the audio script for each POI." },
+    { id: "translating", label: "Translation",  hint: "Scripts are locked. Translations are being generated." },
+    { id: "voicing",     label: "Voicing",      hint: "Assign voices and generate TTS audio for all languages." },
+    { id: "review",      label: "Review",       hint: "Final check before publishing to visitors." },
+  ];
+  const [productionPhase, setProductionPhase] = useState<ProductionPhase>(
+    (guide?.productionPhase as ProductionPhase | undefined) ?? "scripting"
+  );
+  const [pendingPhase, setPendingPhase] = useState<{ phase: ProductionPhase; direction: "forward" | "back" } | null>(null);
+
+  const phaseIndex = PHASES.findIndex(p => p.id === productionPhase);
+  const nextPhase = PHASES[phaseIndex + 1] ?? null;
+  const prevPhase = PHASES[phaseIndex - 1] ?? null;
+
+  const BACK_WARNINGS: Partial<Record<ProductionPhase, string>> = {
+    scripting:   "Going back to Scripting will unlock scripts for editing. Existing translations will need to be regenerated.",
+    translating: "Going back to Translation will unlock translations for editing. Generated audio may become outdated.",
+    voicing:     "Going back to Voicing will unlock audio generation. Review state will be reset.",
+  };
+
   const movePOI = (dragIndex: number, hoverIndex: number) => {
     const newPOIs = [...selectedPOIs];
     const [removed] = newPOIs.splice(dragIndex, 1);
@@ -371,44 +393,62 @@ function GuideEditorContent() {
             })()}
           </div>
 
-          {/* Workflow progress */}
-          {(() => {
-            const steps = [
-              { id: "itinerary",    label: "Itinerary",    done: selectedPOIs.length > 0 && completedPOIs > 0, onClick: () => document.getElementById("poi-section")?.scrollIntoView({ behavior: "smooth" }) },
-              { id: "translations", label: "Translations", done: selectedLanguages.length > 1,                  onClick: () => setActiveModal("translations") },
-              { id: "voicing",      label: "Voicing",      done: false,                                         onClick: () => setActiveModal("voicing") },
-              { id: "publish",      label: "Publish",      done: status === "published",                         onClick: () => setActiveModal("publish") },
-            ];
-            const nextStep = steps.find(s => !s.done);
-            return (
-              <div className="px-7 py-3.5 border-b border-zinc-100 flex items-center gap-2">
-                {steps.map((step, i) => {
-                  const inner = (
-                    <div className="flex items-center gap-1.5">
-                      <div className={`size-2 rounded-full flex-shrink-0 ${step.done ? "bg-zinc-900" : step.id === nextStep?.id ? "bg-zinc-400" : "bg-zinc-200"}`} />
-                      <span className={`text-[12px] font-medium whitespace-nowrap ${step.done ? "text-zinc-400" : step.id === nextStep?.id ? "text-zinc-800" : "text-zinc-400"}`}>
-                        {step.label}
-                      </span>
-                    </div>
-                  );
-                  const element = <button onClick={step.onClick} className="hover:opacity-70 transition-opacity cursor-pointer">{inner}</button>;
+          {/* Production phase stepper */}
+          <div className="px-7 py-3.5 border-b border-zinc-100">
+            <div className="flex items-center gap-3">
+              {/* Phase pills */}
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                {PHASES.map((phase, i) => {
+                  const isCurrent = phase.id === productionPhase;
+                  const isPast = i < phaseIndex;
                   return (
-                    <div key={step.id} className="flex items-center gap-2">
-                      {i > 0 && <div className="w-6 h-px bg-zinc-200" />}
-                      {element}
+                    <div key={phase.id} className="flex items-center gap-1">
+                      {i > 0 && <div className={`w-5 h-px flex-shrink-0 ${isPast ? "bg-zinc-400" : "bg-zinc-200"}`} />}
+                      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
+                        isCurrent  ? "bg-zinc-900 text-white" :
+                        isPast     ? "bg-zinc-100 text-zinc-400 line-through decoration-zinc-300" :
+                                     "bg-zinc-50 text-zinc-300"
+                      }`}>
+                        {isPast && <Check className="size-2.5 flex-shrink-0" strokeWidth={3} />}
+                        {phase.label}
+                      </div>
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {prevPhase && (
+                  <button
+                    onClick={() => setPendingPhase({ phase: prevPhase.id, direction: "back" })}
+                    className="text-[11px] font-medium text-zinc-400 hover:text-zinc-700 transition-colors px-2 py-1 rounded-lg hover:bg-zinc-50"
+                  >
+                    ← {prevPhase.label}
+                  </button>
+                )}
+                {nextPhase && (
+                  <button
+                    onClick={() => setPendingPhase({ phase: nextPhase.id, direction: "forward" })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[11px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                  >
+                    Start {nextPhase.label} →
+                  </button>
+                )}
                 <button
                   onClick={() => setShowPreview(true)}
-                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-all text-[12px] font-medium"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-all text-[11px] font-medium"
                 >
                   <Eye className="size-3.5" />
                   Preview
                 </button>
               </div>
-            );
-          })()}
+            </div>
+            {/* Current phase hint */}
+            <p className="text-[11px] text-zinc-400 mt-1.5 ml-0.5">
+              {PHASES[phaseIndex].hint}
+            </p>
+          </div>
 
           {/* Languages */}
           <div className="px-7 py-5">
@@ -1511,6 +1551,53 @@ function GuideEditorContent() {
           </div>
         </div>
       )}
+
+      {/* Phase transition confirmation */}
+      {pendingPhase && (() => {
+        const isBack = pendingPhase.direction === "back";
+        const target = PHASES.find(p => p.id === pendingPhase.phase)!;
+        const warning = isBack ? BACK_WARNINGS[productionPhase] : null;
+        return (
+          <div className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className={`size-10 rounded-full flex items-center justify-center flex-shrink-0 ${isBack ? "bg-amber-50" : "bg-zinc-50"}`}>
+                    {isBack
+                      ? <AlertCircle className="size-5 text-amber-500" />
+                      : <Check className="size-5 text-zinc-600" />
+                    }
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-semibold text-zinc-900 mb-1">
+                      {isBack ? `Back to ${target.label}?` : `Start ${target.label}?`}
+                    </p>
+                    <p className="text-[13px] text-zinc-500 leading-relaxed">
+                      {warning ?? target.hint}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setPendingPhase(null)}
+                    className="px-4 py-2 text-[13px] font-medium text-zinc-500 hover:bg-zinc-100 rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => { setProductionPhase(pendingPhase.phase); setPendingPhase(null); }}
+                    className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${
+                      isBack ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-zinc-900 hover:bg-zinc-700 text-white"
+                    }`}
+                  >
+                    {isBack ? "Go back" : "Confirm"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </PageShell>
   );
 }

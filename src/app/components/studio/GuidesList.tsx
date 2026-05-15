@@ -107,6 +107,13 @@ const statusConfig = {
   "complete":       { label: "Complete",         dot: "bg-emerald-400", text: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
 };
 
+const phaseConfig: Record<string, { label: string; dot: string; text: string }> = {
+  scripting:   { label: "Scripting",   dot: "bg-zinc-400",    text: "text-zinc-500"    },
+  translating: { label: "Translation", dot: "bg-sky-400",     text: "text-sky-600"     },
+  voicing:     { label: "Voicing",     dot: "bg-violet-400",  text: "text-violet-600"  },
+  review:      { label: "Review",      dot: "bg-emerald-400", text: "text-emerald-600" },
+};
+
 
 function GridCard({ guide, onPreview }: { guide: MockGuide; onPreview: () => void }) {
   const es = statusConfig[guide.editorialStatus];
@@ -141,10 +148,21 @@ function GridCard({ guide, onPreview }: { guide: MockGuide; onPreview: () => voi
 
         <div className="flex items-end justify-between gap-2">
           <div>
-            <span className={`flex items-center gap-1.5 text-[11px] font-medium mb-1 ${es.text}`}>
-              <span className={`size-1.5 rounded-full flex-shrink-0 ${es.dot}`} />
-              {es.label}
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`flex items-center gap-1.5 text-[11px] font-medium ${es.text}`}>
+                <span className={`size-1.5 rounded-full flex-shrink-0 ${es.dot}`} />
+                {es.label}
+              </span>
+              {guide.productionPhase && (() => {
+                const ph = phaseConfig[guide.productionPhase];
+                return ph ? (
+                  <span className={`flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-zinc-50 border border-zinc-100 ${ph.text}`}>
+                    <span className={`size-1.5 rounded-full flex-shrink-0 ${ph.dot}`} />
+                    {ph.label}
+                  </span>
+                ) : null;
+              })()}
+            </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="flex items-center gap-0.5">
                 {guide.languages.map(l => <LangDot key={l} lang={l} />)}
@@ -204,6 +222,18 @@ function ListRow({ guide, onPreview }: { guide: MockGuide; onPreview: () => void
           <span className={`size-1.5 rounded-full flex-shrink-0 ${es.dot}`} />
           {es.label}
         </span>
+        {guide.productionPhase && (() => {
+          const ph = phaseConfig[guide.productionPhase];
+          return ph ? (
+            <>
+              <span className="text-zinc-200">·</span>
+              <span className={`flex items-center gap-1 font-semibold ${ph.text}`}>
+                <span className={`size-1.5 rounded-full flex-shrink-0 ${ph.dot}`} />
+                {ph.label}
+              </span>
+            </>
+          ) : null;
+        })()}
         <span className="text-zinc-200">·</span>
         <span className="flex items-center gap-0.5">
           {guide.languages.map(l => <LangDot key={l} lang={l} />)}
