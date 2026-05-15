@@ -1,9 +1,19 @@
 import {
   ClipboardList, Plus, X, Trash2, Edit, Check,
-  GripVertical, Type, CheckSquare, Star, ChevronDown, Headphones,
+  GripVertical, Type, CheckSquare, Star, ChevronDown, Headphones, BarChart2,
 } from "lucide-react";
 import { useState } from "react";
 import { PageShell } from "./PageShell";
+
+const SAMPLE_TEXT_RESPONSES = [
+  ["The Botticelli room was absolutely breathtaking — worth the whole visit.", "I loved how the audio guide connected the works across different rooms.", "The commentary on the Raphael paintings was insightful and well-paced.", "Incredible collection. The script for the sculpture section was especially rich."],
+  ["Audio quality was crystal clear throughout the entire tour.", "A few sections had slight background noise but overall excellent.", "The voice was warm and professional. Really enhanced the experience.", "Loved the tone — felt like a personal guide, not a generic recording."],
+];
+
+function seededRand(seed: number) {
+  let s = seed;
+  return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; };
+}
 
 interface Question {
   id: string;
@@ -71,6 +81,7 @@ export function Surveys() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Survey>>({ name: "", description: "", guideName: "", questions: [], status: "draft" });
   const [editingQuestion, setEditingQuestion] = useState<Partial<Question> | null>(null);
+  const [viewingResults, setViewingResults] = useState<Survey | null>(null);
 
   const totalResponses = surveys.reduce((s, sv) => s + sv.responses, 0);
   const activeCount = surveys.filter(s => s.status === "active").length;
@@ -226,7 +237,10 @@ export function Surveys() {
                   <button onClick={() => openEdit(survey)} className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
                     <Edit className="size-3.5 inline mr-1.5" />Edit
                   </button>
-                  <button className="flex-1 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                  <button
+                    onClick={() => setViewingResults(survey)}
+                    className="flex-1 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                  >
                     View Results
                   </button>
                   <button onClick={() => deleteSurvey(survey.id)} className="px-3 py-1.5 bg-white border border-zinc-200 text-zinc-400 hover:text-red-600 hover:border-red-200 rounded-lg transition-all">
@@ -520,6 +534,152 @@ export function Surveys() {
           </div>
         </div>
       )}
+      {/* Results modal */}
+      {viewingResults && (() => {
+        const sv = viewingResults;
+        const rand = seededRand(sv.responses * 31 + sv.questions.length * 7);
+        return (
+          <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="px-6 py-5 border-b border-zinc-100 flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                    <BarChart2 className="size-4 text-zinc-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-[15px] font-semibold text-zinc-900 leading-tight">{sv.name}</h2>
+                    <p className="text-[12px] text-zinc-400 mt-0.5">{sv.responses} responses · {sv.questions.length} questions</p>
+                  </div>
+                </div>
+                <button onClick={() => setViewingResults(null)} className="text-zinc-400 hover:text-zinc-700 transition-colors flex-shrink-0">
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+                {sv.questions.map((q, idx) => {
+                  const qRand = seededRand(idx * 97 + sv.responses);
+
+                  if (q.type === "rating") {
+                    const dist = [0.04, 0.06, 0.15, 0.32, 0.43].map(w => Math.round(w * sv.responses + (qRand() - 0.5) * 4));
+                    const total = dist.reduce((a, b) => a + b, 0);
+                    const avg = dist.reduce((a, v, i) => a + v * (i + 1), 0) / total;
+                    const maxVal = Math.max(...dist);
+                    return (
+                      <div key={q.id} className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-[11px] font-semibold text-zinc-400 mt-0.5">Q{idx + 1}</span>
+                          <p className="text-[13px] font-semibold text-zinc-800">{q.question}</p>
+                        </div>
+                        <div className="bg-zinc-50 rounded-xl p-4 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-[28px] font-semibold text-zinc-900 leading-none">{avg.toFixed(1)}</span>
+                            <div>
+                              <div className="flex gap-0.5">
+                                {[1,2,3,4,5].map(n => (
+                                  <Star key={n} className={`size-4 ${n <= Math.round(avg) ? "text-amber-400 fill-amber-400" : "text-zinc-200 fill-zinc-200"}`} />
+                                ))}
+                              </div>
+                              <p className="text-[11px] text-zinc-400 mt-0.5">average · {total} responses</p>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            {[5,4,3,2,1].map(star => {
+                              const count = dist[star - 1];
+                              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                              return (
+                                <div key={star} className="flex items-center gap-2">
+                                  <span className="text-[11px] text-zinc-500 w-4 text-right flex-shrink-0">{star}</span>
+                                  <Star className="size-3 text-amber-400 fill-amber-400 flex-shrink-0" />
+                                  <div className="flex-1 h-2 bg-zinc-200 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-amber-400 rounded-full transition-all"
+                                      style={{ width: `${maxVal > 0 ? (count / maxVal) * 100 : 0}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-[11px] text-zinc-400 w-8 text-right flex-shrink-0">{pct}%</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (q.type === "text") {
+                    const pool = SAMPLE_TEXT_RESPONSES[idx % SAMPLE_TEXT_RESPONSES.length];
+                    return (
+                      <div key={q.id} className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-[11px] font-semibold text-zinc-400 mt-0.5">Q{idx + 1}</span>
+                          <p className="text-[13px] font-semibold text-zinc-800">{q.question}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-[11px] text-zinc-400">{sv.responses} open-ended responses · showing a sample</p>
+                          {pool.map((text, i) => (
+                            <div key={i} className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-lg">
+                              <p className="text-[13px] text-zinc-700 leading-relaxed">"{text}"</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (q.type === "multiple_choice" && q.options) {
+                    const rawWeights = q.options.map(() => qRand());
+                    const totalW = rawWeights.reduce((a, b) => a + b, 0);
+                    const counts = rawWeights.map(w => Math.round((w / totalW) * sv.responses));
+                    const totalC = counts.reduce((a, b) => a + b, 0);
+                    const maxC = Math.max(...counts);
+                    return (
+                      <div key={q.id} className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-[11px] font-semibold text-zinc-400 mt-0.5">Q{idx + 1}</span>
+                          <p className="text-[13px] font-semibold text-zinc-800">{q.question}</p>
+                        </div>
+                        <div className="bg-zinc-50 rounded-xl p-4 space-y-2.5">
+                          {q.options.map((opt, i) => {
+                            const pct = totalC > 0 ? Math.round((counts[i] / totalC) * 100) : 0;
+                            return (
+                              <div key={i} className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[12px] font-medium text-zinc-700">{opt}</span>
+                                  <span className="text-[12px] text-zinc-400 tabular-nums">{counts[i]} <span className="text-zinc-300">({pct}%)</span></span>
+                                </div>
+                                <div className="h-2 bg-zinc-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-zinc-700 rounded-full transition-all"
+                                    style={{ width: `${maxC > 0 ? (counts[i] / maxC) * 100 : 0}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })}
+              </div>
+
+              <div className="px-6 py-4 border-t border-zinc-100 flex justify-end">
+                <button
+                  onClick={() => setViewingResults(null)}
+                  className="px-5 py-2 text-[13px] font-semibold text-zinc-600 hover:bg-zinc-100 rounded-lg transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </PageShell>
   );
 }
