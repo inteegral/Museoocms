@@ -382,7 +382,11 @@ export function CreateGuide() {
                     <p className="text-sm font-medium text-zinc-800">Average POI length</p>
                     <p className="text-xs text-zinc-400 mt-0.5">Suggested 200–300 words</p>
                   </div>
-                  <span className="text-xl font-semibold text-zinc-900 tabular-nums">{config.avgPoiLength}</span>
+                  <div className="text-right">
+                    <span className="text-xl font-semibold text-zinc-900 tabular-nums">{config.avgPoiLength}</span>
+                    <span className="text-xs text-zinc-400 ml-1">words</span>
+                    <p className="text-xs text-zinc-400 tabular-nums">≈ {Math.floor(config.avgPoiLength / 130)}m {Math.round((config.avgPoiLength % 130) / 130 * 60)}s</p>
+                  </div>
                 </div>
                 <input
                   type="range" min={80} max={600} step={10}
