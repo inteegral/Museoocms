@@ -14,7 +14,7 @@ import { Translations } from "./components/studio/Translations";
 import { VoiceTalent } from "./components/studio/VoiceTalent";
 import { Reviews } from "./components/studio/Reviews";
 import { Surveys } from "./components/studio/Surveys";
-import { Hunt } from "./components/studio/Hunt";
+import { Challenge } from "./components/studio/Challenge";
 import { Marketing } from "./components/studio/Marketing";
 import { Monetization } from "./components/studio/Monetization";
 import { Team } from "./components/studio/Team";
@@ -30,6 +30,7 @@ import { SuperAdminPlans } from "./components/superadmin/SuperAdminPlans";
 import { SuperAdminBilling } from "./components/superadmin/SuperAdminBilling";
 import { ReviewMode } from "./components/studio/ReviewMode";
 import { Connectors } from "./components/studio/Connectors";
+import { DesignSystem } from "./components/studio/DesignSystem";
 
 export const router = createBrowserRouter([
   {
@@ -50,13 +51,14 @@ export const router = createBrowserRouter([
       { path: "voice-talent", Component: VoiceTalent },
       { path: "reviews", Component: Reviews },
       { path: "surveys", Component: Surveys },
-      { path: "hunt", Component: Hunt },
+      { path: "challenge", Component: Challenge },
       { path: "marketing", Component: Marketing },
       { path: "monetization", Component: Monetization },
       { path: "connectors", Component: Connectors },
       { path: "settings", Component: Settings },
       { path: "team", Component: Team },
       { path: "profile", Component: Profile },
+      { path: "design-system", Component: DesignSystem },
     ],
   },
   {

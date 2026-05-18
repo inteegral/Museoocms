@@ -1,8 +1,8 @@
-import { Link, useNavigate } from "react-router";
-import { Plus, LayoutGrid, List, PenLine, Copy, Sparkles, GitFork, AlignLeft, X, Smartphone, ChevronRight, Calendar, Ticket, Unlock } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router";
+import { Plus, LayoutGrid, List, PenLine, Copy, Sparkles, GitFork, AlignLeft, X, Smartphone, ChevronRight, Calendar, Ticket, Unlock, Upload, FileText, BookOpen } from "lucide-react";
 import { PageShell } from "./PageShell";
-import { mockGuides } from "../../data/mockData";
-import { useState } from "react";
+import { mockGuides, mockDocuments } from "../../data/mockData";
+import { useState, useEffect, useRef } from "react";
 import { GuidePreviewModal } from "./GuidePreviewModal";
 
 const NEW_GUIDE_PATHS = [
@@ -48,12 +48,12 @@ const LANG_COLOR: Record<string, string> = {
   es: "#dc2626",
 };
 
-function LangDot({ lang }: { lang: string }) {
-  const color = LANG_COLOR[lang] ?? "#71717a";
+function LangDot({ lang, primary }: { lang: string; primary?: boolean }) {
   return (
     <span
-      className="size-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0"
-      style={{ backgroundColor: color }}
+      className={`size-5 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 ${
+        primary ? "bg-[#D33333] text-white" : "bg-zinc-100 text-zinc-600"
+      }`}
     >
       {lang.toUpperCase()}
     </span>
@@ -165,7 +165,7 @@ function GridCard({ guide, onPreview }: { guide: MockGuide; onPreview: () => voi
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="flex items-center gap-0.5">
-                {guide.languages.map(l => <LangDot key={l} lang={l} />)}
+                {guide.languages.map((l, i) => <LangDot key={l} lang={l} primary={i === 0} />)}
               </div>
               <span className="text-zinc-200 text-[11px]">·</span>
               <span className="text-[11px] text-zinc-400">{guide.poiCount} POIs</span>
@@ -182,7 +182,7 @@ function GridCard({ guide, onPreview }: { guide: MockGuide; onPreview: () => voi
           </div>
           <Link
             to={`/guides/${guide.id}`}
-            className="flex items-center justify-center size-7 rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 transition-colors flex-shrink-0"
+            className="flex items-center justify-center size-7 rounded-lg bg-[#D33333] text-white hover:bg-[#b82c2c] transition-colors flex-shrink-0"
           >
             <ChevronRight className="size-3.5" />
           </Link>
@@ -194,11 +194,15 @@ function GridCard({ guide, onPreview }: { guide: MockGuide; onPreview: () => voi
 
 function ListRow({ guide, onPreview }: { guide: MockGuide; onPreview: () => void }) {
   const es = statusConfig[guide.editorialStatus];
+  const ph = guide.productionPhase ? phaseConfig[guide.productionPhase] : null;
   return (
-    <div className="group flex items-center gap-5 px-5 py-3.5 bg-white rounded-2xl border border-zinc-100 hover:border-zinc-200 hover:shadow-sm transition-all duration-200" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.03)" }}>
-
+    <Link
+      to={`/guides/${guide.id}`}
+      className="group flex items-center gap-4 px-5 py-4 bg-white rounded-2xl border border-zinc-100 hover:border-zinc-300 hover:shadow-md transition-all duration-200"
+      style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.03)" }}
+    >
       {/* Thumbnail */}
-      <div className="relative size-[52px] rounded-xl overflow-hidden flex-shrink-0 bg-zinc-100">
+      <div className="relative size-[48px] rounded-xl overflow-hidden flex-shrink-0 bg-zinc-100">
         <img
           src={guide.thumbnail}
           alt=""
@@ -210,74 +214,105 @@ function ListRow({ guide, onPreview }: { guide: MockGuide; onPreview: () => void
         )}
       </div>
 
-      {/* Title + description */}
+      {/* Title + meta */}
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-semibold text-zinc-900 truncate leading-snug">{guide.title}</p>
-        <p className="text-[12px] text-zinc-400 truncate mt-0.5">{guide.description}</p>
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <span className={`flex items-center gap-1 text-[11px] font-medium ${es.text}`}>
+            <span className={`size-1.5 rounded-full flex-shrink-0 ${es.dot}`} />
+            {es.label}
+          </span>
+          {ph && (
+            <>
+              <span className="text-zinc-200 text-[10px]">·</span>
+              <span className={`text-[11px] font-medium ${ph.text}`}>{ph.label}</span>
+            </>
+          )}
+          <span className="text-zinc-200 text-[10px]">·</span>
+          <span className="flex items-center gap-0.5">
+            {guide.languages.map((l, i) => <LangDot key={l} lang={l} primary={i === 0} />)}
+          </span>
+          <span className="text-zinc-200 text-[10px]">·</span>
+          <span className="text-[11px] text-zinc-400">{guide.poiCount} POIs</span>
+        </div>
       </div>
 
-      {/* Metadata inline */}
-      <div className="hidden md:flex items-center gap-2 text-[11px] text-zinc-400 flex-shrink-0">
-        <span className={`flex items-center gap-1.5 font-medium ${es.text}`}>
-          <span className={`size-1.5 rounded-full flex-shrink-0 ${es.dot}`} />
-          {es.label}
-        </span>
-        {guide.productionPhase && (() => {
-          const ph = phaseConfig[guide.productionPhase];
-          return ph ? (
-            <>
-              <span className="text-zinc-200">·</span>
-              <span className={`flex items-center gap-1 font-semibold ${ph.text}`}>
-                <span className={`size-1.5 rounded-full flex-shrink-0 ${ph.dot}`} />
-                {ph.label}
-              </span>
-            </>
-          ) : null;
-        })()}
-        <span className="text-zinc-200">·</span>
-        <span className="flex items-center gap-0.5">
-          {guide.languages.map(l => <LangDot key={l} lang={l} />)}
-        </span>
-        <span className="text-zinc-200">·</span>
-        <span><span className="font-semibold text-zinc-600">{guide.poiCount}</span> POIs</span>
-        <span className="text-zinc-200">·</span>
-        <span className="flex items-center gap-1">
+      {/* Right side: access + date */}
+      <div className="hidden md:flex flex-col items-end gap-1 flex-shrink-0 text-right">
+        <AccessBadge guide={guide} />
+        <span className="text-[11px] text-zinc-400 flex items-center gap-1">
           <Calendar className="size-3 flex-shrink-0" />
           {guide.expositionType === "temporary" && guide.startDate && guide.endDate
             ? `${fmtDate(guide.startDate)} – ${fmtDate(guide.endDate)}`
             : "Permanent"}
         </span>
-        <span className="text-zinc-200">·</span>
-        <AccessBadge guide={guide} />
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-0.5 flex-shrink-0">
-        <button
-          onClick={onPreview}
-          title="Anteprima visitatore"
-          className="p-2 text-zinc-300 hover:text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors"
-        >
-          <Smartphone className="size-3.5" strokeWidth={1.5} />
-        </button>
-        <Link
-          to={`/guides/${guide.id}`}
-          className="p-2 flex items-center justify-center size-8 rounded-lg bg-zinc-900 text-white hover:bg-zinc-700 transition-colors"
-        >
-          <ChevronRight className="size-3.5" />
-        </Link>
-      </div>
-    </div>
+      {/* Preview button */}
+      <button
+        onClick={e => { e.preventDefault(); onPreview(); }}
+        title="Visitor preview"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-800 hover:bg-zinc-50 transition-all text-[11px] font-medium flex-shrink-0"
+      >
+        <Smartphone className="size-3.5" strokeWidth={1.5} />
+        Preview
+      </button>
+    </Link>
   );
 }
 
 export function GuidesList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [guides] = useState(mockGuides);
   const [filter, setFilter] = useState<Filter>("all");
-  const [view, setView] = useState<ViewMode>("grid");
+  const [view, setView] = useState<ViewMode>("list");
   const [showNewModal, setShowNewModal] = useState(false);
   const [previewGuide, setPreviewGuide] = useState<string | null>(null);
+  const [showCatalogueModal, setShowCatalogueModal] = useState(false);
+  const [catalogueFiles, setCatalogueFiles] = useState<{ name: string; size: number }[]>([]);
+  const [catalogueIdea, setCatalogueIdea] = useState("");
+  const [catalogueDragOver, setCatalogueDragOver] = useState(false);
+  const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+  const [selectedLibraryDocs, setSelectedLibraryDocs] = useState<string[]>([]);
+  const catalogueInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if ((location.state as { openNewGuide?: boolean } | null)?.openNewGuide) {
+      setShowNewModal(true);
+      window.history.replaceState({}, "");
+    }
+  }, []);
+
+  const handleCatalogueFiles = (files: FileList | null) => {
+    if (!files) return;
+    const next = Array.from(files)
+      .filter(f => /\.(pdf|docx|txt)$/i.test(f.name))
+      .map(f => ({ name: f.name, size: f.size }));
+    setCatalogueFiles(prev => [...prev, ...next]);
+  };
+
+  const closeNewModal = () => {
+    setShowNewModal(false);
+    setCatalogueFiles([]);
+    setCatalogueIdea("");
+  };
+
+  const closeCatalogueModal = () => {
+    setShowCatalogueModal(false);
+    setCatalogueFiles([]);
+    setCatalogueIdea("");
+    setShowLibraryPicker(false);
+    setSelectedLibraryDocs([]);
+  };
+
+  const toggleLibraryDoc = (id: string) =>
+    setSelectedLibraryDocs(prev => prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]);
+
+  const allSelectedFiles = [
+    ...catalogueFiles,
+    ...mockDocuments.filter(d => selectedLibraryDocs.includes(d.id)).map(d => ({ name: d.filename, size: 0 })),
+  ];
 
   const filteredGuides =
     filter === "all" ? guides : guides.filter(g => g.editorialStatus === filter);
@@ -304,7 +339,7 @@ export function GuidesList() {
           </div>
           <button
             onClick={() => setShowNewModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
           >
             <Plus className="size-4" />
             New Guide
@@ -358,12 +393,16 @@ export function GuidesList() {
             {filteredGuides.map(guide => <ListRow key={guide.id} guide={guide} onPreview={() => setPreviewGuide(guide.title)} />)}
             <button
               onClick={() => setShowNewModal(true)}
-              className="group w-full flex items-center gap-5 px-5 py-4 rounded-xl border-2 border-dashed border-zinc-200 hover:border-zinc-400 hover:bg-zinc-50 transition-all"
+              className="group w-full flex items-center gap-4 px-5 py-4 rounded-2xl border border-dashed border-zinc-300 hover:border-zinc-900 hover:bg-zinc-950 transition-all duration-200"
             >
-              <div className="size-14 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-200 transition-all">
-                <Plus className="size-5 text-zinc-500" />
+              <div className="size-9 rounded-xl bg-zinc-100 group-hover:bg-white/10 flex items-center justify-center flex-shrink-0 transition-all">
+                <Plus className="size-4 text-zinc-500 group-hover:text-white transition-colors" />
               </div>
-              <span className="text-[13px] font-semibold text-zinc-500 group-hover:text-zinc-700 transition-colors">New Guide</span>
+              <div className="flex-1 text-left">
+                <p className="text-[13px] font-semibold text-zinc-500 group-hover:text-white transition-colors">New audio guide</p>
+                <p className="text-[11px] text-zinc-400 group-hover:text-white/50 transition-colors mt-0.5">Create from scratch or generate with AI</p>
+              </div>
+              <ChevronRight className="size-4 text-zinc-300 group-hover:text-white/50 flex-shrink-0 transition-colors" />
             </button>
           </div>
         )}
@@ -377,7 +416,7 @@ export function GuidesList() {
 
     {/* ── New guide modal ──────────────────────── */}
     {showNewModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowNewModal(false)}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeNewModal}>
         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
         <div
           className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
@@ -389,31 +428,43 @@ export function GuidesList() {
               <p className="text-base font-semibold text-zinc-900">New audio guide</p>
               <p className="text-xs text-zinc-400 mt-0.5">Choose how you want to get started</p>
             </div>
-            <button onClick={() => setShowNewModal(false)} className="text-zinc-300 hover:text-zinc-500 transition-colors">
+            <button onClick={closeNewModal} className="text-zinc-300 hover:text-zinc-500 transition-colors">
               <X className="size-4" />
             </button>
           </div>
 
           {/* Options */}
           <div className="px-3 pb-4 space-y-1">
-            {/* First option — available now */}
-            {(() => { const { icon: Icon, title, desc } = NEW_GUIDE_PATHS[0]; return (
-              <button
-                onClick={() => { setShowNewModal(false); navigate("/guides/new"); }}
-                className="group w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left hover:bg-zinc-50 transition-all"
-              >
-                <div className="size-9 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-200 transition-all">
-                  <Icon className="size-4 text-zinc-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-zinc-800">{title}</p>
-                  <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{desc}</p>
-                </div>
-                <svg className="size-4 text-zinc-300 flex-shrink-0 group-hover:text-zinc-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            ); })()}
+
+            {/* Option 1 — Create from scratch */}
+            <button
+              onClick={() => { closeNewModal(); navigate("/guides/guide-1", { state: { generatedName: "", generatedDescription: "", generatedPOIs: [], sources: [], scratch: true } }); }}
+              className="group w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left hover:bg-zinc-50 transition-all"
+            >
+              <div className="size-9 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0 group-hover:bg-zinc-200 transition-all">
+                <PenLine className="size-4 text-zinc-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-zinc-800">Create from scratch</p>
+                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">Build your itinerary step by step, adding stops manually.</p>
+              </div>
+              <ChevronRight className="size-4 text-zinc-300 flex-shrink-0 group-hover:text-zinc-400 transition-colors" />
+            </button>
+
+            {/* Option 2 — Generate from catalogue */}
+            <button
+              onClick={() => { closeNewModal(); setShowCatalogueModal(true); }}
+              className="group w-full flex items-center gap-4 px-4 py-3.5 text-left hover:bg-zinc-50 transition-all rounded-xl"
+            >
+              <div className="size-9 rounded-xl bg-zinc-100 group-hover:bg-zinc-200 flex items-center justify-center flex-shrink-0 transition-all">
+                <BookOpen className="size-4 text-zinc-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-zinc-800">Generate from your catalogue</p>
+                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">Upload your museum's documents and let the AI build the guide.</p>
+              </div>
+              <ChevronRight className="size-4 text-zinc-300 group-hover:text-zinc-400 flex-shrink-0 transition-colors" />
+            </button>
 
             {/* Coming Soon divider */}
             <div className="flex items-center gap-3 px-4 pt-3 pb-1">
@@ -441,6 +492,137 @@ export function GuidesList() {
         </div>
       </div>
     )}
+      {/* Catalogue Modal */}
+      {showCatalogueModal && (
+        <div className="fixed inset-0 bg-zinc-950/50 z-50 flex items-center justify-center p-6" onClick={closeCatalogueModal}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
+            <div className="px-7 pt-7 pb-7 space-y-5">
+
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="size-8 rounded-xl bg-zinc-900 flex items-center justify-center">
+                      <BookOpen className="size-4 text-white" />
+                    </div>
+                    <h2 className="text-[17px] font-semibold text-zinc-900 tracking-tight">Generate from your catalogue</h2>
+                  </div>
+                  <p className="text-[13px] text-zinc-400 leading-relaxed">Upload your museum's documents and describe your idea. Museoo will draft the guide for you.</p>
+                </div>
+                <button onClick={closeCatalogueModal} className="text-zinc-400 hover:text-zinc-700 transition-colors ml-4 flex-shrink-0">
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              {/* Idea field */}
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
+                  Describe your idea <span className="normal-case font-normal text-zinc-400">(optional)</span>
+                </label>
+                <textarea
+                  value={catalogueIdea}
+                  onChange={e => setCatalogueIdea(e.target.value)}
+                  placeholder="e.g. A 45-minute tour for families with children, focusing on ancient Roman everyday life…"
+                  rows={3}
+                  className="w-full px-3.5 py-3 border border-zinc-200 rounded-xl text-[13px] text-zinc-800 placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900 resize-none transition-all leading-relaxed"
+                />
+                <p className="text-[11px] text-zinc-400 mt-1.5">Museoo will use this to build drafts you can freely adapt and refine.</p>
+              </div>
+
+              {/* Source buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowLibraryPicker(false); catalogueInputRef.current?.click(); }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-xl text-[13px] font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50 transition-all"
+                >
+                  <Upload className="size-4 text-zinc-400" strokeWidth={1.5} />
+                  Upload from device
+                </button>
+                <button
+                  onClick={() => setShowLibraryPicker(v => !v)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border rounded-xl text-[13px] font-medium transition-all ${
+                    showLibraryPicker ? "border-zinc-900 bg-[#D33333] text-white" : "border-zinc-200 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50"
+                  }`}
+                >
+                  <BookOpen className="size-4" strokeWidth={1.5} />
+                  Choose from Library
+                </button>
+                <input ref={catalogueInputRef} type="file" multiple accept=".pdf,.docx,.txt" className="hidden" onChange={e => handleCatalogueFiles(e.target.files)} />
+              </div>
+
+              {/* Library picker */}
+              {showLibraryPicker && (
+                <div className="border border-zinc-100 rounded-2xl overflow-hidden">
+                  {mockDocuments.map(doc => {
+                    const selected = selectedLibraryDocs.includes(doc.id);
+                    return (
+                      <button
+                        key={doc.id}
+                        onClick={() => toggleLibraryDoc(doc.id)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-zinc-100 last:border-0 transition-colors ${selected ? "bg-zinc-50" : "hover:bg-zinc-50"}`}
+                      >
+                        <div className={`size-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "bg-zinc-900 border-zinc-900" : "border-zinc-300"}`}>
+                          {selected && <X className="size-2.5 text-white" strokeWidth={3} />}
+                        </div>
+                        <FileText className="size-4 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                        <span className="text-[13px] font-medium text-zinc-700 flex-1 truncate">{doc.filename}</span>
+                        <span className="text-[11px] text-zinc-400 flex-shrink-0">{doc.size}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Combined file list */}
+              {allSelectedFiles.length > 0 && !showLibraryPicker && (
+                <div className="space-y-1.5">
+                  {catalogueFiles.map((f, i) => (
+                    <div key={`upload-${i}`} className="flex items-center gap-2.5 px-3 py-2 bg-zinc-50 rounded-xl border border-zinc-100">
+                      <FileText className="size-3.5 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                      <span className="text-[12px] font-medium text-zinc-700 flex-1 truncate">{f.name}</span>
+                      <span className="text-[11px] text-zinc-400">{(f.size / 1024).toFixed(0)} KB</span>
+                      <button onClick={() => setCatalogueFiles(prev => prev.filter((_, j) => j !== i))} className="text-zinc-300 hover:text-zinc-500 transition-colors">
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {mockDocuments.filter(d => selectedLibraryDocs.includes(d.id)).map(doc => (
+                    <div key={`lib-${doc.id}`} className="flex items-center gap-2.5 px-3 py-2 bg-zinc-50 rounded-xl border border-zinc-100">
+                      <BookOpen className="size-3.5 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                      <span className="text-[12px] font-medium text-zinc-700 flex-1 truncate">{doc.filename}</span>
+                      <span className="text-[11px] text-zinc-400">{doc.size}</span>
+                      <button onClick={() => toggleLibraryDoc(doc.id)} className="text-zinc-300 hover:text-zinc-500 transition-colors">
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2 pt-1">
+                <button
+                  disabled={allSelectedFiles.length === 0}
+                  onClick={() => {
+                    const files = allSelectedFiles;
+                    closeCatalogueModal();
+                    navigate("/guides/new", { state: { catalogueFiles: files, catalogueIdea } });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  <Sparkles className="size-3.5" />
+                  Generate guide
+                </button>
+                <button onClick={closeCatalogueModal} className="w-full py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all">
+                  Cancel
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

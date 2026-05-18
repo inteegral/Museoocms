@@ -81,7 +81,7 @@ export function LandingPagePreviewModal({ page, onClose }: Props) {
 
           {/* CTA */}
           <div className="px-5 py-5 space-y-3">
-            <button className="w-full flex items-center justify-center gap-2 py-3.5 bg-zinc-900 text-white text-[14px] font-semibold rounded-xl hover:bg-zinc-800 transition-colors">
+            <button className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#D33333] text-white text-[14px] font-medium rounded-xl hover:bg-[#b82c2c] transition-colors">
               <Play className="size-4 fill-white stroke-none" />
               Start Audio Guide
             </button>

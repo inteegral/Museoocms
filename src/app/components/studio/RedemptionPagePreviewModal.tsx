@@ -58,7 +58,7 @@ export function RedemptionPagePreviewModal({ guideName, redemptionUrl, thumbnail
               <span className="font-mono text-[15px] text-zinc-400 tracking-[0.2em]">ABC · 123</span>
             </div>
 
-            <button className="w-full py-3.5 bg-zinc-900 text-white text-[14px] font-semibold rounded-xl hover:bg-zinc-800 transition-colors">
+            <button className="w-full py-3.5 bg-[#D33333] text-white text-[14px] font-medium rounded-xl hover:bg-[#b82c2c] transition-colors">
               {content.buttonText}
             </button>
 

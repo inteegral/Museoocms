@@ -278,9 +278,9 @@ export const mockPacks = [
   },
 ];
 
-export const mockHunts = [
-  { id: "hunt-1", title: "Greek Art Challenge",   guideId: "guide-1", status: "active" as const, completions: 47 },
-  { id: "hunt-2", title: "Family Discovery Game", guideId: "guide-3", status: "draft"  as const, completions: 0  },
+export const mockChallenges = [
+  { id: "challenge-1", title: "Greek Art Challenge",   guideId: "guide-1", status: "active" as const, completions: 47 },
+  { id: "challenge-2", title: "Family Discovery Game", guideId: "guide-3", status: "draft"  as const, completions: 0  },
 ];
 
 export const mockSurveys = [
@@ -294,4 +294,7 @@ export const languages = [
   { code: "fr", name: "Français", flag: "🇫🇷" },
   { code: "de", name: "Deutsch", flag: "🇩🇪" },
   { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "ja", name: "日本語", flag: "🇯🇵" },
+  { code: "ru", name: "Русский", flag: "🇷🇺" },
+  { code: "ar", name: "العربية", flag: "🇸🇦" },
 ];

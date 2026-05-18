@@ -238,7 +238,7 @@ export function Reviews() {
                   key={lang}
                   onClick={() => setFilterLang(lang)}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                    selected ? "bg-zinc-900 text-white" : "bg-white border border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:text-zinc-800"
+                    selected ? "bg-[#D33333] text-white" : "bg-white border border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:text-zinc-800"
                   }`}
                 >
                   {lang === "all" ? "All" : lang}

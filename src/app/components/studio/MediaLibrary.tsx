@@ -204,7 +204,7 @@ export function MediaLibrary() {
             </div>
             <button
               onClick={() => setShowUploadZone(!showUploadZone)}
-              className="inline-flex items-center justify-center gap-2.5 px-6 py-3 bg-[#D33333] text-white text-[14px] font-semibold rounded-lg hover:bg-[#b82828] transition-all duration-200 shadow-sm hover:shadow-md"
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-3 bg-[#D33333] text-white text-[14px] font-medium rounded-lg hover:bg-[#b82828] transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <Upload className="size-5" />
               Upload Images
@@ -251,7 +251,7 @@ export function MediaLibrary() {
               <p className="text-[13px] text-zinc-600 mb-6">
                 Supports: JPG, PNG, WebP • Max size: 10MB per image
               </p>
-              <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-semibold rounded-lg hover:bg-[#b82828] transition-all">
+              <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82828] transition-all">
                 Choose Files
               </button>
             </div>
@@ -277,7 +277,7 @@ export function MediaLibrary() {
                 onClick={() => setFilterUnused(!filterUnused)}
                 className={`inline-flex items-center gap-2 px-4 py-2.5 border rounded-lg text-[13px] font-semibold transition-all ${
                   filterUnused
-                    ? "bg-zinc-900 text-white border-zinc-900"
+                    ? "bg-[#D33333] text-white border-zinc-900"
                     : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300"
                 }`}
               >
@@ -538,7 +538,7 @@ export function MediaLibrary() {
             {!searchQuery && !filterUnused && (
               <button
                 onClick={() => setShowUploadZone(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[14px] font-semibold rounded-lg hover:bg-[#b82828] transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[14px] font-medium rounded-lg hover:bg-[#b82828] transition-all"
               >
                 <Upload className="size-4" />
                 Upload Images

@@ -321,7 +321,7 @@ export function Monetization() {
                   <p className="text-[12px] text-zinc-500">Text codes to distribute at the ticket desk, reception or in brochures</p>
                 </div>
                 <button onClick={() => { setShowInloco(!showInloco); setShowQr(false); }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 text-white text-[12px] font-medium rounded-lg hover:bg-zinc-800 transition-all">
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                   <Plus className="size-3.5" />Generate batch
                 </button>
               </div>
@@ -349,7 +349,7 @@ export function Monetization() {
                       </div>
                     </div>
                     <button onClick={() => generateBatch("inloco", inlocoGuide, inlocoQty)}
-                      className="px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all whitespace-nowrap">
+                      className="px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all whitespace-nowrap">
                       Generate &amp; download CSV
                     </button>
                     <button onClick={() => setShowInloco(false)} className="p-2.5 text-zinc-400 hover:text-zinc-700 transition-colors">
@@ -372,7 +372,7 @@ export function Monetization() {
                   <p className="text-[12px] text-zinc-500">Each code with its own scannable QR — ideal for groups, schools, events</p>
                 </div>
                 <button onClick={() => { setShowQr(!showQr); setShowInloco(false); }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 text-white text-[12px] font-medium rounded-lg hover:bg-zinc-800 transition-all">
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                   <Plus className="size-3.5" />Generate with QR
                 </button>
               </div>
@@ -400,7 +400,7 @@ export function Monetization() {
                       </div>
                     </div>
                     <button onClick={() => generateBatch("qr", qrGuide, qrQty)}
-                      className="px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all whitespace-nowrap">
+                      className="px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all whitespace-nowrap">
                       Generate &amp; download ZIP
                     </button>
                     <button onClick={() => setShowQr(false)} className="p-2.5 text-zinc-400 hover:text-zinc-700 transition-colors">
@@ -694,7 +694,7 @@ export function Monetization() {
                 Cancel
               </button>
               <button onClick={saveEditAccess}
-                className="flex-1 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all">
+                className="flex-1 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                 Save
               </button>
             </div>
@@ -739,7 +739,7 @@ export function Monetization() {
                 </button>
                 <button
                   onClick={applyAccessChange}
-                  className="flex-1 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all"
+                  className="flex-1 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
                 >
                   Yes, change it
                 </button>
@@ -798,7 +798,7 @@ export function Monetization() {
                     <div className="flex gap-1 ml-auto">
                       {(["csv", "json"] as const).map(f => (
                         <button key={f} onClick={() => setOrderFormat(f)}
-                          className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${orderFormat === f ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}>
+                          className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${orderFormat === f ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}>
                           .{f}
                         </button>
                       ))}
@@ -820,7 +820,7 @@ export function Monetization() {
             </div>
             <div className="px-6 py-5 border-t border-zinc-100 space-y-3">
               <button onClick={handlePlaceOrder}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all">
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
                 {orderDelivery === "digital"
                   ? <><Download className="size-4" />Generate &amp; download</>
                   : <><Package className="size-4" />Confirm order</>

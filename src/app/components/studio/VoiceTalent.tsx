@@ -276,7 +276,7 @@ function VoiceGenerationModal({ voice, onClose, onPublish }: { voice: VoiceTalen
               <button
                 onClick={() => { setStep("generating"); setProgress(0); setPlaying(false); }}
                 disabled={testPOI === null}
-                className="w-full py-3 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 Generate test sample <ArrowRight className="size-3.5" />
               </button>
@@ -342,7 +342,7 @@ function VoiceGenerationModal({ voice, onClose, onPublish }: { voice: VoiceTalen
               {/* Play */}
               <button
                 onClick={() => { setPlaying(p => !p); if (progress >= 100) { setProgress(0); setPlaying(true); } }}
-                className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all flex items-center justify-center gap-2"
               >
                 {playing
                   ? <><Pause className="size-3.5" fill="white" /> Pause</>
@@ -363,7 +363,7 @@ function VoiceGenerationModal({ voice, onClose, onPublish }: { voice: VoiceTalen
             <div className="space-y-2 pt-1">
               <button
                 onClick={() => { setStep("all"); setStatuses(mockPOIs.map(() => "queued")); setDoneCount(0); }}
-                className="w-full py-3 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all flex items-center justify-center gap-2"
               >
                 Generate all {mockPOIs.length} tracks <ArrowRight className="size-3.5" />
               </button>
@@ -432,7 +432,7 @@ function VoiceGenerationModal({ voice, onClose, onPublish }: { voice: VoiceTalen
             <p className="text-[11px] text-zinc-400 mb-8">{guide.name}</p>
             <button
               onClick={() => { onClose(); onPublish?.(); }}
-              className="w-full py-3 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all flex items-center justify-center gap-2"
             >
               Proceed to publish <ArrowRight className="size-3.5" />
             </button>
@@ -561,7 +561,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
                 <h1 className="text-[26px] font-semibold text-zinc-900 tracking-tight mb-1">Voice Talent</h1>
                 <p className="text-[13px] text-zinc-500">{mockVoices.length} voices available</p>
               </div>
-              <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+              <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
                 <Upload className="size-4" />
                 Upload Custom Voice
               </button>
@@ -647,7 +647,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
                     <p className="text-[13px] text-zinc-500 leading-relaxed mb-6">{voice.description}</p>
                     <button
                       onClick={() => setSelectedVoiceForAssignment(voice)}
-                      className="mt-auto w-full px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                      className="mt-auto w-full px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"
                     >
                       Use Voice
                     </button>
@@ -751,7 +751,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
                             <button
                               onClick={() => saveOverride(p.id)}
                               disabled={!editValue.trim()}
-                              className="px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all disabled:opacity-40"
+                              className="px-3 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40"
                             >
                               Save override
                             </button>
@@ -768,7 +768,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
                             title="Preview pronunciation"
                             className={`size-8 rounded-full flex items-center justify-center transition-all ${
                               isPlaying
-                                ? "bg-zinc-900 text-white"
+                                ? "bg-[#D33333] text-white"
                                 : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
                             }`}
                           >
@@ -785,7 +785,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
                               </button>
                               <button
                                 onClick={() => approvePronunciation(p.id)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"
                               >
                                 <Check className="size-3" /> Approve
                               </button>
@@ -823,7 +823,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
               </p>
               <button
                 onClick={() => setActiveTab("catalog")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
               >
                 Next: Assign Voice
                 <ArrowRight className="size-4" />
@@ -903,7 +903,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
               <p className="text-[13px] text-zinc-400">Step 1 of 3 · Reviewed? Move to pronunciation check.</p>
               <button
                 onClick={() => setActiveTab("pronunciations")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
               >
                 Next: Pronunciations
                 <ArrowRight className="size-4" />
@@ -952,7 +952,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => { approvePronunciation(existing.id); setPopover(null); }}
-                                  className="flex-1 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                                  className="flex-1 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"
                                 >
                                   <Check className="size-3 inline mr-1" />Approve
                                 </button>
@@ -985,7 +985,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
                             </p>
                             <button
                               onClick={() => addToReview(popover.word, popover.poiTitle)}
-                              className="w-full py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                              className="w-full py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"
                             >
                               + Add to review
                             </button>

@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router";
+import { Outlet, Link, useLocation, useNavigate } from "react-router";
 import {
   LayoutDashboard, Headphones, MapPin, Map,
   Megaphone, DollarSign, MessageSquare,
@@ -8,6 +8,7 @@ import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
 import { useState, useEffect } from "react";
 import { OnboardingWizard } from "./OnboardingWizard";
+import MainLogoVariant from "../../../imports/MainLogoVariant5";
 import { GuidePreviewModal } from "./GuidePreviewModal";
 import { AIAssistantDrawer } from "./AIAssistantDrawer";
 
@@ -53,7 +54,7 @@ const navSections: NavSection[] = [
     spacerBefore: true,
     items: [
       { key: "surveys", path: "/surveys", icon: ClipboardList, label: "Surveys" },
-      { key: "hunt", path: "/hunt", icon: Trophy, label: "Gamification" },
+      { key: "challenge", path: "/challenge", icon: Trophy, label: "Gamification" },
     ],
   },
   {
@@ -241,6 +242,7 @@ const allGuideNames = [
 
 export function StudioLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [visitorPickerOpen, setVisitorPickerOpen] = useState(false);
   const [visitorGuide, setVisitorGuide] = useState<string | null>(null);
@@ -251,11 +253,10 @@ export function StudioLayout() {
     if (!localStorage.getItem("museoo_onboarded")) setShowOnboarding(true);
   }, []);
 
-  const handleOnboardingComplete = (data: { museumName: string; language: string }) => {
+  const handleOnboardingComplete = () => {
     localStorage.setItem("museoo_onboarded", "true");
-    localStorage.setItem("museoo_museum_name", data.museumName);
-    localStorage.setItem("museoo_language", data.language);
     setShowOnboarding(false);
+    navigate("/guides", { state: { openNewGuide: true } });
   };
 
   const isActive = (path: string) => {
@@ -281,14 +282,16 @@ export function StudioLayout() {
 
           {/* Logo + toggle */}
           <div className={`flex items-center border-b border-zinc-100 h-14 flex-shrink-0 relative ${collapsed ? "justify-center px-0" : "px-4 gap-2.5"}`}>
-            <Link to="/" className="flex items-center gap-2.5 min-w-0">
-              <div className="size-6 rounded bg-[#D33333] flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-[10px] font-bold">M</span>
-              </div>
-              {!collapsed && (
-                <span className="font-semibold text-[13px] text-zinc-900 truncate">
-                  {mockMuseum.name}
-                </span>
+            <Link to="/" className="flex items-center gap-2.5 min-w-0 flex-1">
+              {collapsed ? (
+                <div className="size-6 rounded bg-[#D33333] flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-[10px] font-bold">M</span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <MainLogoVariant className="h-[16px] w-[87px] relative flex-shrink-0" />
+                  <span className="text-[11px] text-zinc-400 truncate leading-tight">{mockMuseum.name}</span>
+                </div>
               )}
             </Link>
             {!collapsed && (
@@ -369,34 +372,41 @@ export function StudioLayout() {
           </div>
 
           {/* User card */}
-          <Link
-            to="/profile"
-            className={`flex items-center border-t border-zinc-100 hover:bg-zinc-50 transition-colors flex-shrink-0 ${collapsed ? "justify-center py-3" : "gap-3 px-4 py-3"}`}
-            title={collapsed ? currentUser.name : undefined}
-          >
-            <div className="size-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[10px] flex-shrink-0">
-              {currentUser.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
-            </div>
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-zinc-800 truncate leading-tight">{currentUser.name}</p>
-                <p className="text-[10px] text-zinc-400 truncate">{currentUser.email}</p>
-              </div>
+          <div className={`border-t border-zinc-100 flex-shrink-0 ${collapsed ? "flex justify-center py-3" : "px-4 py-4"}`}>
+            {collapsed ? (
+              <Link to="/profile" title={currentUser.name}>
+                <div className="size-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[11px]">
+                  {currentUser.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()}
+                </div>
+              </Link>
+            ) : (
+              <>
+                <div className="flex items-start gap-2.5">
+                  <div className="size-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[11px] flex-shrink-0">
+                    {currentUser.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-zinc-800 leading-tight truncate">{currentUser.name}</p>
+                    <p className="text-[11px] text-zinc-400 truncate">{currentUser.email}</p>
+                    {currentUser.bio && (
+                      <p className="text-[11px] text-zinc-400 italic mt-1 leading-snug line-clamp-2">{currentUser.bio}</p>
+                    )}
+                  </div>
+                </div>
+                <Link to="/profile" className="mt-2 block text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors underline underline-offset-2">
+                  Edit
+                </Link>
+              </>
             )}
-          </Link>
+          </div>
         </div>
       </aside>
 
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-zinc-200">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="size-5 rounded bg-[#D33333] flex items-center justify-center">
-              <span className="text-white text-[9px] font-bold">M</span>
-            </div>
-            <span className="font-semibold text-[13px] text-zinc-900">
-              {mockMuseum.name}
-            </span>
+          <Link to="/" className="flex items-center">
+            <MainLogoVariant className="h-[20px] w-[108px] relative" />
           </Link>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -500,6 +510,8 @@ export function StudioLayout() {
       {showOnboarding && (
         <OnboardingWizard onComplete={handleOnboardingComplete} />
       )}
+
+
     </div>
   );
 }

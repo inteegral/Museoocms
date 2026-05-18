@@ -293,7 +293,7 @@ function VoicePanel({ textApproved, audioStatus, voice, lang, showPicker, voiceS
       <div className="p-5 rounded-xl border border-zinc-200 bg-white flex flex-col gap-3">
         <div className="flex items-center gap-2"><Mic className="size-4 text-blue-500" /><p className="text-[12px] font-semibold text-zinc-700">No voice assigned</p></div>
         <p className="text-[11px] text-zinc-500 leading-relaxed">Assign a voice talent to start the {lang} recording.</p>
-        <button onClick={onChooseVoice} className="w-full py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1.5">
+        <button onClick={onChooseVoice} className="w-full py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-colors flex items-center justify-center gap-1.5">
           Choose Voice <ArrowRight className="size-3.5" />
         </button>
       </div>
@@ -301,7 +301,7 @@ function VoicePanel({ textApproved, audioStatus, voice, lang, showPicker, voiceS
   }
   const stateMap: Record<string, { bg: string; border: string; icon: React.ReactNode; title: string; desc: string; action?: React.ReactNode }> = {
     pending: { bg: "bg-white", border: "border-zinc-200", icon: <Clock className="size-4 text-zinc-400" />, title: "Awaiting recording", desc: `Awaiting recording from ${voice.name}.`, action: <button onClick={onAdvance} className="w-full py-2 border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-colors">Mark as Received</button> },
-    review: { bg: "bg-amber-50", border: "border-amber-200", icon: <Eye className="size-4 text-amber-600" />, title: "Under review", desc: "Listen and approve if quality meets standards.", action: <button onClick={onApprove} className="w-full py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1.5"><CheckCircle2 className="size-3.5" />Approve Voice</button> },
+    review: { bg: "bg-amber-50", border: "border-amber-200", icon: <Eye className="size-4 text-amber-600" />, title: "Under review", desc: "Listen and approve if quality meets standards.", action: <button onClick={onApprove} className="w-full py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-colors flex items-center justify-center gap-1.5"><CheckCircle2 className="size-3.5" />Approve Voice</button> },
     ready: { bg: "bg-emerald-50", border: "border-emerald-200", icon: <CheckCircle2 className="size-4 text-emerald-600" />, title: "Voice approved", desc: `Recording by ${voice.name} is ready.`, action: <button onClick={onReopen} className="w-full py-2 border border-emerald-200 text-emerald-700 text-[12px] font-semibold rounded-lg hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1.5"><RotateCcw className="size-3.5" />Reopen</button> },
   };
   const s = stateMap[audioStatus ?? "pending"];
@@ -538,7 +538,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
               {/* Approve from review */}
               {isReview && (
                 <button onClick={() => patch({ status: "approved", text: editingText })}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all active:scale-95 flex-shrink-0">
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all active:scale-95 flex-shrink-0">
                   <CheckCircle2 className="size-4" />Approve
                 </button>
               )}
@@ -561,7 +561,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
             {/* Col 2: Translation */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-bold rounded tracking-wider">{lang}</span>
+                <span className="px-2 py-0.5 bg-[#D33333] text-white text-[10px] font-bold rounded tracking-wider">{lang}</span>
                 <span className="text-[12px] font-semibold text-zinc-500">Translation</span>
                 {isAIDraft && <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 text-violet-700"><Sparkles className="size-2.5" />AI draft</span>}
                 {isApproved && <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700"><CheckCircle2 className="size-2.5" />Approved</span>}
@@ -606,7 +606,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
                       Reject corrections
                     </button>
                     <button onClick={acceptExpertSuggestion}
-                      className="flex items-center gap-2 px-5 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all active:scale-95">
+                      className="flex items-center gap-2 px-5 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all active:scale-95">
                       <CheckCircle2 className="size-4" />Accept & Approve
                     </button>
                   </div>
@@ -631,7 +631,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
                         </button>
                       )}
                       <button onClick={() => patch({ status: "approved", text: editingText })}
-                        className="flex items-center gap-2 px-5 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all active:scale-95">
+                        className="flex items-center gap-2 px-5 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all active:scale-95">
                         <CheckCircle2 className="size-4" />Approve
                       </button>
                     </div>

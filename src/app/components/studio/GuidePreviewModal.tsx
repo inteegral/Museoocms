@@ -1101,15 +1101,26 @@ export function GuidePhonePreview({ guideName, guideId, onActivePOIChange, onScr
 // ── GuidePreviewModal — thin wrapper around GuidePhonePreview ─────────────────
 export function GuidePreviewModal({ guideName, guideId, onClose }: GuidePreviewModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/75 backdrop-blur-sm py-12 px-4">
       <button onClick={onClose} className="absolute top-6 right-6 size-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-50">
         <X className="size-5" />
       </button>
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+      <div className="text-center pointer-events-none mb-6">
         <p className="text-[10px] text-white/40 uppercase tracking-widest font-semibold mb-0.5" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>Visitor Preview</p>
         <p className="text-[13px] text-white/60" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>{guideName}</p>
       </div>
-      <GuidePhonePreview guideName={guideName} guideId={guideId} />
+      <div className="flex-1 flex items-center justify-center min-h-0 w-full">
+        <div style={{ transform: "scale(var(--phone-scale, 1))", transformOrigin: "center center" }}
+          ref={(el) => {
+            if (!el) return;
+            const available = el.parentElement!.clientHeight;
+            const scale = Math.min(1, (available - 16) / 790);
+            el.style.setProperty("--phone-scale", String(scale));
+          }}
+        >
+          <GuidePhonePreview guideName={guideName} guideId={guideId} />
+        </div>
+      </div>
     </div>
   );
 }

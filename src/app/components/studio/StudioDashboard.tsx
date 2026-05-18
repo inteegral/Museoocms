@@ -3,18 +3,12 @@ import { Link, useNavigate } from "react-router";
 import {
   FileAudio,
   MapPin,
-  FileText,
-  BarChart3,
   Plus,
   ExternalLink,
   TrendingUp,
   ArrowUp,
   ArrowDown,
   Smartphone,
-  Check,
-  X,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { mockMuseum, mockGuides, mockAnalytics } from "../../data/mockData";
 import {
@@ -107,13 +101,6 @@ const guideStats: Record<string, { accesses: number; visitors: number; takeUpRat
   "guide-3": { accesses:  0, visitors:   0, takeUpRate:  0.0, poiCount: 6 },
 };
 
-const GS_STEPS: { id: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; title: string; desc: string; action: { label: string; to: string } | null }[] = [
-  { id: "account",  icon: FileText,  title: "Create your account",           desc: "Your museum workspace is ready.",                           action: null },
-  { id: "guide",    icon: FileAudio, title: "Create your first audio guide", desc: "Set the title, languages and cover image.",                 action: { label: "Go to Guides", to: "/guides" } },
-  { id: "poi",      icon: MapPin,    title: "Add a point of interest",       desc: "Write a script and map the location.",                     action: { label: "Go to POIs",   to: "/pois" } },
-  { id: "team",     icon: BarChart3, title: "Invite a collaborator",         desc: "Delegate script writing to a team member.",                action: { label: "Go to Team",   to: "/team" } },
-  { id: "publish",  icon: FileAudio, title: "Publish your guide",            desc: "Make it available to your visitors.",                      action: { label: "Go to Guides", to: "/guides" } },
-];
 
 export function StudioDashboard() {
   const [trendRange, setTrendRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
@@ -121,31 +108,6 @@ export function StudioDashboard() {
   const [poiRange, setPoiRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
   const [topPoiRange, setTopPoiRange] = useState<"7D" | "30D" | "90D" | "1Y">("30D");
   const [selectedGuideId, setSelectedGuideId] = useState<string>("all");
-  const [onboardingVisible, setOnboardingVisible] = useState(() =>
-    localStorage.getItem("museoo_gs_dismissed") !== "true"
-  );
-  const [onboardingExpanded, setOnboardingExpanded] = useState(true);
-  const [doneSteps, setDoneSteps] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem("museoo_gs_steps");
-    return new Set(saved ? saved.split(",") : ["account"]);
-  });
-
-  useEffect(() => {
-    localStorage.setItem("museoo_gs_steps", [...doneSteps].join(","));
-  }, [doneSteps]);
-
-  const toggleStep = (id: string) => {
-    setDoneSteps(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const dismissOnboarding = () => {
-    localStorage.setItem("museoo_gs_dismissed", "true");
-    setOnboardingVisible(false);
-  };
   const navigate = useNavigate();
 
   const { totalAccesses, limit, totalVisitors, takeUpRate, previousPeriodAccesses } = mockAnalytics;
@@ -211,116 +173,13 @@ export function StudioDashboard() {
           </div>
         </div>
 
-        {/* Onboarding checklist */}
-        {onboardingVisible && (() => {
-          const doneCount = GS_STEPS.filter(s => doneSteps.has(s.id)).length;
-          const total = GS_STEPS.length;
-          const pct = Math.round((doneCount / total) * 100);
-          const allDone = doneCount === total;
-          return (
-            <div className="mb-6 bg-white rounded-xl border border-zinc-200 overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center gap-4 px-5 py-4">
-                <div className="relative size-11 flex-shrink-0">
-                  <svg className="size-11 -rotate-90" viewBox="0 0 44 44">
-                    <circle cx="22" cy="22" r="18" fill="none" stroke="#f4f4f5" strokeWidth="3.5" />
-                    <circle
-                      cx="22" cy="22" r="18" fill="none"
-                      stroke={allDone ? "#10b981" : "#3f3f46"} strokeWidth="3.5"
-                      strokeDasharray={`${2 * Math.PI * 18}`}
-                      strokeDashoffset={`${2 * Math.PI * 18 * (1 - pct / 100)}`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-zinc-700">
-                    {pct}%
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-900">
-                    {allDone ? "🎉 You're all set!" : "Getting started"}
-                  </p>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    {allDone ? "Your museum is ready for visitors." : `${doneCount} of ${total} steps completed`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setOnboardingExpanded(v => !v)}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors rounded-lg hover:bg-zinc-50"
-                  >
-                    {onboardingExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                  </button>
-                  <button
-                    onClick={dismissOnboarding}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors rounded-lg hover:bg-zinc-50"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
-              </div>
-
-              {onboardingExpanded && (
-                <div className="border-t border-zinc-100">
-                  {GS_STEPS.map((step, i) => {
-                    const Icon = step.icon;
-                    const done = doneSteps.has(step.id);
-                    const isNext = !done && GS_STEPS.slice(0, i).every(s => doneSteps.has(s.id));
-                    const isLast = i === GS_STEPS.length - 1;
-                    return (
-                      <div
-                        key={step.id}
-                        className={`flex items-center gap-4 px-5 py-3.5 ${!isLast ? "border-b border-zinc-100" : ""} ${isNext ? "bg-zinc-50/60" : ""}`}
-                      >
-                        <button
-                          onClick={() => step.id !== "account" && toggleStep(step.id)}
-                          className={`size-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                            done ? "bg-zinc-900 border-zinc-900" : isNext ? "border-zinc-400 hover:border-zinc-600" : "border-zinc-200"
-                          } ${step.id !== "account" ? "cursor-pointer" : "cursor-default"}`}
-                        >
-                          {done && <Check className="size-3 text-white" strokeWidth={3} />}
-                        </button>
-
-                        <div className={`size-7 rounded-lg flex items-center justify-center flex-shrink-0 ${done ? "bg-zinc-100" : isNext ? "bg-zinc-100" : "bg-zinc-50"}`}>
-                          <Icon className={`size-3.5 ${done ? "text-zinc-400" : isNext ? "text-zinc-600" : "text-zinc-300"}`} strokeWidth={1.5} />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-[13px] font-medium leading-tight ${done ? "text-zinc-400 line-through decoration-zinc-300" : isNext ? "text-zinc-900" : "text-zinc-500"}`}>
-                            {step.title}
-                          </p>
-                          {!done && <p className="text-[11px] text-zinc-400 mt-0.5">{step.desc}</p>}
-                        </div>
-
-                        {!done && step.action && (
-                          <Link
-                            to={step.action.to}
-                            className={`flex-shrink-0 px-3 py-1.5 text-[11px] font-semibold rounded-lg border transition-all ${
-                              isNext ? "bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-700" : "border-zinc-200 text-zinc-400 hover:border-zinc-300"
-                            }`}
-                          >
-                            {step.action.label}
-                          </Link>
-                        )}
-                        {done && step.id !== "account" && (
-                          <span className="text-[11px] text-zinc-300 flex-shrink-0">Done</span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
         {/* Guide selector */}
         <div className="flex items-center gap-2 mb-5 flex-wrap">
           <button
             onClick={() => setSelectedGuideId("all")}
             className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
               selectedGuideId === "all"
-                ? "bg-zinc-900 text-white"
+                ? "bg-[#D33333] text-white"
                 : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
             }`}
           >
@@ -332,7 +191,7 @@ export function StudioDashboard() {
               onClick={() => setSelectedGuideId(g.id)}
               className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
                 selectedGuideId === g.id
-                  ? "bg-zinc-900 text-white"
+                  ? "bg-[#D33333] text-white"
                   : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
               }`}
             >
@@ -417,7 +276,7 @@ export function StudioDashboard() {
                             onClick={() => setTrendRange(range)}
                             className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${
                               trendRange === range
-                                ? "bg-[#D33333] text-white"
+                                ? "bg-zinc-900 text-white"
                                 : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"
                             }`}
                           >
@@ -466,7 +325,7 @@ export function StudioDashboard() {
                       <div className="flex items-center gap-1">
                         {(["7D", "30D", "90D", "1Y"] as const).map((range) => (
                           <button key={range} onClick={() => setAudioGuideRange(range)}
-                            className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${audioGuideRange === range ? "bg-[#D33333] text-white" : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"}`}>
+                            className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${audioGuideRange === range ? "bg-zinc-900 text-white" : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"}`}>
                             {range}
                           </button>
                         ))}
@@ -509,7 +368,7 @@ export function StudioDashboard() {
                       <div className="flex items-center gap-1">
                         {(["7D", "30D", "90D", "1Y"] as const).map((range) => (
                           <button key={range} onClick={() => setPoiRange(range)}
-                            className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${poiRange === range ? "bg-[#D33333] text-white" : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"}`}>
+                            className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${poiRange === range ? "bg-zinc-900 text-white" : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"}`}>
                             {range}
                           </button>
                         ))}
@@ -553,7 +412,7 @@ export function StudioDashboard() {
                   <div className="flex items-center gap-1">
                     {(["7D", "30D", "90D", "1Y"] as const).map((range) => (
                       <button key={range} onClick={() => setTopPoiRange(range)}
-                        className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${topPoiRange === range ? "bg-[#D33333] text-white" : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"}`}>
+                        className={`px-2 py-0.5 text-[9px] font-medium rounded transition-all ${topPoiRange === range ? "bg-zinc-900 text-white" : "bg-white text-zinc-600 border border-zinc-200 hover:border-zinc-400"}`}>
                         {range}
                       </button>
                     ))}

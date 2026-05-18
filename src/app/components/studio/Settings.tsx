@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Toggle } from "./Toggle";
 import { 
   Building2, 
   Users, 
@@ -323,7 +324,7 @@ export function Settings() {
                     <button className="px-5 py-2.5 text-[14px] font-semibold text-zinc-700 hover:bg-zinc-100 rounded-lg transition-all">
                       Cancel
                     </button>
-                    <button className="px-5 py-2.5 bg-zinc-900 text-white text-[14px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm">
+                    <button className="px-5 py-2.5 bg-[#D33333] text-white text-[14px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all shadow-sm">
                       Save Changes
                     </button>
                   </div>
@@ -346,7 +347,7 @@ export function Settings() {
                     </div>
                     <button
                       onClick={() => setShowInviteModal(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all shadow-sm"
                     >
                       <Plus className="size-4" />
                       Invite Member
@@ -430,7 +431,7 @@ export function Settings() {
                       <div className="text-[28px] font-light text-zinc-950 mb-1">Free Plan</div>
                       <div className="text-[13px] text-zinc-600">Perfect for getting started</div>
                     </div>
-                    <button className="px-4 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all">
+                    <button className="px-4 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                       Upgrade Plan
                     </button>
                   </div>
@@ -502,7 +503,7 @@ export function Settings() {
                       >
                         {plan.popular && (
                           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                            <div className="inline-flex items-center gap-1 px-3 py-1 bg-zinc-900 text-white text-[11px] font-semibold rounded-full uppercase tracking-wide">
+                            <div className="inline-flex items-center gap-1 px-3 py-1 bg-[#D33333] text-white text-[11px] font-medium rounded-full uppercase tracking-wide">
                               <Crown className="size-3" />
                               Popular
                             </div>
@@ -533,7 +534,7 @@ export function Settings() {
                             plan.id === currentPlan
                               ? "bg-zinc-100 text-zinc-500 cursor-default"
                               : plan.popular
-                              ? "bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm"
+                              ? "bg-[#D33333] text-white hover:bg-[#b82c2c] shadow-sm"
                               : "bg-white border-2 border-zinc-200 text-zinc-900 hover:border-zinc-900"
                           }`}
                           disabled={plan.id === currentPlan}
@@ -653,7 +654,7 @@ export function Settings() {
                   </div>
 
                   <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-zinc-200">
-                    <button className="px-5 py-2.5 bg-zinc-900 text-white text-[14px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm">
+                    <button className="px-5 py-2.5 bg-[#D33333] text-white text-[14px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all shadow-sm">
                       Save Changes
                     </button>
                   </div>
@@ -698,7 +699,7 @@ export function Settings() {
                   </div>
 
                   <div className="flex justify-end mt-8 pt-6 border-t border-zinc-200">
-                    <button className="px-5 py-2.5 bg-zinc-900 text-white text-[14px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm">
+                    <button className="px-5 py-2.5 bg-[#D33333] text-white text-[14px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all shadow-sm">
                       Update Password
                     </button>
                   </div>
@@ -729,23 +730,10 @@ export function Settings() {
                             {item.description}
                           </div>
                         </div>
-                        <button
-                          onClick={() =>
-                            setNotifications({
-                              ...notifications,
-                              [item.id]: !notifications[item.id as keyof typeof notifications],
-                            })
-                          }
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            notifications[item.id as keyof typeof notifications] ? "bg-zinc-900" : "bg-zinc-300"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              notifications[item.id as keyof typeof notifications] ? "translate-x-6" : "translate-x-1"
-                            }`}
-                          />
-                        </button>
+                        <Toggle
+                          checked={!!notifications[item.id as keyof typeof notifications]}
+                          onChange={() => setNotifications({ ...notifications, [item.id]: !notifications[item.id as keyof typeof notifications] })}
+                        />
                       </div>
                     ))}
                   </div>
@@ -776,7 +764,7 @@ export function Settings() {
                           <button
                             key={basis}
                             onClick={() => setLegalBasis(basis)}
-                            className={`flex-1 py-2.5 text-[13px] font-semibold rounded-lg border transition-all ${legalBasis === basis ? "bg-zinc-900 text-white border-zinc-900" : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400"}`}
+                            className={`flex-1 py-2.5 text-[13px] font-medium rounded-lg border transition-all ${legalBasis === basis ? "bg-zinc-900 text-white border-zinc-900" : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400"}`}
                           >
                             {basis === "legitimate" ? "Legitimate Interest" : basis === "consent" ? "Consent" : "Both"}
                           </button>
@@ -828,12 +816,7 @@ export function Settings() {
                           <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">{item.label}</div>
                           <div className="text-[12px] text-zinc-500">{item.desc}</div>
                         </div>
-                        <button
-                          onClick={() => item.setter(!item.value)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${item.value ? "bg-zinc-900" : "bg-zinc-300"}`}
-                        >
-                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.value ? "translate-x-6" : "translate-x-1"}`} />
-                        </button>
+                        <Toggle checked={item.value} onChange={() => item.setter(!item.value)} className="ml-6" />
                       </div>
                     ))}
                   </div>
@@ -874,12 +857,7 @@ export function Settings() {
                       <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">All data processed within the EU/EEA</div>
                       <div className="text-[12px] text-zinc-500">Infrastructure, storage, and processing remain in EU/EEA data centres</div>
                     </div>
-                    <button
-                      onClick={() => setEuDataResidency(!euDataResidency)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${euDataResidency ? "bg-zinc-900" : "bg-zinc-300"}`}
-                    >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${euDataResidency ? "translate-x-6" : "translate-x-1"}`} />
-                    </button>
+                    <Toggle checked={euDataResidency} onChange={() => setEuDataResidency(!euDataResidency)} className="ml-6" />
                   </div>
                   {!euDataResidency && (
                     <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -966,12 +944,7 @@ export function Settings() {
                           <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">{item.label}</div>
                           <div className="text-[12px] text-zinc-500">{item.desc}</div>
                         </div>
-                        <button
-                          onClick={() => item.setter(!item.value)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${item.value ? "bg-zinc-900" : "bg-zinc-300"}`}
-                        >
-                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.value ? "translate-x-6" : "translate-x-1"}`} />
-                        </button>
+                        <Toggle checked={item.value} onChange={() => item.setter(!item.value)} className="ml-6" />
                       </div>
                     ))}
                   </div>
@@ -1007,12 +980,7 @@ export function Settings() {
                           <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">{item.label}</div>
                           <div className="text-[12px] text-zinc-500">{item.desc}</div>
                         </div>
-                        <button
-                          onClick={() => item.setter(!item.value)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${item.value ? "bg-zinc-900" : "bg-zinc-300"}`}
-                        >
-                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.value ? "translate-x-6" : "translate-x-1"}`} />
-                        </button>
+                        <Toggle checked={item.value} onChange={() => item.setter(!item.value)} className="ml-6" />
                       </div>
                     ))}
                   </div>
@@ -1026,12 +994,7 @@ export function Settings() {
                       <div className="font-semibold text-[14px] text-zinc-950 mb-0.5">Auto-generate transcripts for new POIs</div>
                       <div className="text-[12px] text-zinc-500">WCAG 1.2.1 — all audio content must have a text transcript</div>
                     </div>
-                    <button
-                      onClick={() => setAutoTranscripts(!autoTranscripts)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-6 ${autoTranscripts ? "bg-zinc-900" : "bg-zinc-300"}`}
-                    >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoTranscripts ? "translate-x-6" : "translate-x-1"}`} />
-                    </button>
+                    <Toggle checked={autoTranscripts} onChange={() => setAutoTranscripts(!autoTranscripts)} className="ml-6" />
                   </div>
                   <div className="mt-4 bg-zinc-50 border border-zinc-200 rounded-lg p-4">
                     <p className="text-[13px] text-zinc-600">Transcripts also improve SEO, support hearing-impaired visitors, and are required under WCAG 2.1 SC 1.2.1 for audio-only content.</p>
@@ -1056,7 +1019,7 @@ export function Settings() {
                       <input type="email" value={a11yFeedbackEmail} onChange={(e) => setA11yFeedbackEmail(e.target.value)} placeholder="accessibility@museum.it" className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all" />
                       <p className="text-[12px] text-zinc-500 mt-1.5">Mandatory for public bodies under Dir. 2016/2102 Art. 7(1)(b) — must be publicly accessible</p>
                     </div>
-                    <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm">
+                    <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all shadow-sm">
                       <FileText className="size-4" />
                       Generate Statement
                     </button>
@@ -1143,7 +1106,7 @@ export function Settings() {
               >
                 Cancel
               </button>
-              <button className="px-5 py-2.5 bg-zinc-900 text-white text-[14px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm">
+              <button className="px-5 py-2.5 bg-[#D33333] text-white text-[14px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all shadow-sm">
                 Send Invitation
               </button>
             </div>

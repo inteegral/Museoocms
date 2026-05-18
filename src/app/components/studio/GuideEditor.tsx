@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router";
-import { ArrowLeft, Plus, GripVertical, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye, Ticket, Unlock, Trophy } from "lucide-react";
+import { ArrowLeft, Plus, GripVertical, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye, Ticket, Unlock, Trophy, HelpCircle } from "lucide-react";
 import confetti from "canvas-confetti";
-import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents, mockHunts } from "../../data/mockData";
+import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents, mockChallenges } from "../../data/mockData";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { POIEditor } from "./POIEditor";
+import { POIEditor, type QuizQuestion } from "./POIEditor";
 import { GuidePreviewModal } from "./GuidePreviewModal";
 import { PageShell } from "./PageShell";
 import { getMemberByGuideId, teamMembers, CURRENT_USER_ID, type TeamMember } from "../../data/teamData";
 import { Translations } from "./Translations";
 import { VoiceTalent } from "./VoiceTalent";
+import { Toggle } from "./Toggle";
 
 const COVER_GALLERY = [
   "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",
@@ -33,12 +34,16 @@ interface POI {
   body: string;
   imageUrl: string;
   orderIndex: number;
+  status?: "draft" | "in-progress" | "under-revision" | "complete";
 }
 
-function POIItem({ poi, onRemove, onEdit, index, movePOI }: {
+function POIItem({ poi, onRemove, onEdit, onQuiz, quizQuestion, hasChallenge, index, movePOI }: {
   poi: POI;
   onRemove: () => void;
   onEdit: () => void;
+  onQuiz: () => void;
+  quizQuestion?: QuizQuestion;
+  hasChallenge: boolean;
   index: number;
   movePOI: (dragIndex: number, hoverIndex: number) => void;
 }) {
@@ -76,22 +81,17 @@ function POIItem({ poi, onRemove, onEdit, index, movePOI }: {
       }}
     >
       {/* Toggle attivazione POI */}
-      <button
-        onClick={(e) => { e.stopPropagation(); setIsActive((v) => !v); }}
-        title={isActive ? "Disattiva POI" : "Attiva POI"}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-5 rounded-full flex items-center px-[3px] transition-colors duration-300 cursor-pointer z-10 focus:outline-none"
-        style={{ background: isActive ? '#b8aa9c' : '#ece7e1' }}
-      >
-        <span
-          className="size-[14px] rounded-full bg-white shadow-sm transition-transform duration-300"
-          style={{ transform: isActive ? 'translateX(16px)' : 'translateX(0)' }}
-        />
-      </button>
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10" onClick={e => e.stopPropagation()}>
+        <Toggle checked={isActive} onChange={() => setIsActive(v => !v)} />
+      </div>
 
       <GripVertical className="size-4 text-zinc-300 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      <div className={`size-12 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-100 transition-all duration-300 ${!isActive ? "grayscale opacity-50" : ""}`}>
-        <img src={poi.imageUrl} alt={poi.title} className="w-full h-full object-cover" />
+      <div className={`size-12 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-100 flex items-center justify-center transition-all duration-300 ${!isActive ? "grayscale opacity-50" : ""}`}>
+        {poi.imageUrl
+          ? <img src={poi.imageUrl} alt={poi.title} className="w-full h-full object-cover" />
+          : <ImageIcon className="size-5 text-zinc-300" strokeWidth={1.5} />
+        }
       </div>
 
       <div className={`flex-1 min-w-0 transition-opacity duration-300 ${!isActive ? "opacity-40" : ""}`}>
@@ -106,10 +106,25 @@ function POIItem({ poi, onRemove, onEdit, index, movePOI }: {
           </div>
           
           <div className="flex items-center gap-1 flex-shrink-0">
-            {hasContent ? (
-              <CheckCircle2 className="size-4 text-emerald-500 mr-1" />
-            ) : (
-              <AlertCircle className="size-4 text-amber-500 mr-1" />
+            {(() => {
+              const s = poi.status ?? "draft";
+              const cfg: Record<string, { label: string; cls: string }> = {
+                draft:            { label: "Draft",          cls: "bg-zinc-100 text-zinc-500" },
+                "in-progress":    { label: "In Progress",    cls: "bg-blue-50 text-blue-600" },
+                "under-revision": { label: "Under Revision", cls: "bg-amber-50 text-amber-600" },
+                complete:         { label: "Complete",        cls: "bg-emerald-50 text-emerald-600" },
+              };
+              const { label, cls } = cfg[s] ?? cfg["draft"];
+              return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full mr-1 ${cls}`}>{label}</span>;
+            })()}
+            {hasChallenge && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onQuiz(); }}
+                title={quizQuestion ? "Edit quiz question" : "Add quiz question"}
+                className={`p-1.5 rounded transition-colors ${quizQuestion ? "text-violet-600 hover:text-violet-700 hover:bg-violet-50" : "text-zinc-300 hover:text-zinc-500 hover:bg-zinc-100"}`}
+              >
+                <HelpCircle className="size-3.5" />
+              </button>
             )}
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
@@ -130,19 +145,129 @@ function POIItem({ poi, onRemove, onEdit, index, movePOI }: {
   );
 }
 
+const OPTION_LABELS = ["A", "B", "C", "D"] as const;
+
+function POIQuizModal({ poi, existing, onSave, onRemove, onClose }: {
+  poi: POI;
+  existing?: QuizQuestion;
+  onSave: (q: QuizQuestion) => void;
+  onRemove: () => void;
+  onClose: () => void;
+}) {
+  const [question, setQuestion] = useState(existing?.question ?? "");
+  const [options, setOptions] = useState<[string, string, string, string]>(
+    existing?.options ?? ["", "", "", ""]
+  );
+  const [correct, setCorrect] = useState<0 | 1 | 2 | 3>(existing?.correct ?? 0);
+
+  const canSave = question.trim() && options.every((o) => o.trim());
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-zinc-100">
+          <div>
+            <p className="text-[10px] font-semibold text-violet-600 uppercase tracking-widest mb-0.5">Quiz question</p>
+            <p className="text-sm font-semibold text-zinc-900 leading-tight">{poi.title}</p>
+          </div>
+          <button onClick={onClose} className="text-zinc-300 hover:text-zinc-500 transition-colors mt-0.5">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-4">
+          {/* Question */}
+          <div>
+            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Question</label>
+            <textarea
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              rows={2}
+              placeholder="What do you want visitors to discover about this work?"
+              className="w-full text-sm px-3 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300 resize-none text-zinc-800 placeholder:text-zinc-300"
+            />
+          </div>
+
+          {/* Options */}
+          <div>
+            <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">
+              Answer options — tap to mark correct
+            </label>
+            <div className="space-y-2">
+              {options.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCorrect(i as 0 | 1 | 2 | 3)}
+                    className={`size-6 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold transition-all border ${
+                      correct === i
+                        ? "bg-violet-600 border-violet-600 text-white"
+                        : "border-zinc-300 text-zinc-400 hover:border-violet-300"
+                    }`}
+                  >
+                    {OPTION_LABELS[i]}
+                  </button>
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={(e) => {
+                      const next = [...options] as [string, string, string, string];
+                      next[i] = e.target.value;
+                      setOptions(next);
+                    }}
+                    placeholder={`Option ${OPTION_LABELS[i]}`}
+                    className="flex-1 text-sm px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300 text-zinc-800 placeholder:text-zinc-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-zinc-100 flex items-center justify-between gap-3">
+          {existing ? (
+            <button onClick={onRemove} className="text-xs text-red-400 hover:text-red-600 transition-colors">
+              Remove question
+            </button>
+          ) : <span />}
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-zinc-500 hover:bg-zinc-100 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave({ question, options, correct })}
+              disabled={!canSave}
+              className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Save question
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GuideEditorContent() {
   const { id } = useParams();
   const location = useLocation();
-  const incoming = location.state as { generatedName?: string; generatedDescription?: string; generatedPOIs?: POI[]; sources?: { name: string; type: "library" | "uploaded" }[] } | null;
+  const incoming = location.state as { generatedName?: string; generatedDescription?: string; generatedPOIs?: POI[]; sources?: { name: string; type: "library" | "uploaded" }[]; scratch?: boolean } | null;
+  const isScratch = incoming?.scratch === true;
   const currentUser = teamMembers.find((m) => m.id === CURRENT_USER_ID)!;
   const guide = mockGuides.find((g) => g.id === id);
   const [selectedPOIs, setSelectedPOIs] = useState<POI[]>(incoming?.generatedPOIs ?? mockPOIs.slice(0, guide?.poiCount || 0));
-  const [title, setTitle] = useState(incoming?.generatedName || guide?.title || "");
-  const [description, setDescription] = useState(incoming?.generatedDescription || guide?.description || "");
+  const isNew = incoming !== null;
+  const [title, setTitle] = useState(isNew ? (incoming.generatedName ?? "") : (guide?.title || ""));
+  const [description, setDescription] = useState(isNew ? (incoming.generatedDescription ?? "") : (guide?.description || ""));
   const [showAddPOI, setShowAddPOI] = useState(false);
-  const [selectedLanguages, setSelectedLanguages] = useState(guide?.languages || ["it"]);
-  const [status, setStatus] = useState<"draft" | "published">(guide?.status || "draft");
-  const [accessType, setAccessType] = useState<"free" | "paid">("free");
+  const [selectedLanguages, setSelectedLanguages] = useState(isNew ? ["it"] : (guide?.languages || ["it"]));
+  const [status, setStatus] = useState<"draft" | "published">(isNew ? "draft" : (guide?.status || "draft"));
+  const [accessType, setAccessType] = useState<"free" | "paid">(isNew ? "free" : (guide?.accessMode === "paid" ? "paid" : "free"));
   const [editingPOI, setEditingPOI] = useState<POI | null>(null);
   const [creatingPOI, setCreatingPOI] = useState(false);
   const [linkedSurveyId, setLinkedSurveyId] = useState<string>("");
@@ -150,7 +275,7 @@ function GuideEditorContent() {
   const [startDate, setStartDate] = useState<string>(guide?.startDate ?? "");
   const [endDate, setEndDate] = useState<string>(guide?.endDate ?? "");
   const [linkedEventIds, setLinkedEventIds] = useState<string[]>(
-    () => mockEvents.filter((e) => e.linkedGuides.includes(id || "")).map((e) => e.id)
+    () => incoming !== null ? [] : mockEvents.filter((e) => e.linkedGuides.includes(id || "")).map((e) => e.id)
   );
   const [showAddEvent, setShowAddEvent] = useState(false);
   const linkedEvents = mockEvents.filter((e) => linkedEventIds.includes(e.id));
@@ -169,12 +294,10 @@ function GuideEditorContent() {
   const [reviewMode, setReviewMode] = useState<"member" | "invite">("member");
   const [inviteEmail, setInviteEmail] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  const [thumbnail, setThumbnail] = useState<string>(guide?.thumbnail ?? "");
+  const [thumbnail, setThumbnail] = useState<string>(isNew ? "" : (guide?.thumbnail ?? ""));
   const [showCoverGallery, setShowCoverGallery] = useState(false);
-  const [huntStatuses, setHuntStatuses] = useState<Record<string, "active" | "draft">>(() =>
-    Object.fromEntries(mockHunts.map(h => [h.id, h.status]))
-  );
-  const guideHunts = mockHunts.filter(h => h.guideId === id);
+  const guideChallenges = incoming !== null ? [] : mockChallenges.filter(h => h.guideId === id);
+  const [linkedChallengeId, setLinkedChallengeId] = useState<string>(guideChallenges[0]?.id ?? "");
   const [pendingAccessType, setPendingAccessType] = useState<"free" | "paid" | null>(null);
 
   type ProductionPhase = "scripting" | "translating" | "voicing" | "review";
@@ -188,8 +311,21 @@ function GuideEditorContent() {
     incoming ? "scripting" : (guide?.productionPhase as ProductionPhase | undefined) ?? "scripting"
   );
   const [pendingPhase, setPendingPhase] = useState<{ phase: ProductionPhase; direction: "forward" | "back" } | null>(null);
+  const [phaseBlocker, setPhaseBlocker] = useState<{ title: string; detail: string } | null>(null);
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  const langPickerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showLangPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (langPickerRef.current && !langPickerRef.current.contains(e.target as Node)) setShowLangPicker(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showLangPicker]);
   const sources = incoming?.sources ?? [];
   const [showSources, setShowSources] = useState(false);
+  const [poiQuestions, setPoiQuestions] = useState<Record<string, QuizQuestion>>({});
+  const [editingQuizPOI, setEditingQuizPOI] = useState<POI | null>(null);
 
   const phaseIndex = PHASES.findIndex(p => p.id === productionPhase);
   const nextPhase = PHASES[phaseIndex + 1] ?? null;
@@ -219,7 +355,7 @@ function GuideEditorContent() {
 
   const savePOI = (updated: any) => {
     setSelectedPOIs(selectedPOIs.map((p) =>
-      p.id === updated.id ? { ...p, title: updated.title, body: updated.audioScript ?? p.body } : p
+      p.id === updated.id ? { ...p, title: updated.title, body: updated.audioScript ?? p.body, status: updated.status ?? p.status } : p
     ));
     setEditingPOI(null);
   };
@@ -228,7 +364,7 @@ function GuideEditorContent() {
     id: `poi-new-${Date.now()}`,
     title: "",
     description: "",
-    status: "in-progress" as const,
+    status: "draft" as const,
     category: "General",
     imageUrl: "",
     audioScript: "",
@@ -242,6 +378,7 @@ function GuideEditorContent() {
       body: saved.audioScript ?? "",
       imageUrl: saved.imageUrl ?? "",
       orderIndex: selectedPOIs.length,
+      status: saved.status ?? "draft",
     };
     setSelectedPOIs([...selectedPOIs, newPOI]);
     setCreatingPOI(false);
@@ -252,7 +389,7 @@ function GuideEditorContent() {
     id: poi.id,
     title: poi.title,
     description: "",
-    status: "in-progress" as const,
+    status: poi.status ?? "draft" as const,
     category: "General",
     imageUrl: poi.imageUrl,
     audioScript: poi.body,
@@ -264,8 +401,29 @@ function GuideEditorContent() {
   );
 
   const maxPOIs = 10; // Free tier limit
-  const completedPOIs = selectedPOIs.filter(p => p.body && p.body.length > 50).length;
+  const completedPOIs = selectedPOIs.filter(p => p.status === "complete").length;
   const progressPercentage = selectedPOIs.length > 0 ? Math.round((completedPOIs / selectedPOIs.length) * 100) : 0;
+
+  const tryAdvancePhase = (targetPhase: ProductionPhase) => {
+    if (targetPhase === "translating") {
+      if (selectedPOIs.length === 0) {
+        setPhaseBlocker({
+          title: "No points of interest yet",
+          detail: "Add at least one POI and complete its script before moving to Translation.",
+        });
+        return;
+      }
+      const incomplete = selectedPOIs.length - completedPOIs;
+      if (incomplete > 0) {
+        setPhaseBlocker({
+          title: "Scripting not complete",
+          detail: `${incomplete} POI${incomplete > 1 ? "s are" : " is"} still missing a script. Complete all scripts before starting Translation.`,
+        });
+        return;
+      }
+    }
+    setPendingPhase({ phase: targetPhase, direction: "forward" });
+  };
 
   const flagMap: Record<string, string> = { it: "🇮🇹", en: "🇬🇧", fr: "🇫🇷", de: "🇩🇪", es: "🇪🇸", pt: "🇵🇹", zh: "🇨🇳", ja: "🇯🇵", ar: "🇸🇦" };
 
@@ -372,9 +530,9 @@ function GuideEditorContent() {
               placeholder="Add a description..."
             />
             {(() => {
-              const isPaid = guide.accessMode === "paid";
-              const used  = isPaid ? (guide.codesUsed    ?? 0) : (guide.accessesUsed   ?? 0);
-              const total = isPaid ? (guide.codesTotal   ?? 0) : (guide.accessesLimit  ?? 0);
+              const isPaid = isNew ? false : guide?.accessMode === "paid";
+              const used  = isNew ? 0 : isPaid ? (guide?.codesUsed    ?? 0) : (guide?.accessesUsed   ?? 0);
+              const total = isNew ? 200 : isPaid ? (guide?.codesTotal   ?? 0) : (guide?.accessesLimit  ?? 0);
               const remaining = total - used;
               const pct = total ? Math.round((used / total) * 100) : 0;
               const isLow = total ? remaining / total < 0.15 : false;
@@ -389,7 +547,7 @@ function GuideEditorContent() {
                     <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
                   </div>
                   <span className={`text-[10px] font-medium tabular-nums ${isLow ? "text-amber-600" : "text-zinc-400"}`}>
-                    {remaining.toLocaleString()} / {total.toLocaleString()} accesses
+                    {remaining.toLocaleString()} / {total.toLocaleString()} available
                   </span>
                 </div>
               );
@@ -407,7 +565,7 @@ function GuideEditorContent() {
                   const modalKey = phase.id === "translating" ? "translations" as const : phase.id === "voicing" ? "voicing" as const : null;
                   const isClickable = modalKey && (isCurrent || isPast);
                   const pillClass = `flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                    isCurrent  ? "bg-zinc-900 text-white" :
+                    isCurrent  ? "bg-[#D33333] text-white" :
                     isPast     ? "bg-zinc-100 text-zinc-400 line-through decoration-zinc-300" :
                                  "bg-zinc-50 text-zinc-300"
                   }`;
@@ -440,14 +598,21 @@ function GuideEditorContent() {
                     ← {prevPhase.label}
                   </button>
                 )}
-                {nextPhase && (
-                  <button
-                    onClick={() => setPendingPhase({ phase: nextPhase.id, direction: "forward" })}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[11px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
-                  >
-                    Start {nextPhase.label} →
-                  </button>
-                )}
+                {nextPhase && (() => {
+                  const translationBlocked = nextPhase.id === "translating" && (selectedPOIs.length === 0 || completedPOIs < selectedPOIs.length);
+                  return (
+                    <button
+                      onClick={() => tryAdvancePhase(nextPhase.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
+                        translationBlocked
+                          ? "bg-zinc-300 text-zinc-400 cursor-not-allowed"
+                          : "bg-[#D33333] text-white hover:bg-[#b82c2c]"
+                      }`}
+                    >
+                      Start {nextPhase.label} →
+                    </button>
+                  );
+                })()}
                 <button
                   onClick={() => setShowPreview(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-all text-[11px] font-medium"
@@ -476,25 +641,57 @@ function GuideEditorContent() {
             <div className="flex items-end gap-4">
               {selectedLanguages.map((lang, i) => (
                 <div key={lang} className="flex flex-col items-center gap-1.5">
-                  <div
-                    className={`size-10 rounded-full flex items-center justify-center text-[12px] font-bold tracking-wider ${
-                      i === 0 ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600"
-                    }`}
-                    style={{ boxShadow: i === 0 ? '0 2px 8px 0 rgba(0,0,0,0.15)' : 'none' }}
-                  >
-                    {lang.toUpperCase()}
+                  <div className="relative group">
+                    <div
+                      className={`size-10 rounded-full flex items-center justify-center text-[12px] font-bold tracking-wider transition-all ${
+                        i === 0 ? "bg-[#D33333] text-white" : "bg-zinc-100 text-zinc-600 group-hover:opacity-40"
+                      }`}
+                      style={{ boxShadow: i === 0 ? '0 2px 8px 0 rgba(0,0,0,0.15)' : 'none' }}
+                    >
+                      {lang.toUpperCase()}
+                    </div>
+                    {i > 0 && (
+                      <button
+                        onClick={() => setSelectedLanguages(prev => prev.filter(c => c !== lang))}
+                        className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`Remove ${lang}`}
+                      >
+                        <X className="size-4 text-zinc-600" />
+                      </button>
+                    )}
                   </div>
                   <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">
                     {i === 0 ? "Primary" : languages.find(l => l.code === lang)?.name}
                   </span>
                 </div>
               ))}
-              <div className="flex flex-col items-center gap-1.5">
-                <button className="size-10 rounded-full border-2 border-dashed border-zinc-200 flex items-center justify-center text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 transition-all">
-                  <Plus className="size-3.5" />
-                </button>
-                <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Add</span>
-              </div>
+              {languages.filter(l => !selectedLanguages.includes(l.code)).length > 0 && (
+                <div className="flex flex-col items-center gap-1.5" ref={langPickerRef}>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowLangPicker(v => !v)}
+                      className="size-10 rounded-full border-2 border-dashed border-zinc-200 flex items-center justify-center text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 transition-all"
+                    >
+                      <Plus className="size-3.5" />
+                    </button>
+                    {showLangPicker && (
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-zinc-100 rounded-2xl shadow-xl z-30 p-1.5 min-w-[170px]">
+                        {languages.filter(l => !selectedLanguages.includes(l.code)).map(l => (
+                          <button
+                            key={l.code}
+                            onClick={() => { setSelectedLanguages(prev => [...prev, l.code]); setShowLangPicker(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-zinc-700 hover:bg-zinc-50 transition-colors"
+                          >
+                            <span className="text-base">{l.flag}</span>
+                            <span className="font-medium">{l.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Add</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -533,20 +730,51 @@ function GuideEditorContent() {
                 <button
                   onClick={() => setShowAddPOI(true)}
                   disabled={selectedPOIs.length >= maxPOIs}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="size-4" />
                   Add POI
                 </button>
               </div>
+
+              {/* Challenge banner — shown only when no challenge exists */}
+              {linkedChallengeId === "" && selectedPOIs.length > 0 && (
+                <div className="mx-5 mt-4 flex items-center gap-3 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl">
+                  <Trophy className="size-4 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                  <p className="text-[12px] text-zinc-500 flex-1">
+                    Create a <strong className="text-zinc-700">Challenge</strong> for this guide to enable quiz questions on each POI and reward visitors who complete them.
+                  </p>
+                  <Link
+                    to="/challenge"
+                    className="text-[12px] font-semibold text-zinc-700 hover:text-zinc-900 whitespace-nowrap transition-colors"
+                  >
+                    Set up →
+                  </Link>
+                </div>
+              )}
+
               <div className="p-5">
                 {selectedPOIs.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="size-14 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FileText className="size-7 text-zinc-400" />
+                  <div className="text-center py-12">
+                    <div className="relative inline-flex items-center justify-center mb-5">
+                      <div className="size-16 bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-2xl flex items-center justify-center">
+                        <MapPin className="size-7 text-zinc-300" strokeWidth={1.5} />
+                      </div>
                     </div>
-                    <p className="text-[14px] text-zinc-600 mb-1">No POIs added yet</p>
-                    <p className="text-[12px] text-zinc-400">Add POIs manually or use AI Assistant</p>
+                    <p className="text-[15px] font-semibold text-zinc-800 mb-1.5">No points of interest yet</p>
+                    <p className="text-[12px] text-zinc-400 leading-relaxed max-w-[210px] mx-auto mb-6">
+                      POIs are the stops on your guide — each one has a script, image, and location.
+                    </p>
+                    <div className="relative inline-flex">
+                      <span className="absolute inset-0 rounded-xl animate-ping bg-zinc-300 opacity-50" />
+                      <button
+                        onClick={() => setCreatingPOI(true)}
+                        className="relative inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
+                      >
+                        <Plus className="size-4" />
+                        Add your first POI
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -557,6 +785,9 @@ function GuideEditorContent() {
                         index={index}
                         onRemove={() => removePOI(poi.id)}
                         onEdit={() => setEditingPOI(poi)}
+                        onQuiz={() => setEditingQuizPOI(poi)}
+                        quizQuestion={poiQuestions[poi.id]}
+                        hasChallenge={linkedChallengeId !== ""}
                         movePOI={movePOI}
                       />
                     ))}
@@ -786,7 +1017,7 @@ function GuideEditorContent() {
                 </div>
 
                 <button
-                  className="w-full px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all disabled:opacity-40"
+                  className="w-full px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40"
                   disabled={selectedPOIs.length === 0}
                 >
                   {status === 'published' ? 'Update Guide' : 'Publish Guide'}
@@ -916,47 +1147,33 @@ function GuideEditorContent() {
               )}
             </div>
 
-            {/* Hunt */}
-            {guideHunts.length > 0 && (
-              <div className="p-5">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Trophy className="size-3.5 text-zinc-400" strokeWidth={1.5} />
-                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Hunt</p>
-                </div>
-                <div className="space-y-2">
-                  {guideHunts.map(hunt => {
-                    const isActive = huntStatuses[hunt.id] === "active";
-                    return (
-                      <div key={hunt.id} className="flex items-center gap-3 px-3 py-2.5 bg-white border border-zinc-200 rounded-lg">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12px] font-medium text-zinc-800 truncate">{hunt.title}</p>
-                          <p className="text-[10px] text-zinc-400">{hunt.completions} completions</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setHuntStatuses(prev => ({ ...prev, [hunt.id]: isActive ? "draft" : "active" }))}
-                          style={{
-                            position: "relative", width: 36, height: 20, borderRadius: 10,
-                            background: isActive ? "#D33333" : "#e4e4e7",
-                            border: "none", cursor: "pointer", padding: 0,
-                            transition: "background 0.2s ease", flexShrink: 0,
-                          }}
-                        >
-                          <div style={{
-                            position: "absolute", top: 3,
-                            left: isActive ? 19 : 3,
-                            width: 14, height: 14, borderRadius: "50%",
-                            background: "white",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
-                            transition: "left 0.2s ease",
-                          }} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Challenge */}
+            <div className="p-5">
+              <div className="flex items-center gap-1.5 mb-3">
+                <Trophy className="size-3.5 text-zinc-400" strokeWidth={1.5} />
+                <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Challenge</p>
               </div>
-            )}
+              <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">Link a challenge to reward visitors who answer all quiz questions correctly.</p>
+              <div className="relative">
+                <select
+                  value={linkedChallengeId}
+                  onChange={(e) => setLinkedChallengeId(e.target.value)}
+                  className="w-full appearance-none pl-3 pr-8 py-2 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent cursor-pointer"
+                >
+                  <option value="">No challenge linked</option>
+                  {mockChallenges.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+                <Trophy className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
+              </div>
+              {linkedChallengeId && (
+                <p className="text-[11px] text-emerald-600 mt-2 flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-emerald-400 inline-block" />
+                  Challenge linked
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -969,7 +1186,11 @@ function GuideEditorContent() {
           onSave={savePOI}
           onDelete={() => { removePOI(editingPOI.id); setEditingPOI(null); }}
           guideId={id}
+          guideContext={{ id: id || "", title, status, thumbnail, languages: selectedLanguages }}
           guideLanguages={selectedLanguages}
+          quizQuestion={poiQuestions[editingPOI.id]}
+          onQuizChange={(q) => setPoiQuestions((prev) => q ? { ...prev, [editingPOI.id]: q } : Object.fromEntries(Object.entries(prev).filter(([k]) => k !== editingPOI.id)))}
+          hasChallenge={linkedChallengeId !== ""}
         />
       )}
 
@@ -981,7 +1202,9 @@ function GuideEditorContent() {
           onSave={handleNewPOISave}
           onDelete={() => setCreatingPOI(false)}
           guideId={id}
+          guideContext={{ id: id || "", title, status, thumbnail, languages: selectedLanguages }}
           guideLanguages={selectedLanguages}
+          hasChallenge={linkedChallengeId !== ""}
         />
       )}
 
@@ -1027,11 +1250,12 @@ function GuideEditorContent() {
                       onClick={() => addPOI(poi)}
                       className="w-full flex items-start gap-4 p-4 border border-zinc-200 rounded-lg hover:border-zinc-300 hover:bg-zinc-50 transition-all text-left"
                     >
-                      <img
-                        src={poi.imageUrl}
-                        alt={poi.title}
-                        className="size-16 rounded-lg object-cover flex-shrink-0"
-                      />
+                      {poi.imageUrl
+                        ? <img src={poi.imageUrl} alt={poi.title} className="size-16 rounded-lg object-cover flex-shrink-0" />
+                        : <div className="size-16 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                            <ImageIcon className="size-6 text-zinc-300" strokeWidth={1.5} />
+                          </div>
+                      }
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-[15px] text-zinc-950 mb-1">
                           {poi.title}
@@ -1157,8 +1381,9 @@ function GuideEditorContent() {
 
       {/* Translations Modal */}
       {activeModal === "translations" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-zinc-950/50 flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300 flex-shrink-0" />
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 flex-shrink-0">
               <span className="text-[14px] font-semibold text-zinc-900">Translations — {title}</span>
               <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-900 transition-colors">
@@ -1174,8 +1399,9 @@ function GuideEditorContent() {
 
       {/* Voicing Modal */}
       {activeModal === "voicing" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-zinc-950/50 flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300 flex-shrink-0" />
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 flex-shrink-0">
               <span className="text-[14px] font-semibold text-zinc-900">Voicing — {title}</span>
               <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-900 transition-colors">
@@ -1191,8 +1417,9 @@ function GuideEditorContent() {
 
       {/* Publish Modal */}
       {activeModal === "publish" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-zinc-950/50 flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300 flex-shrink-0" />
 
             {/* Header */}
             <div className="flex items-start justify-between px-6 py-4 border-b border-zinc-100 flex-shrink-0">
@@ -1340,7 +1567,7 @@ function GuideEditorContent() {
               <button
                 disabled={!canPublish}
                 onClick={handlePublish}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Rocket className="size-4" />
                 Publish Guide
@@ -1351,41 +1578,40 @@ function GuideEditorContent() {
       )}
       {/* Access type change confirmation — published guides only */}
       {pendingAccessType && (
-        <div className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-start gap-4 mb-5">
-                <div className="size-10 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="size-5 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-[15px] font-semibold text-zinc-900 mb-1">Change access on published guide</p>
-                  <p className="text-[13px] text-zinc-500 leading-relaxed">
-                    This guide is live. Switching to <span className="font-semibold">{pendingAccessType}</span> access will take effect immediately for all visitors.
-                  </p>
+        <div className="fixed inset-0 bg-zinc-950/50 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
+            <div className="px-7 pt-8 pb-7">
+              <div className="mb-5">
+                <div className="size-12 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-lg shadow-zinc-900/20">
+                  <AlertCircle className="size-5 text-white" />
                 </div>
               </div>
+              <p className="text-[17px] font-semibold text-zinc-900 tracking-tight leading-snug mb-2">Change access on published guide</p>
+              <p className="text-[13px] text-zinc-400 leading-relaxed mb-5">
+                This guide is live. Switching to <span className="font-semibold text-zinc-600">{pendingAccessType}</span> access will take effect immediately for all visitors.
+              </p>
               {pendingAccessType === "paid" ? (
-                <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5 text-[12px] text-amber-800 leading-relaxed">
+                <div className="bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3 mb-6 text-[12px] text-zinc-600 leading-relaxed">
                   Visitors using the current universal QR will lose access. Unique codes will be required.
                 </div>
               ) : (
-                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 mb-5 text-[12px] text-blue-800 leading-relaxed">
+                <div className="bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3 mb-6 text-[12px] text-zinc-600 leading-relaxed">
                   The guide will become freely accessible to anyone with the universal QR. Existing paid codes will stop being required.
                 </div>
               )}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setPendingAccessType(null)}
-                  className="flex-1 py-2.5 border border-zinc-200 text-[13px] font-semibold text-zinc-700 rounded-xl hover:bg-zinc-50 transition-all"
-                >
-                  Cancel
-                </button>
+              <div className="flex flex-col gap-2">
                 <button
                   onClick={() => { setAccessType(pendingAccessType); setPendingAccessType(null); }}
-                  className="flex-1 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all"
+                  className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
                 >
                   Yes, change it
+                </button>
+                <button
+                  onClick={() => setPendingAccessType(null)}
+                  className="w-full py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
@@ -1396,13 +1622,14 @@ function GuideEditorContent() {
       {/* Final Review sub-modal */}
       {showFinalReview && (
         <div
-          className="fixed inset-0 z-[60] bg-zinc-950/60 backdrop-blur-sm flex items-center justify-center p-6"
+          className="fixed inset-0 z-[60] bg-zinc-950/50 flex items-center justify-center p-6"
           onClick={() => setShowFinalReview(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
             {/* Header */}
             <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-zinc-100">
               <div>
@@ -1512,7 +1739,7 @@ function GuideEditorContent() {
                     setReviewNote("");
                     setShowFinalReview(false);
                   }}
-                  className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {reviewMode === "member" ? "Send for review →" : "Send invitation →"}
                 </button>
@@ -1565,38 +1792,70 @@ function GuideEditorContent() {
         </div>
       )}
 
+      {/* Phase blocker — cannot advance */}
+      {phaseBlocker && (
+        <div className="fixed inset-0 bg-zinc-950/50 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+            {/* Top accent bar */}
+            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
+            <div className="px-7 pt-8 pb-7">
+              {/* Icon */}
+              <div className="mb-5">
+                <div className="size-12 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-lg shadow-zinc-900/20">
+                  <AlertCircle className="size-5 text-white" />
+                </div>
+              </div>
+              {/* Text */}
+              <p className="text-[17px] font-semibold text-zinc-900 tracking-tight leading-snug mb-2">{phaseBlocker.title}</p>
+              <p className="text-[13px] text-zinc-400 leading-relaxed">{phaseBlocker.detail}</p>
+              {/* Actions */}
+              <div className="mt-7 flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    setPhaseBlocker(null);
+                    setTimeout(() => document.getElementById("poi-section")?.scrollIntoView({ behavior: "smooth" }), 50);
+                  }}
+                  className="w-full px-4 py-2.5 text-[13px] font-medium bg-[#D33333] text-white rounded-xl hover:bg-[#b82c2c] transition-all"
+                >
+                  Go to Scripting
+                </button>
+                <button
+                  onClick={() => setPhaseBlocker(null)}
+                  className="w-full px-4 py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all"
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Phase transition confirmation */}
       {pendingPhase && (() => {
         const isBack = pendingPhase.direction === "back";
         const target = PHASES.find(p => p.id === pendingPhase.phase)!;
         const warning = isBack ? BACK_WARNINGS[productionPhase] : null;
         return (
-          <div className="fixed inset-0 bg-zinc-950/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className={`size-10 rounded-full flex items-center justify-center flex-shrink-0 ${isBack ? "bg-amber-50" : "bg-zinc-50"}`}>
+          <div className="fixed inset-0 bg-zinc-950/50 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+              <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
+              <div className="px-7 pt-8 pb-7">
+                <div className="mb-5">
+                  <div className="size-12 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-lg shadow-zinc-900/20">
                     {isBack
-                      ? <AlertCircle className="size-5 text-amber-500" />
-                      : <Check className="size-5 text-zinc-600" />
+                      ? <AlertCircle className="size-5 text-white" />
+                      : <Check className="size-5 text-white" />
                     }
                   </div>
-                  <div>
-                    <p className="text-[15px] font-semibold text-zinc-900 mb-1">
-                      {isBack ? `Back to ${target.label}?` : `Start ${target.label}?`}
-                    </p>
-                    <p className="text-[13px] text-zinc-500 leading-relaxed">
-                      {warning ?? target.hint}
-                    </p>
-                  </div>
                 </div>
-                <div className="flex gap-2 justify-end">
-                  <button
-                    onClick={() => setPendingPhase(null)}
-                    className="px-4 py-2 text-[13px] font-medium text-zinc-500 hover:bg-zinc-100 rounded-lg transition-all"
-                  >
-                    Cancel
-                  </button>
+                <p className="text-[17px] font-semibold text-zinc-900 tracking-tight leading-snug mb-2">
+                  {isBack ? `Back to ${target.label}?` : `Start ${target.label}?`}
+                </p>
+                <p className="text-[13px] text-zinc-400 leading-relaxed">
+                  {warning ?? target.hint}
+                </p>
+                <div className="mt-7 flex flex-col gap-2">
                   <button
                     onClick={() => {
                       setProductionPhase(pendingPhase.phase);
@@ -1604,13 +1863,18 @@ function GuideEditorContent() {
                       if (!pendingPhase.direction || pendingPhase.direction === "forward") {
                         if (pendingPhase.phase === "translating") setActiveModal("translations");
                         if (pendingPhase.phase === "voicing") setActiveModal("voicing");
+                        if (pendingPhase.phase === "review") setActiveModal("publish");
                       }
                     }}
-                    className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${
-                      isBack ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-zinc-900 hover:bg-zinc-700 text-white"
-                    }`}
+                    className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
                   >
                     {isBack ? "Go back" : "Confirm"}
+                  </button>
+                  <button
+                    onClick={() => setPendingPhase(null)}
+                    className="w-full py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all"
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>
@@ -1618,6 +1882,23 @@ function GuideEditorContent() {
           </div>
         );
       })()}
+
+      {/* POI Quiz Modal */}
+      {editingQuizPOI && (
+        <POIQuizModal
+          poi={editingQuizPOI}
+          existing={poiQuestions[editingQuizPOI.id]}
+          onSave={(q) => {
+            setPoiQuestions((prev) => ({ ...prev, [editingQuizPOI.id]: q }));
+            setEditingQuizPOI(null);
+          }}
+          onRemove={() => {
+            setPoiQuestions((prev) => { const next = { ...prev }; delete next[editingQuizPOI.id]; return next; });
+            setEditingQuizPOI(null);
+          }}
+          onClose={() => setEditingQuizPOI(null)}
+        />
+      )}
 
       {/* Context floating pill */}
       {sources.length > 0 && (

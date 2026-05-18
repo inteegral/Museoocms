@@ -98,7 +98,7 @@ export function SuperAdminBilling() {
             key={tab.key}
             onClick={() => setFilter(tab.key)}
             className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
-              filter === tab.key ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
+              filter === tab.key ? "bg-[#D33333] text-white" : "text-zinc-500 hover:bg-zinc-100"
             }`}
           >
             {tab.label}

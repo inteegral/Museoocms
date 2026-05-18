@@ -152,7 +152,7 @@ function GeoModal({ marker, onSave, onClose }: { marker: POIMarker; onSave: (id:
         </div>
         <div className="px-6 pb-6 flex flex-col items-center gap-2">
           <button onClick={()=>{ if(hasCoords) onSave(marker.id, Number(lat), Number(lng)); }} disabled={!hasCoords}
-            className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Save GPS Location</button>
+            className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] disabled:opacity-40 disabled:cursor-not-allowed transition-all">Save GPS Location</button>
           {marker.lat != null
             ? <button onClick={()=>onSave(marker.id,NaN,NaN)} className="text-[12px] text-red-400 hover:text-red-600 transition-colors">Remove coordinates</button>
             : <button onClick={onClose} className="text-[12px] text-zinc-400 hover:text-zinc-600 transition-colors">Cancel</button>
@@ -387,7 +387,7 @@ function OutdoorMap({
                       <div className="w-px h-2 bg-[#D33333]" />
                       <div className="absolute top-0 size-8 bg-[#D33333] rounded-full animate-ping opacity-20 pointer-events-none" />
                       <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                        <div className="bg-zinc-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-xl">
+                        <div className="bg-[#D33333] text-white text-[11px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl">
                           {marker.name}<br />
                           <span className="text-white/40 font-normal text-[10px]">click for GPS · drag to move</span>
                         </div>
@@ -609,7 +609,7 @@ export function MapEditor() {
                   </div>
                   {activeFloor.imageUrl
                     ?<button onClick={()=>fileRef.current?.click()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all"><RotateCcw className="size-3.5"/>Change</button>
-                    :<button onClick={()=>fileRef.current?.click()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-800 transition-all"><Upload className="size-3.5"/>Upload Floor Plan</button>
+                    :<button onClick={()=>fileRef.current?.click()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"><Upload className="size-3.5"/>Upload Floor Plan</button>
                   }
                 </div>
               </div>
@@ -620,7 +620,7 @@ export function MapEditor() {
                   {activeFloor.imageUrl?(
                     <>
                       <img src={activeFloor.imageUrl} alt={activeFloor.name} className="w-full h-full object-contain" draggable={false}/>
-                      {isDragOver&&<div className="absolute inset-0 bg-[#D33333]/5 flex items-center justify-center pointer-events-none"><div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm border border-[#D33333]/20"><p className="text-[12px] font-semibold text-[#D33333]">Drop to place</p></div></div>}
+                      {isDragOver&&<div className="absolute inset-0 bg-[#D33333]/5 flex items-center justify-center pointer-events-none"><div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm border border-[#D33333]/20"><p className="text-[12px] font-medium text-[#D33333]">Drop to place</p></div></div>}
                       {activeMarkers.map(marker=>(
                         <div key={marker.id} draggable
                           onDragStart={e=>{e.stopPropagation();e.dataTransfer.setData("markerId",marker.id);e.dataTransfer.effectAllowed="move";setDraggingMarkerId(marker.id);justDraggedRef.current=false;}}
@@ -640,7 +640,7 @@ export function MapEditor() {
                             <div className="w-px h-2 bg-[#D33333]"/>
                             <div className="absolute top-0 size-8 bg-[#D33333] rounded-full animate-ping opacity-20 pointer-events-none"/>
                             <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
-                              <div className="bg-zinc-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-xl">{marker.name}{marker.lat!=null?<><br/><span className="text-emerald-400 font-normal text-[10px]">GPS set</span></>:<><br/><span className="text-white/40 font-normal text-[10px]">click GPS · drag move</span></>}</div>
+                              <div className="bg-[#D33333] text-white text-[11px] font-medium px-2.5 py-1.5 rounded-lg shadow-xl">{marker.name}{marker.lat!=null?<><br/><span className="text-emerald-400 font-normal text-[10px]">GPS set</span></>:<><br/><span className="text-white/40 font-normal text-[10px]">click GPS · drag move</span></>}</div>
                             </div>
                           </div>
                         </div>
@@ -651,7 +651,7 @@ export function MapEditor() {
                       <div className="size-16 bg-zinc-100 rounded-2xl flex items-center justify-center mb-4"><ImageIcon className="size-8 text-zinc-300"/></div>
                       <p className="text-[14px] font-semibold text-zinc-700 mb-1">No floor plan uploaded</p>
                       <p className="text-[12px] text-zinc-400 mb-5 text-center max-w-[240px]">Upload a floor plan image to start placing POI markers</p>
-                      <button onClick={()=>fileRef.current?.click()} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all"><Upload className="size-4"/>Upload Floor Plan</button>
+                      <button onClick={()=>fileRef.current?.click()} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"><Upload className="size-4"/>Upload Floor Plan</button>
                     </div>
                   )}
                 </div>
@@ -674,7 +674,7 @@ export function MapEditor() {
       {/* Save actions */}
       <div className="flex gap-3">
         <button className="px-5 py-2.5 text-[13px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all">Reset Changes</button>
-        <button className="flex-1 px-5 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all inline-flex items-center justify-center gap-2"><Save className="size-4"/>Save Map Configuration</button>
+        <button className="flex-1 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all inline-flex items-center justify-center gap-2"><Save className="size-4"/>Save Map Configuration</button>
       </div>
 
       {/* Add floor modal */}
@@ -691,7 +691,7 @@ export function MapEditor() {
                 className="w-full px-3 py-2.5 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition"/>
             </div>
             <div className="px-6 pb-6 flex flex-col items-center gap-2">
-              <button onClick={addFloor} disabled={!newFloorName.trim()} className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 disabled:opacity-40 transition-all">Add Floor</button>
+              <button onClick={addFloor} disabled={!newFloorName.trim()} className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] disabled:opacity-40 transition-all">Add Floor</button>
               <button onClick={()=>setShowAddFloor(false)} className="text-[12px] text-zinc-400 hover:text-zinc-600 transition-colors">Cancel</button>
             </div>
           </div>

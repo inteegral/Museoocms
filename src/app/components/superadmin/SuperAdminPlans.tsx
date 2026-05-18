@@ -283,7 +283,7 @@ export function SuperAdminPlans() {
           )}
           <button
             onClick={handleSave}
-            className="px-5 py-2 text-[13px] font-semibold bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+            className="px-5 py-2 text-[13px] font-medium bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors"
           >
             Save changes
           </button>

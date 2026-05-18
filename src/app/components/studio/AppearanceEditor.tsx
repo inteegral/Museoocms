@@ -438,7 +438,7 @@ export function AppearanceEditor() {
             >
               Reset to Defaults
             </button>
-            <button className="flex-1 px-5 py-3 bg-zinc-900 text-white text-[14px] font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-sm">
+            <button className="flex-1 px-5 py-3 bg-[#D33333] text-white text-[14px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all shadow-sm">
               Save Appearance
             </button>
           </div>

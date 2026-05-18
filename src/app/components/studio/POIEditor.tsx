@@ -1,8 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check, Globe, Mic } from "lucide-react";
+import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check, Globe, Mic, HelpCircle, Plus, Trophy } from "lucide-react";
 import { mockGuides, mockPOIs, mockDocuments } from "../../data/mockData";
+import { Toggle } from "./Toggle";
 
-type POIStatus = "idea" | "in-progress" | "under-revision" | "complete";
+type POIStatus = "draft" | "in-progress" | "under-revision" | "complete";
+
+export interface QuizQuestion {
+  question: string;
+  options: [string, string, string, string];
+  correct: 0 | 1 | 2 | 3;
+}
 
 interface POI {
   id: string;
@@ -22,17 +29,29 @@ interface POI {
   assigneeNote?: string;
 }
 
+interface GuideContext {
+  id: string;
+  title: string;
+  status: "draft" | "published";
+  thumbnail?: string;
+  languages?: string[];
+}
+
 interface POIEditorProps {
   poi: POI;
   onClose: () => void;
   onSave: (updatedPOI: POI) => void;
   onDelete: (poiId: string) => void;
   guideId?: string;
+  guideContext?: GuideContext;
   guideLanguages?: string[];
+  quizQuestion?: QuizQuestion;
+  onQuizChange?: (q: QuizQuestion | null) => void;
+  hasChallenge?: boolean;
 }
 
 const statusConfig = {
-  idea:             { label: "Idea",           dot: "bg-zinc-400",    text: "text-zinc-600",    bg: "bg-zinc-50",    border: "border-zinc-200" },
+  draft:             { label: "Draft",           dot: "bg-zinc-400",    text: "text-zinc-600",    bg: "bg-zinc-50",    border: "border-zinc-200" },
   "in-progress":    { label: "In Progress",    dot: "bg-blue-400",    text: "text-blue-700",    bg: "bg-blue-50",    border: "border-blue-200" },
   "under-revision": { label: "Under Revision", dot: "bg-amber-400",   text: "text-amber-700",   bg: "bg-amber-50",   border: "border-amber-200" },
   complete:         { label: "Complete",        dot: "bg-emerald-400", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200" },
@@ -205,12 +224,28 @@ function MediaPicker({ current, onSelect, onClose }: {
   );
 }
 
-export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLanguages }: POIEditorProps) {
-  const [formData, setFormData] = useState(poi);
+const OPT_LABELS = ["A", "B", "C", "D"] as const;
+
+export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideContext, guideLanguages, quizQuestion: initialQuiz, onQuizChange, hasChallenge = false }: POIEditorProps) {
+  const [formData, setFormData] = useState(() =>
+    guideLanguages && guideLanguages.length > 0
+      ? { ...poi, translations: [], voices: [] }
+      : poi
+  );
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [selectedTranslationLang, setSelectedTranslationLang] = useState<string | null>(null);
   const [selectedVoicingLang, setSelectedVoicingLang] = useState<string | null>(null);
+
+  // Quiz
+  const [quiz, setQuiz] = useState<QuizQuestion>(
+    initialQuiz ?? { question: "", options: ["", "", "", ""], correct: 0 }
+  );
+  const [quizOpen, setQuizOpen] = useState(!!initialQuiz);
+
+  const saveQuiz = () => { if (onQuizChange) onQuizChange(quiz); };
+  const removeQuiz = () => { if (onQuizChange) onQuizChange(null); setQuiz({ question: "", options: ["", "", "", ""], correct: 0 }); setQuizOpen(false); };
+  const quizSaved = !!initialQuiz;
 
   // Co-curator
   const [showCoCurator, setShowCoCurator] = useState(false);
@@ -296,13 +331,25 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                 )}
               </div>
 
-              <button
-                onClick={() => onSave(formData)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
-              >
-                <Save className="size-3.5" />
-                Save
-              </button>
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={() => onSave(formData)}
+                  disabled={!formData.title.trim() || !formData.imageUrl}
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Save className="size-3.5" />
+                  Save
+                </button>
+                {(!formData.title.trim() || !formData.imageUrl) && (
+                  <p className="text-[10px] text-zinc-400 text-right leading-snug">
+                    {!formData.title.trim() && !formData.imageUrl
+                      ? "Title and image required"
+                      : !formData.title.trim()
+                      ? "Title required"
+                      : "Image required"}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -407,12 +454,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                         <p className="text-[11px] text-zinc-400">Auto-trigger when visitor reaches this location</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setFormData({ ...formData, isGeolocated: !formData.isGeolocated })}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${formData.isGeolocated ? "bg-zinc-900" : "bg-zinc-200"}`}
-                    >
-                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${formData.isGeolocated ? "translate-x-[18px]" : "translate-x-0.5"}`} />
-                    </button>
+                    <Toggle checked={formData.isGeolocated} onChange={() => setFormData({ ...formData, isGeolocated: !formData.isGeolocated })} />
                   </div>
                   {formData.isGeolocated && (
                     <div className="h-56 bg-zinc-100 rounded-xl border border-zinc-200 overflow-hidden relative">
@@ -575,11 +617,120 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
 
                 <div className="border-t border-zinc-100" />
 
+                {/* Quiz — only if a Challenge exists for this guide */}
+                {hasChallenge ? (
+                  <div>
+                    <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Quiz</p>
+                    {quizSaved ? (
+                      <div className="flex items-center justify-between px-3 py-2.5 bg-violet-50 border border-violet-100 rounded-lg">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="size-1.5 rounded-full bg-violet-500 flex-shrink-0" />
+                          <p className="text-[12px] text-violet-800 font-medium truncate">{quiz.question}</p>
+                        </div>
+                        <button
+                          onClick={() => setQuizOpen(true)}
+                          className="text-[11px] text-violet-600 hover:text-violet-800 font-medium ml-2 flex-shrink-0 transition-colors"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setQuizOpen(true)}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border border-dashed border-zinc-300 rounded-lg text-[12px] text-zinc-400 hover:border-violet-300 hover:text-violet-600 hover:bg-violet-50 transition-all"
+                      >
+                        <Plus className="size-3.5" /> Add quiz question
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2.5 px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg">
+                    <Trophy className="size-3.5 text-zinc-400 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+                    <p className="text-[11px] text-zinc-500 leading-relaxed">
+                      Quiz questions require an active <strong className="text-zinc-700">Challenge</strong> for this guide.
+                    </p>
+                  </div>
+                )}
+
+                {/* Quiz modal */}
+                {quizOpen && (
+                  <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setQuizOpen(false)}>
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-zinc-100">
+                        <div>
+                          <p className="text-[10px] font-semibold text-violet-600 uppercase tracking-widest mb-0.5">Quiz question</p>
+                          <p className="text-sm font-semibold text-zinc-900 leading-tight">{formData.title}</p>
+                        </div>
+                        <button onClick={() => setQuizOpen(false)} className="text-zinc-300 hover:text-zinc-500 transition-colors mt-0.5">
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                      <div className="px-5 py-4 space-y-4">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Question</label>
+                          <textarea
+                            value={quiz.question}
+                            onChange={(e) => setQuiz(q => ({ ...q, question: e.target.value }))}
+                            rows={2}
+                            placeholder="What do you want visitors to discover about this work?"
+                            className="w-full text-sm px-3 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300 resize-none text-zinc-800 placeholder:text-zinc-300"
+                            autoFocus
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Answer options — tap to mark correct</label>
+                          <div className="space-y-2">
+                            {quiz.options.map((opt, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setQuiz(q => ({ ...q, correct: i as 0|1|2|3 }))}
+                                  className={`size-6 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold transition-all border ${
+                                    quiz.correct === i ? "bg-violet-600 border-violet-600 text-white" : "border-zinc-300 text-zinc-400 hover:border-violet-300"
+                                  }`}
+                                >
+                                  {OPT_LABELS[i]}
+                                </button>
+                                <input
+                                  type="text"
+                                  value={opt}
+                                  onChange={(e) => {
+                                    const next = [...quiz.options] as [string,string,string,string];
+                                    next[i] = e.target.value;
+                                    setQuiz(q => ({ ...q, options: next }));
+                                  }}
+                                  placeholder={`Option ${OPT_LABELS[i]}`}
+                                  className="flex-1 text-sm px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300 text-zinc-800 placeholder:text-zinc-300"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="px-5 py-4 border-t border-zinc-100 flex items-center justify-between gap-3">
+                        {quizSaved ? (
+                          <button onClick={removeQuiz} className="text-xs text-red-400 hover:text-red-600 transition-colors">Remove question</button>
+                        ) : <span />}
+                        <div className="flex gap-2">
+                          <button onClick={() => setQuizOpen(false)} className="px-4 py-2 text-sm text-zinc-500 hover:bg-zinc-100 rounded-lg transition-colors">Cancel</button>
+                          <button
+                            onClick={() => { saveQuiz(); setQuizOpen(false); }}
+                            disabled={!quiz.question.trim() || quiz.options.some(o => !o.trim())}
+                            className="px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {quizSaved ? "Update" : "Save question"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* In Guides */}
                 <div id="poi-in-guides" className="space-y-3">
                   <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">In Guides</p>
                   {(() => {
-                    const currentGuide = guideId ? mockGuides.find(g => g.id === guideId) : null;
+                    const currentGuide = guideContext ?? (guideId ? mockGuides.find(g => g.id === guideId) : null);
                     const otherGuides = assignedGuides.filter(g => g.id !== guideId);
                     if (!currentGuide && otherGuides.length === 0) {
                       return <p className="text-[12px] text-zinc-400">Not assigned to any guide yet.</p>;
@@ -766,7 +917,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
                             setCoCuratorPhase("idle");
                             setGeneratedScript("");
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-zinc-900 hover:bg-zinc-700 text-white text-[12px] font-semibold rounded-lg transition-all"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#D33333] hover:bg-[#b82c2c] text-white text-[12px] font-medium rounded-lg transition-all"
                         >
                           <CheckCircle2 className="size-3.5" />
                           Apply
@@ -855,7 +1006,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideLangua
               <p className="text-[12px] text-zinc-400">{coCuratorDocIds.length} selected</p>
               <button
                 onClick={() => setShowDocModal(false)}
-                className="px-4 py-2 text-[13px] bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
+                className="px-4 py-2 text-[13px] bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors"
               >
                 Done
               </button>

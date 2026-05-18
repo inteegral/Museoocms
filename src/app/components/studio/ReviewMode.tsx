@@ -148,7 +148,7 @@ export function ReviewMode() {
             <div className="text-left space-y-3">
               {filled.map((a, i) => (
                 <div key={a.id} className="flex gap-3">
-                  <span className="size-5 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0 mt-0.5">
+                  <span className="size-5 rounded-full bg-[#D33333] text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0 mt-0.5">
                     {i + 1}
                   </span>
                   <div>
@@ -197,7 +197,7 @@ export function ReviewMode() {
 
           <button
             onClick={() => setSubmitted(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"
           >
             <Send className="size-3" />
             Send feedback
@@ -252,7 +252,7 @@ export function ReviewMode() {
                   className={`size-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg transition-all ${
                     ann.resolved
                       ? "bg-emerald-500 text-white"
-                      : "bg-zinc-900 text-white hover:scale-110"
+                      : "bg-[#D33333] text-white hover:scale-110"
                   }`}
                   style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
                 >
@@ -265,7 +265,7 @@ export function ReviewMode() {
                     style={{ width: 220, top: "50%", left: "calc(100% + 10px)", transform: "translateY(-50%)" }}
                   >
                     <div className="flex items-center gap-2 px-3 pt-2.5 pb-1 border-b border-zinc-100">
-                      <span className="size-4 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+                      <span className="size-4 rounded-full bg-[#D33333] text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
                         {i + 1}
                       </span>
                       <p className="text-[10px] font-semibold text-zinc-500 flex-1 truncate">
@@ -339,7 +339,7 @@ export function ReviewMode() {
                     <button
                       onClick={savePendingPin}
                       disabled={!draftText.trim()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[11px] font-semibold rounded-lg hover:bg-zinc-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white text-[11px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       Save
                     </button>

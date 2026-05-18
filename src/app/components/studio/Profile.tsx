@@ -133,7 +133,7 @@ export function Profile() {
             <button
               onClick={handleSave}
               disabled={!dirty && !saved}
-              className="px-5 py-2 text-[13px] font-semibold bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-2 text-[13px] font-medium bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Save changes
             </button>

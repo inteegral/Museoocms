@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Calendar, MapPin, X, BookOpen, Trash2, Pencil, Image as ImageIcon, Check } from "lucide-react";
 import { PageShell } from "./PageShell";
-import { mockEvents as initialMockEvents } from "../../data/mockData";
+import { mockEvents as initialMockEvents, mockGuides } from "../../data/mockData";
 
 const GALLERY = [
   "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=400&q=80",
@@ -117,11 +117,29 @@ function EventCard({ event, onOpen }: { event: MuseumEvent; onOpen: () => void }
           )}
         </div>
 
-        <div className="flex items-center pt-3 border-t border-zinc-100">
-          <span className={`flex items-center gap-1.5 text-[11px] font-medium ${guideCount > 0 ? "text-zinc-500" : "text-zinc-300"}`}>
-            <BookOpen className="size-3.5" />
-            {guideCount > 0 ? `${guideCount} guide${guideCount !== 1 ? "s" : ""}` : "No guides"}
-          </span>
+        <div className="pt-3 border-t border-zinc-100">
+          {guideCount === 0 ? (
+            <span className="flex items-center gap-1.5 text-[11px] text-zinc-300">
+              <BookOpen className="size-3.5" />
+              Not linked to any guide
+            </span>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {event.linkedGuides.map(gid => {
+                const g = mockGuides.find(x => x.id === gid);
+                if (!g) return null;
+                return (
+                  <span key={gid} className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-medium ${
+                    g.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"
+                  }`}>
+                    <BookOpen className="size-3" strokeWidth={1.5} />
+                    {g.title}
+                    {g.status === "published" && <span className="size-1.5 rounded-full bg-emerald-400 flex-shrink-0" />}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -345,7 +363,7 @@ function EventDetailModal({
             <button
               disabled={!form.title || !form.startDate}
               onClick={handleSave}
-              className="px-5 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Save
             </button>
@@ -469,7 +487,7 @@ export function Events() {
             </div>
             <button
               onClick={() => setShowNew(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
             >
               <Plus className="size-4" />
               New Event
@@ -703,7 +721,7 @@ export function Events() {
               <button
                 disabled={!form.title || !form.startDate}
                 onClick={handleCreate}
-                className="px-5 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-5 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Create Event
               </button>

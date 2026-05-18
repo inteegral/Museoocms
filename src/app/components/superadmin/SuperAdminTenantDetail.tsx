@@ -97,7 +97,7 @@ export function SuperAdminTenantDetail() {
           {/* Impersonate */}
           <Link
             to="/"
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-700 text-white text-[13px] font-semibold rounded-lg transition-colors flex-shrink-0"
+            className="flex items-center gap-2 px-4 py-2 bg-[#D33333] hover:bg-[#b82c2c] text-white text-[13px] font-medium rounded-lg transition-colors flex-shrink-0"
           >
             <ExternalLink className="size-4" strokeWidth={1.5} />
             Impersonate
@@ -112,7 +112,7 @@ export function SuperAdminTenantDetail() {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
-              activeTab === tab.key ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-100"
+              activeTab === tab.key ? "bg-[#D33333] text-white" : "text-zinc-500 hover:bg-zinc-100"
             }`}
           >
             {tab.label}
@@ -279,7 +279,7 @@ export function SuperAdminTenantDetail() {
                 </span>
               )}
               <button onClick={handleSaveNotes}
-                className="px-4 py-2 text-[13px] font-semibold bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+                className="px-4 py-2 text-[13px] font-medium bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors"
               >
                 Save notes
               </button>

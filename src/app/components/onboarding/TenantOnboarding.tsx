@@ -4,6 +4,7 @@ import {
   Building2, Users, CheckCircle2,
   ArrowRight, ArrowLeft, Plus, X,
 } from "lucide-react";
+import MainLogoVariant from "../../../imports/MainLogoVariant5";
 
 const STEPS = [
   { id: 0, label: "Account", icon: Building2 },
@@ -46,12 +47,7 @@ export function TenantOnboarding() {
     <div className="min-h-screen bg-zinc-50 flex flex-col">
       {/* Top bar */}
       <div className="bg-white border-b border-zinc-200 px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded bg-[#D33333] flex items-center justify-center">
-            <span className="text-white text-[10px] font-semibold">M</span>
-          </div>
-          <span className="font-semibold text-sm text-zinc-900">Museoo</span>
-        </div>
+        <MainLogoVariant className="h-[20px] w-[108px] relative" />
         {!isDone && (
           <span className="text-xs text-zinc-400">Step {step + 1} of {TOTAL}</span>
         )}
@@ -66,7 +62,7 @@ export function TenantOnboarding() {
               <div key={s.id} className="flex items-center gap-1.5">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all ${
                   i < step  ? "bg-[#D33333] text-white" :
-                  i === step ? "bg-zinc-900 text-white" :
+                  i === step ? "bg-[#D33333] text-white" :
                   "bg-zinc-200 text-zinc-400"
                 }`}>
                   {i < step ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
@@ -131,7 +127,7 @@ export function TenantOnboarding() {
                         onClick={() => setMuseum({ ...museum, type: t })}
                         className={`text-xs px-3 py-2 rounded-lg border transition-all text-left ${
                           museum.type === t
-                            ? "border-zinc-900 bg-zinc-900 text-white"
+                            ? "border-zinc-900 bg-[#D33333] text-white"
                             : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
                         }`}
                       >
@@ -224,7 +220,7 @@ export function TenantOnboarding() {
               {step < 2 && (
                 <button
                   onClick={next}
-                  className="flex items-center gap-2 bg-zinc-900 text-white text-sm px-5 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors"
+                  className="flex items-center gap-2 bg-[#D33333] text-white text-sm px-5 py-2.5 rounded-lg hover:bg-[#b82c2c] transition-colors"
                 >
                   Continue <ArrowRight className="w-4 h-4" />
                 </button>
@@ -236,7 +232,7 @@ export function TenantOnboarding() {
                   </button>
                   <button
                     onClick={next}
-                    className="flex items-center gap-2 bg-zinc-900 text-white text-sm px-5 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors"
+                    className="flex items-center gap-2 bg-[#D33333] text-white text-sm px-5 py-2.5 rounded-lg hover:bg-[#b82c2c] transition-colors"
                   >
                     Send invites <ArrowRight className="w-4 h-4" />
                   </button>

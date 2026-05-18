@@ -8,7 +8,7 @@ import { mockGuides, mockPOIs } from "../../data/mockData";
 import { PageShell } from "./PageShell";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface HuntQuestion {
+interface ChallengeQuestion {
   id: string;
   poiId: string;
   poiTitle: string;
@@ -17,7 +17,7 @@ interface HuntQuestion {
   correct: 0 | 1 | 2 | 3;
 }
 
-interface Hunt {
+interface Challenge {
   id: string;
   title: string;
   guideId: string;
@@ -26,14 +26,14 @@ interface Hunt {
   prize: string;
   prizeCode: string;
   completions: number;
-  questions: HuntQuestion[];
+  questions: ChallengeQuestion[];
   createdAt: string;
 }
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
-const INITIAL_HUNTS: Hunt[] = [
+const INITIAL_HUNTS: Challenge[] = [
   {
-    id: "hunt-1",
+    id: "challenge-1",
     title: "Greek Art Challenge",
     guideId: "guide-1",
     guideName: "Complete Museum Tour",
@@ -64,7 +64,7 @@ const INITIAL_HUNTS: Hunt[] = [
     createdAt: "10 Mar 2026",
   },
   {
-    id: "hunt-2",
+    id: "challenge-2",
     title: "Family Discovery Game",
     guideId: "guide-3",
     guideName: "Family Tour",
@@ -111,7 +111,7 @@ function TogglePill({ active, onChange }: { active: boolean; onChange: () => voi
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
-function makeEmptyQuestion(poi: typeof mockPOIs[0]): HuntQuestion {
+function makeEmptyQuestion(poi: typeof mockPOIs[0]): ChallengeQuestion {
   return {
     id: `q-${Date.now()}-${poi.id}`,
     poiId: poi.id,
@@ -141,9 +141,9 @@ function StatusBadge({ status }: { status: "active" | "draft" }) {
 function QuestionCard({
   q, index, onChange, allPOIs,
 }: {
-  q: HuntQuestion;
+  q: ChallengeQuestion;
   index: number;
-  onChange: (updated: HuntQuestion) => void;
+  onChange: (updated: ChallengeQuestion) => void;
   allPOIs: typeof mockPOIs;
 }) {
   return (
@@ -232,47 +232,47 @@ function QuestionCard({
   );
 }
 
-// ── Hunt Editor ────────────────────────────────────────────────────────────────
-function HuntEditor({
-  hunt,
+// ── Challenge Editor ────────────────────────────────────────────────────────────────
+function ChallengeEditor({
+  challenge,
   onSave,
   onCancel,
 }: {
-  hunt: Hunt | null;
-  onSave: (h: Hunt) => void;
+  challenge: Challenge | null;
+  onSave: (h: Challenge) => void;
   onCancel: () => void;
 }) {
-  const isNew = hunt === null;
+  const isNew = challenge === null;
   const guideOptions = mockGuides;
 
-  const [title, setTitle] = useState(hunt?.title ?? "");
-  const [guideId, setGuideId] = useState(hunt?.guideId ?? guideOptions[0]?.id ?? "");
-  const [prize, setPrize] = useState(hunt?.prize ?? "");
-  const [prizeCode, setPrizeCode] = useState(hunt?.prizeCode ?? "");
-  const [status, setStatus] = useState<"active" | "draft">(hunt?.status ?? "draft");
-  const [questions, setQuestions] = useState<HuntQuestion[]>(() => {
-    if (hunt) return hunt.questions;
+  const [title, setTitle] = useState(challenge?.title ?? "");
+  const [guideId, setGuideId] = useState(challenge?.guideId ?? guideOptions[0]?.id ?? "");
+  const [prize, setPrize] = useState(challenge?.prize ?? "");
+  const [prizeCode, setPrizeCode] = useState(challenge?.prizeCode ?? "");
+  const [status, setStatus] = useState<"active" | "draft">(challenge?.status ?? "draft");
+  const [questions, setQuestions] = useState<ChallengeQuestion[]>(() => {
+    if (challenge) return challenge.questions;
     return mockPOIs.slice(0, 3).map(makeEmptyQuestion);
   });
 
   const selectedGuide = guideOptions.find(g => g.id === guideId);
 
-  const updateQ = (idx: number, updated: HuntQuestion) => {
+  const updateQ = (idx: number, updated: ChallengeQuestion) => {
     setQuestions(qs => qs.map((q, i) => i === idx ? updated : q));
   };
 
   const handleSave = () => {
-    const saved: Hunt = {
-      id: hunt?.id ?? `hunt-${Date.now()}`,
-      title: title || "Untitled Hunt",
+    const saved: Challenge = {
+      id: challenge?.id ?? `challenge-${Date.now()}`,
+      title: title || "Untitled Challenge",
       guideId,
       guideName: selectedGuide?.title ?? "",
       status,
       prize,
       prizeCode,
-      completions: hunt?.completions ?? 0,
+      completions: challenge?.completions ?? 0,
       questions,
-      createdAt: hunt?.createdAt ?? new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+      createdAt: challenge?.createdAt ?? new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
     };
     onSave(saved);
   };
@@ -292,11 +292,11 @@ function HuntEditor({
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="Hunt title…"
+            placeholder="Challenge title…"
             className="w-full text-[22px] font-semibold text-zinc-900 tracking-tight bg-transparent border-none focus:outline-none placeholder:text-zinc-300"
           />
           <p className="text-[13px] text-zinc-400 mt-0.5">
-            {isNew ? "Create a quiz tied to an audio guide" : "Edit hunt"}
+            {isNew ? "Create a quiz tied to an audio guide" : "Edit challenge"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -311,7 +311,7 @@ function HuntEditor({
             className="px-5 py-2 text-[13px] font-semibold text-white rounded-lg transition-all active:scale-95"
             style={{ background: "#D33333" }}
           >
-            Save Hunt
+            Save Challenge
           </button>
         </div>
       </div>
@@ -323,7 +323,7 @@ function HuntEditor({
             <h2 className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wide">Settings</h2>
 
             <div>
-              <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Hunt name</label>
+              <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Challenge name</label>
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -393,33 +393,64 @@ function HuntEditor({
             <h2 className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wide">
               Questions · {questions.length}
             </h2>
-            <button
-              type="button"
-              onClick={() => {
-                const nextPoi = mockPOIs[questions.length % mockPOIs.length];
-                setQuestions(qs => [...qs, makeEmptyQuestion(nextPoi)]);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
-            >
-              <Plus className="size-3.5" />
-              Add question
-            </button>
           </div>
 
-          {questions.map((q, i) => (
-            <div key={q.id} className="relative group">
-              <QuestionCard q={q} index={i} onChange={updated => updateQ(i, updated)} allPOIs={mockPOIs} />
-              {questions.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setQuestions(qs => qs.filter((_, idx) => idx !== i))}
-                  className="absolute top-3 right-3 size-7 flex items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-400 hover:text-red-500 hover:border-red-200 transition-all opacity-0 group-hover:opacity-100"
+          {/* Info banner */}
+          <div className="flex items-start gap-3 px-4 py-3 bg-violet-50 border border-violet-100 rounded-xl">
+            <div className="size-5 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Edit3 className="size-3 text-violet-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] text-violet-800 font-medium leading-snug">
+                Questions are authored directly from each POI in the guide editor.
+              </p>
+              <p className="text-[11px] text-violet-500 mt-0.5">
+                Open the guide and tap the <span className="font-semibold">?</span> icon on any POI to add or edit its question.
+              </p>
+              {guideId && (
+                <a
+                  href={`/guides/${guideId}`}
+                  className="inline-block mt-1.5 text-[11px] font-semibold text-violet-600 hover:text-violet-800 underline underline-offset-2 transition-colors"
                 >
-                  <Trash2 className="size-3.5" />
-                </button>
+                  Go to guide editor →
+                </a>
               )}
             </div>
-          ))}
+          </div>
+
+          {questions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center bg-white border border-zinc-200 rounded-xl">
+              <div className="size-10 rounded-full bg-zinc-100 flex items-center justify-center mb-3">
+                <CheckCircle2 className="size-5 text-zinc-300" />
+              </div>
+              <p className="text-[13px] text-zinc-500 mb-0.5">No questions yet</p>
+              <p className="text-[11px] text-zinc-400">Add questions from the POI cards in the guide editor</p>
+            </div>
+          ) : (
+            questions.map((q, i) => (
+              <div key={q.id} className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+                <div className="flex items-center gap-3 px-4 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
+                  <div className="size-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-semibold" style={{ background: "#D33333" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <span className="text-[13px] font-medium text-zinc-700">{q.poiTitle}</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <p className="text-[13px] text-zinc-800 leading-snug">{q.question || <span className="text-zinc-300 italic">No question yet</span>}</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {q.options.map((opt, j) => (
+                      <div key={j} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] ${j === q.correct ? "bg-emerald-50 border border-emerald-200 text-emerald-800 font-medium" : "bg-zinc-50 border border-zinc-100 text-zinc-500"}`}>
+                        <span className={`size-4 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 ${j === q.correct ? "bg-emerald-500 text-white" : "bg-zinc-200 text-zinc-500"}`}>
+                          {OPTION_LABELS[j]}
+                        </span>
+                        {opt || <span className="italic text-zinc-300">—</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -427,17 +458,17 @@ function HuntEditor({
   );
 }
 
-// ── Hunt List ──────────────────────────────────────────────────────────────────
-export function Hunt() {
-  const [hunts, setHunts] = useState<Hunt[]>(INITIAL_HUNTS);
-  const [editing, setEditing] = useState<Hunt | null | "new">(null);
+// ── Challenge List ──────────────────────────────────────────────────────────────────
+export function Challenge() {
+  const [challenges, setChallenges] = useState<Challenge[]>(INITIAL_HUNTS);
+  const [editing, setEditing] = useState<Challenge | null | "new">(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const totalCompletions = hunts.reduce((s, h) => s + h.completions, 0);
-  const activeCount = hunts.filter(h => h.status === "active").length;
+  const totalCompletions = challenges.reduce((s, h) => s + h.completions, 0);
+  const activeCount = challenges.filter(h => h.status === "active").length;
 
-  const handleSave = (h: Hunt) => {
-    setHunts(hs => {
+  const handleSave = (h: Challenge) => {
+    setChallenges(hs => {
       const idx = hs.findIndex(x => x.id === h.id);
       return idx >= 0 ? hs.map(x => x.id === h.id ? h : x) : [...hs, h];
     });
@@ -445,21 +476,21 @@ export function Hunt() {
   };
 
   const handleToggleStatus = (id: string) => {
-    setHunts(hs => hs.map(h =>
+    setChallenges(hs => hs.map(h =>
       h.id === id ? { ...h, status: h.status === "active" ? "draft" : "active" } : h
     ));
   };
 
   const handleDelete = (id: string) => {
-    setHunts(hs => hs.filter(h => h.id !== id));
+    setChallenges(hs => hs.filter(h => h.id !== id));
     setDeleteId(null);
   };
 
   // Editor view
   if (editing !== null) {
     return (
-      <HuntEditor
-        hunt={editing === "new" ? null : editing}
+      <ChallengeEditor
+        challenge={editing === "new" ? null : editing}
         onSave={handleSave}
         onCancel={() => setEditing(null)}
       />
@@ -476,7 +507,7 @@ export function Hunt() {
             <Trophy className="size-5" style={{ color: "#D33333" }} />
           </div>
           <div>
-            <h1 className="text-[22px] font-semibold text-zinc-900 tracking-tight">Hunt</h1>
+            <h1 className="text-[22px] font-semibold text-zinc-900 tracking-tight">Challenge</h1>
             <p className="text-[13px] text-zinc-400 mt-0.5">Quiz tied to each audio stop — reward visitors who listen carefully</p>
           </div>
         </div>
@@ -486,14 +517,14 @@ export function Hunt() {
           style={{ background: "#D33333" }}
         >
           <Plus className="size-4" />
-          New Hunt
+          New Challenge
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {[
-          { label: "Total Hunts", value: hunts.length, icon: Trophy },
+          { label: "Total Challenges", value: challenges.length, icon: Trophy },
           { label: "Active", value: activeCount, icon: Zap },
           { label: "Completions", value: totalCompletions, icon: Users },
         ].map(({ label, value, icon: Icon }) => (
@@ -509,13 +540,13 @@ export function Hunt() {
         ))}
       </div>
 
-      {/* Hunt cards */}
-      {hunts.length === 0 ? (
+      {/* Challenge cards */}
+      {challenges.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="size-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: "rgba(211,51,51,0.07)" }}>
             <Trophy className="size-7" style={{ color: "#D33333" }} />
           </div>
-          <p className="text-[15px] font-medium text-zinc-700 mb-1">No hunts yet</p>
+          <p className="text-[15px] font-medium text-zinc-700 mb-1">No challenges yet</p>
           <p className="text-[13px] text-zinc-400 mb-5">Create your first quiz to engage visitors at each stop</p>
           <button
             onClick={() => setEditing("new")}
@@ -523,12 +554,12 @@ export function Hunt() {
             style={{ background: "#D33333" }}
           >
             <Plus className="size-4" />
-            Create Hunt
+            Create Challenge
           </button>
         </div>
       ) : (
         <div className="space-y-3">
-          {hunts.map((h) => (
+          {challenges.map((h) => (
             <div
               key={h.id}
               className="bg-white border border-zinc-200 rounded-xl px-5 py-4 flex items-center gap-4 hover:border-zinc-300 transition-colors group"
@@ -596,8 +627,8 @@ export function Hunt() {
             <div className="size-11 rounded-xl bg-red-50 flex items-center justify-center mb-4">
               <Trash2 className="size-5 text-red-500" />
             </div>
-            <h3 className="text-[15px] font-semibold text-zinc-900 mb-1">Delete hunt?</h3>
-            <p className="text-[13px] text-zinc-500 mb-5">This will permanently remove the hunt and all its questions. This cannot be undone.</p>
+            <h3 className="text-[15px] font-semibold text-zinc-900 mb-1">Delete challenge?</h3>
+            <p className="text-[13px] text-zinc-500 mb-5">This will permanently remove the challenge and all its questions. This cannot be undone.</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setDeleteId(null)}

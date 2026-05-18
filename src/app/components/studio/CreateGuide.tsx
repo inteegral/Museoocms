@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import {
   ArrowLeft, Upload, Sparkles, X, Wand2, FileText,
   Loader2, Users, Baby, GraduationCap, Eye, Church, Plus, Search, Check,
@@ -113,14 +113,16 @@ function SuggestionRow({ label, value }: { label: string; value: string }) {
 
 export function CreateGuide() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const incomingFiles = (location.state as { catalogueFiles?: { name: string; size: number }[]; catalogueIdea?: string } | null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [config, setConfig] = useState<ItineraryConfig>({
     name: "",
-    description: "",
+    description: incomingFiles?.catalogueIdea ?? "",
     accessType: null,
     language: "it",
-    files: [],
+    files: incomingFiles?.catalogueFiles ?? [],
     useAllDocs: false,
     selectedDocIds: [],
     useMuseoo: null,
@@ -269,7 +271,7 @@ export function CreateGuide() {
             <button
               onClick={handleGenerate}
               disabled={!config.name.trim()}
-              className="px-5 py-2 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-2 text-sm bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Generate →
             </button>
@@ -327,7 +329,7 @@ export function CreateGuide() {
                             onClick={() => handleTargetChange(value)}
                             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border text-left transition-all ${
                               active
-                                ? "border-zinc-900 bg-zinc-900 text-white"
+                                ? "border-zinc-900 bg-[#D33333] text-white"
                                 : "border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50"
                             }`}
                           >
@@ -364,7 +366,7 @@ export function CreateGuide() {
                             title={desc}
                             className={`px-3 py-2 text-xs rounded-lg border text-left transition-all ${
                               active
-                                ? "border-zinc-900 bg-zinc-900 text-white"
+                                ? "border-zinc-900 bg-[#D33333] text-white"
                                 : "border-zinc-200 text-zinc-500 hover:border-zinc-300"
                             }`}
                           >
@@ -539,7 +541,7 @@ export function CreateGuide() {
                     key={String(value)}
                     onClick={() => setConfig((c) => ({ ...c, accessType: value }))}
                     className={`text-left px-4 py-4 rounded-xl border transition-all ${
-                      active ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
+                      active ? "border-zinc-900 bg-[#D33333] text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
                     }`}
                   >
                     <p className={`text-sm font-semibold mb-1 ${active ? "text-white" : "text-zinc-800"}`}>{label}</p>
@@ -573,7 +575,7 @@ export function CreateGuide() {
                       onClick={() => setConfig((c) => ({ ...c, useMuseoo: v }))}
                       className={`px-4 py-1.5 text-xs rounded-lg border transition-all ${
                         config.useMuseoo === v
-                          ? "border-zinc-900 bg-zinc-900 text-white"
+                          ? "border-zinc-900 bg-[#D33333] text-white"
                           : "border-zinc-200 text-zinc-500 hover:border-zinc-300"
                       }`}
                     >
@@ -645,7 +647,7 @@ export function CreateGuide() {
                     <SuggestionRow label="Quiz" value={suggestion.generateQuiz ? "Yes" : "No"} />
                   )}
                 </div>
-                <button onClick={applySuggestion} className="w-full py-2 text-xs bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors">
+                <button onClick={applySuggestion} className="w-full py-2 text-xs bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors">
                   Apply to form
                 </button>
                 <button
@@ -817,7 +819,7 @@ export function CreateGuide() {
               </p>
               <button
                 onClick={() => setShowDocModal(false)}
-                className="px-4 py-2 text-xs bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors"
+                className="px-4 py-2 text-xs bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors"
               >
                 Done
               </button>

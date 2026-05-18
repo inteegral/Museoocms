@@ -193,7 +193,7 @@ function InviteModal({ onInvite, onClose }: {
         <div className="px-5 py-3 border-t border-zinc-100 flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 text-[13px] text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors">Cancel</button>
           <button disabled={!canSubmit} onClick={() => canSubmit && onInvite(email.trim(), role, [...selectedGuides])}
-            className="px-4 py-2 text-[13px] font-semibold bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-[13px] font-medium bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Send invite
           </button>
@@ -279,7 +279,7 @@ export function Team() {
             </div>
           </div>
           <button onClick={() => setInviteOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-700 text-white text-[13px] font-semibold rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#D33333] hover:bg-[#b82c2c] text-white text-[13px] font-medium rounded-lg transition-colors"
           >
             <UserPlus className="size-4" strokeWidth={1.5} />
             Invite member

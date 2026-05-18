@@ -224,7 +224,7 @@ function PoiPickerModal({
           <p className="text-[11px] text-zinc-400 truncate">{selectedPoi ? `Selected: ${selectedPoi.title}` : "No POI selected"}</p>
           <div className="flex gap-2 flex-shrink-0">
             <button onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] text-zinc-500 hover:bg-zinc-100 transition-colors">Cancel</button>
-            <button disabled={!selected} onClick={() => selectedPoi && onConfirm(selectedPoi.id, selectedPoi.title)} className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-30 transition-colors">Apply to POI</button>
+            <button disabled={!selected} onClick={() => selectedPoi && onConfirm(selectedPoi.id, selectedPoi.title)} className="px-4 py-1.5 rounded-lg text-[12px] font-medium bg-[#D33333] text-white hover:bg-[#b82c2c] disabled:opacity-30 transition-colors">Apply to POI</button>
           </div>
         </div>
       </div>
@@ -509,7 +509,7 @@ export function DocumentsManager() {
             <h1 className="text-[22px] font-semibold text-zinc-900">Co-Curator</h1>
             <p className="text-[13px] text-zinc-500 mt-0.5">Your AI assistant — explores the knowledge base and helps you create better content</p>
           </div>
-          <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-[12px] font-medium transition-colors">
+          <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#D33333] hover:bg-[#b82c2c] text-white text-[12px] font-medium transition-colors">
             <Upload className="size-3.5" strokeWidth={1.5} />
             Upload document
           </button>
@@ -789,7 +789,7 @@ export function DocumentsManager() {
 
                     <div className="flex items-center justify-between pt-3 border-t border-zinc-200">
                       <p className="text-[12px] text-zinc-500">Total: <span className="font-semibold text-zinc-800">~{planTotalMin} min</span></p>
-                      <button onClick={createGuideDraft} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-[13px] font-medium transition-colors">
+                      <button onClick={createGuideDraft} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D33333] hover:bg-[#b82c2c] text-white text-[13px] font-medium transition-colors">
                         Create guide draft
                         <ChevronRight className="size-4" strokeWidth={2} />
                       </button>
@@ -906,7 +906,7 @@ export function DocumentsManager() {
         >
           <button
             onClick={() => { setPendingSave({ text: selectionTooltip.text }); setSelectionTooltip(null); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white rounded-xl text-[12px] font-medium shadow-lg hover:bg-zinc-800 transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white rounded-xl text-[12px] font-medium shadow-lg hover:bg-[#b82c2c] transition-colors whitespace-nowrap"
           >
             <Lightbulb className="size-3.5 text-amber-400" strokeWidth={1.5} />
             Save as idea

@@ -73,7 +73,7 @@ export function RedemptionPageEditModal({ guideName, initial, onSave, onClose }:
           <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-white border border-zinc-200 text-zinc-700 text-[13px] font-semibold rounded-xl hover:bg-zinc-50 transition-all">
             Cancel
           </button>
-          <button onClick={handleSave} className="flex-1 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+          <button onClick={handleSave} className="flex-1 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
             Save changes
           </button>
         </div>

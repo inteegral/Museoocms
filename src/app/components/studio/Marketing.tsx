@@ -370,7 +370,7 @@ export function Marketing() {
                   <>
                     <div className="flex items-center justify-between mb-5">
                       <p className="text-[13px] text-zinc-500">{filteredLanding.length} {filteredLanding.length === 1 ? "page" : "pages"}</p>
-                      <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+                      <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
                         <Plus className="size-4" />Create Landing Page
                       </button>
                     </div>
@@ -379,7 +379,7 @@ export function Marketing() {
                         <div className="size-12 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4"><Globe className="size-6 text-zinc-400" /></div>
                         <p className="text-[14px] font-semibold text-zinc-900 mb-1">No landing page yet</p>
                         <p className="text-[13px] text-zinc-500 mb-6">Create a landing page to promote this guide</p>
-                        <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+                        <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
                           <Plus className="size-4" />Create Landing Page
                         </button>
                       </div>
@@ -451,7 +451,7 @@ export function Marketing() {
                     </div>
                     <div className="px-6 py-5 flex items-center justify-between">
                       <p className="text-[13px] text-zinc-500">Batch generation and tracking are managed in Monetization.</p>
-                      <a href="/monetization" className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all flex-shrink-0">
+                      <a href="/monetization" className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all flex-shrink-0">
                         <ExternalLink className="size-3.5" />Go to Monetization
                       </a>
                     </div>
@@ -473,7 +473,7 @@ export function Marketing() {
                         <p className="text-[11px] text-zinc-400 mt-0.5">One universal code pointing to the full guide</p>
                       </div>
                       {!guideQR && (
-                        <button onClick={() => setShowCreateQR(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                        <button onClick={() => setShowCreateQR(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                           <Plus className="size-3.5" />Generate
                         </button>
                       )}
@@ -493,7 +493,7 @@ export function Marketing() {
                           </div>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
-                          <button className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                          <button className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                             <Download className="size-3.5" />Download
                           </button>
                           <button className="px-3 py-2 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all">
@@ -537,7 +537,7 @@ export function Marketing() {
                               <p className="text-[11px] text-zinc-400">{qr.scans} scans · {qr.style}</p>
                             </div>
                             <div className="flex gap-2 flex-shrink-0">
-                              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-[11px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white text-[11px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                                 <Download className="size-3" />Download
                               </button>
                               <button className="px-2.5 py-1.5 bg-white border border-zinc-200 text-zinc-500 hover:text-red-500 hover:border-red-200 rounded-lg transition-all">
@@ -559,7 +559,7 @@ export function Marketing() {
               <>
                 <div className="flex items-center justify-between mb-5">
                   <p className="text-[13px] text-zinc-500">{filteredAssets.length} {filteredAssets.length === 1 ? "asset" : "assets"}</p>
-                  <button onClick={() => setShowCreateAsset(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+                  <button onClick={() => setShowCreateAsset(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
                     <Plus className="size-4" />Create Asset
                   </button>
                 </div>
@@ -581,7 +581,7 @@ export function Marketing() {
                     <div className="size-12 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4"><FileText className="size-6 text-zinc-400" /></div>
                     <p className="text-[14px] font-semibold text-zinc-900 mb-1">No print assets yet</p>
                     <p className="text-[13px] text-zinc-500 mb-6">Create print-ready materials for this guide</p>
-                    <button onClick={() => setShowCreateAsset(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-700 transition-all">
+                    <button onClick={() => setShowCreateAsset(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
                       <Plus className="size-4" />Create Asset
                     </button>
                   </div>
@@ -601,7 +601,7 @@ export function Marketing() {
                           </div>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
-                          <button className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                          <button className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                             <Download className="size-3.5" />Download
                           </button>
                           <button className="px-3 py-2 bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 rounded-lg transition-all"><Edit className="size-3.5" /></button>
@@ -649,7 +649,7 @@ export function Marketing() {
                             </div>
                             <p className="text-[12px] text-zinc-500 mb-3">{desc}</p>
                             <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg mb-3 font-mono text-[11px] text-zinc-600 overflow-x-auto whitespace-pre">{code}</div>
-                            <button onClick={() => handleCopy(code, copyKey)} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                            <button onClick={() => handleCopy(code, copyKey)} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                               {copiedText === copyKey ? <><Check className="size-3.5" />Copiato!</> : <><Copy className="size-3.5" />Copia codice</>}
                             </button>
                           </div>
@@ -664,7 +664,7 @@ export function Marketing() {
                         </div>
                         <p className="text-[12px] text-zinc-500 mb-3">Display a QR code lightbox on your homepage</p>
                         <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg mb-3 font-mono text-[11px] text-zinc-600 overflow-x-auto whitespace-pre">{`<div id="museoo-qr" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/widget.js"></script>`}</div>
-                        <button onClick={() => handleCopy(`<div id="museoo-qr" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/widget.js"></script>`, "embed-qr")} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">
+                        <button onClick={() => handleCopy(`<div id="museoo-qr" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/widget.js"></script>`, "embed-qr")} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
                           {copiedText === "embed-qr" ? <><Check className="size-3.5" />Copied!</> : <><Copy className="size-3.5" />Copy Code</>}
                         </button>
                       </div>
@@ -778,7 +778,7 @@ export function Marketing() {
               <button onClick={() => setShowCreateLanding(false)} className="text-zinc-400 hover:text-zinc-700 transition-colors"><X className="size-5" /></button>
             </div>
             <p className="text-[14px] text-zinc-500 mb-6">Landing page builder coming soon…</p>
-            <button onClick={() => setShowCreateLanding(false)} className="w-full px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">Close</button>
+            <button onClick={() => setShowCreateLanding(false)} className="w-full px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">Close</button>
           </div>
         </div>
       )}
@@ -790,7 +790,7 @@ export function Marketing() {
               <button onClick={() => setShowCreateQR(false)} className="text-zinc-400 hover:text-zinc-700 transition-colors"><X className="size-5" /></button>
             </div>
             <p className="text-[14px] text-zinc-500 mb-6">QR generator coming soon…</p>
-            <button onClick={() => setShowCreateQR(false)} className="w-full px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">Close</button>
+            <button onClick={() => setShowCreateQR(false)} className="w-full px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">Close</button>
           </div>
         </div>
       )}
@@ -802,7 +802,7 @@ export function Marketing() {
               <button onClick={() => setShowCreateAsset(false)} className="text-zinc-400 hover:text-zinc-700 transition-colors"><X className="size-5" /></button>
             </div>
             <p className="text-[14px] text-zinc-500 mb-6">Asset builder coming soon…</p>
-            <button onClick={() => setShowCreateAsset(false)} className="w-full px-4 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all">Close</button>
+            <button onClick={() => setShowCreateAsset(false)} className="w-full px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">Close</button>
           </div>
         </div>
       )}

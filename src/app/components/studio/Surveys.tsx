@@ -235,7 +235,7 @@ export function Surveys() {
                   </button>
                   <button
                     onClick={() => setViewingResults(survey)}
-                    className="flex-1 px-3 py-1.5 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700 transition-all"
+                    className="flex-1 px-3 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"
                   >
                     View Results
                   </button>
@@ -362,7 +362,7 @@ export function Surveys() {
                             key={type}
                             onClick={() => setEditingQuestion({ ...editingQuestion, type, ...(type === "multiple_choice" ? { options: ["Option 1", "Option 2"] } : {}) })}
                             className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] font-semibold rounded-lg border transition-all ${
-                              editingQuestion.type === type ? "bg-zinc-900 text-white border-zinc-900" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                              editingQuestion.type === type ? "bg-[#D33333] text-white border-zinc-900" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
                             }`}
                           >
                             <Icon className="size-3.5" />{label}
@@ -420,7 +420,7 @@ export function Surveys() {
                                 onClick={() => setEditingQuestion({ ...editingQuestion, multipleSelection: value })}
                                 className={`flex-1 px-3 py-2 text-[12px] font-semibold rounded-lg border transition-all ${
                                   (editingQuestion.multipleSelection ?? false) === value
-                                    ? "bg-zinc-900 text-white border-zinc-900"
+                                    ? "bg-[#D33333] text-white border-zinc-900"
                                     : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
                                 }`}
                               >
@@ -452,7 +452,7 @@ export function Surveys() {
                     </label>
 
                     <div className="flex gap-2">
-                      <button onClick={addQuestion} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 text-white text-[12px] font-semibold rounded-lg hover:bg-zinc-700">
+                      <button onClick={addQuestion} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c]">
                         <Check className="size-3.5" />Add Question
                       </button>
                       <button onClick={() => setEditingQuestion(null)} className="px-3 py-2 border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50">
@@ -478,7 +478,7 @@ export function Surveys() {
                       key={s}
                       onClick={() => setDraft({ ...draft, status: s })}
                       className={`flex-1 px-4 py-2.5 text-[13px] font-semibold rounded-lg border transition-all ${
-                        draft.status === s ? "bg-zinc-900 text-white border-zinc-900" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                        draft.status === s ? "bg-[#D33333] text-white border-zinc-900" : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
                       }`}
                     >
                       {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -493,7 +493,7 @@ export function Surveys() {
               <button
                 onClick={saveSurvey}
                 disabled={!draft.name || !draft.questions?.length}
-                className="px-6 py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {editingId ? "Save Changes" : "Create Survey"}
               </button>

@@ -4,8 +4,8 @@
   /* Premium SaaS Design System - Linear/Stripe/Vercel Inspired */
   
   /* Typography - Surgical Precision */
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Fraunces', Georgia, serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-size: 14px;
   
@@ -198,6 +198,8 @@
   html {
     font-size: var(--font-size);
     font-family: var(--font-body);
+    font-optical-sizing: auto;
+    font-variation-settings: 'SOFT' 0, 'WONK' 0;
   }
 
   h1, h2, h3, h4, h5, h6 {

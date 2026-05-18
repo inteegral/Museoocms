@@ -84,7 +84,7 @@ const mockPOIs: POI[] = [
     id: "5",
     title: "Secret Garden",
     description: "",
-    status: "idea",
+    status: "draft",
     category: "Outdoors",
     scriptValidated: false,
     translations: [],
@@ -112,7 +112,7 @@ const mockPOIs: POI[] = [
 
 const statusConfig = {
   idea: { 
-    label: "Idea", 
+    label: "Draft", 
     color: "text-zinc-500", 
     bg: "bg-white", 
     border: "border-zinc-200",
@@ -321,7 +321,7 @@ function POIsManagerContent() {
   const openNewPOI = () => {
     const blank: POI = {
       id: `poi-${Date.now()}`,
-      title: "New Point of Interest",
+      title: "",
       description: "",
       status: "in-progress",
       category: "General",
@@ -394,7 +394,7 @@ function POIsManagerContent() {
 
   const stats = {
     total: pois.length,
-    idea: pois.filter((p) => p.status === "idea").length,
+    draft: pois.filter((p) => p.status === "draft").length,
     inProgress: pois.filter((p) => p.status === "in-progress").length,
     underRevision: pois.filter((p) => p.status === "under-revision").length,
     complete: pois.filter((p) => p.status === "complete").length,
@@ -411,7 +411,7 @@ function POIsManagerContent() {
           </div>
           <button
             onClick={openNewPOI}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-[13px] font-semibold rounded-lg hover:bg-zinc-800 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all"
           >
             <Plus className="size-4" />
             New POI
@@ -426,7 +426,7 @@ function POIsManagerContent() {
             </div>
             <div className="w-px h-4 bg-zinc-200" />
             {([
-              { dot: "bg-zinc-400",   label: "Idea",           count: stats.idea },
+              { dot: "bg-zinc-400",   label: "Draft",           count: stats.draft },
               { dot: "bg-zinc-900",   label: "In Progress",    count: stats.inProgress },
               { dot: "bg-orange-400", label: "Under Revision", count: stats.underRevision },
               { dot: "bg-[#D33333]",  label: "Complete",       count: stats.complete },
@@ -532,7 +532,7 @@ function POIsManagerContent() {
                 {isBlocked ? (
                   <button
                     onClick={() => setDeleteConfirm(null)}
-                    className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-semibold rounded-xl hover:bg-zinc-800 transition-all"
+                    className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
                   >
                     OK, go back
                   </button>
