@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router";
 import { X, Check, ChevronRight, Zap, Search, ChevronDown } from "lucide-react";
 import { PageShell } from "./PageShell";
 
@@ -862,6 +863,17 @@ export function Connectors() {
   const [categorySelect, setCategorySelect] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [configuring, setConfiguring] = useState<Connector | null>(null);
+  const [searchParams] = useSearchParams();
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const id = searchParams.get("highlight");
+    if (!id) return;
+    const connector = CONNECTORS.find(c => c.id === id);
+    if (!connector) return;
+    setConfiguring({ ...connector, status: statuses[connector.id] });
+    setTimeout(() => highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+  }, []);
 
   const connectedCount = Object.values(statuses).filter(s => s === "connected").length;
   const availableCount = CONNECTORS.filter(c => statuses[c.id] === "available").length;
@@ -984,11 +996,12 @@ export function Connectors() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {items.map(connector => (
-                    <ConnectorCard
-                      key={connector.id}
-                      connector={{ ...connector, status: statuses[connector.id] }}
-                      onConfigure={() => setConfiguring({ ...connector, status: statuses[connector.id] })}
-                    />
+                    <div key={connector.id} ref={connector.id === searchParams.get("highlight") ? highlightRef : undefined}>
+                      <ConnectorCard
+                        connector={{ ...connector, status: statuses[connector.id] }}
+                        onConfigure={() => setConfiguring({ ...connector, status: statuses[connector.id] })}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>

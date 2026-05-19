@@ -331,6 +331,16 @@ function GuideEditorContent() {
   const nextPhase = PHASES[phaseIndex + 1] ?? null;
   const prevPhase = PHASES[phaseIndex - 1] ?? null;
 
+  const translationLanguages = selectedLanguages.slice(1);
+  const translatingHint = translationLanguages.length > 0
+    ? `Scripts are locked. Translations in ${translationLanguages.map(l => l.toUpperCase()).join(", ")} are being generated.`
+    : "No additional languages configured. Add a language or skip directly to Voicing.";
+  const translatingHintJSX = translationLanguages.length > 0 ? (
+    <>Scripts are locked. Translations in {translationLanguages.map((l, i) => (
+      <span key={l}><span className="text-[#D33333] font-semibold">{l.toUpperCase()}</span>{i < translationLanguages.length - 1 ? ", " : ""}</span>
+    ))} are being generated.</>
+  ) : <>No additional languages configured. Add a language or skip directly to Voicing.</>;
+
   const BACK_WARNINGS: Partial<Record<ProductionPhase, string>> = {
     scripting:   "Going back to Scripting will unlock scripts for editing. Existing translations will need to be regenerated.",
     translating: "Going back to Translation will unlock translations for editing. Generated audio may become outdated.",
@@ -402,6 +412,7 @@ function GuideEditorContent() {
 
   const maxPOIs = 10; // Free tier limit
   const completedPOIs = selectedPOIs.filter(p => p.status === "complete").length;
+  const [translationsComplete, setTranslationsComplete] = useState(false);
   const progressPercentage = selectedPOIs.length > 0 ? Math.round((completedPOIs / selectedPOIs.length) * 100) : 0;
 
   const tryAdvancePhase = (targetPhase: ProductionPhase) => {
@@ -421,6 +432,13 @@ function GuideEditorContent() {
         });
         return;
       }
+    }
+    if (targetPhase === "voicing" && translationLanguages.length > 0 && !translationsComplete) {
+      setPhaseBlocker({
+        title: "Translations not complete",
+        detail: "All translations must be approved before moving to Voicing.",
+      });
+      return;
     }
     setPendingPhase({ phase: targetPhase, direction: "forward" });
   };
@@ -600,11 +618,13 @@ function GuideEditorContent() {
                 )}
                 {nextPhase && (() => {
                   const translationBlocked = nextPhase.id === "translating" && (selectedPOIs.length === 0 || completedPOIs < selectedPOIs.length);
+                  const voicingBlocked = nextPhase.id === "voicing" && translationLanguages.length > 0 && !translationsComplete;
+                  const isBlocked = translationBlocked || voicingBlocked;
                   return (
                     <button
                       onClick={() => tryAdvancePhase(nextPhase.id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
-                        translationBlocked
+                        isBlocked
                           ? "bg-zinc-300 text-zinc-400 cursor-not-allowed"
                           : "bg-[#D33333] text-white hover:bg-[#b82c2c]"
                       }`}
@@ -624,12 +644,12 @@ function GuideEditorContent() {
             </div>
             {/* Current phase hint */}
             <p className="text-[11px] text-zinc-400 mt-1.5 ml-0.5">
-              {PHASES[phaseIndex].hint}
+              {productionPhase === "translating" ? translatingHintJSX : PHASES[phaseIndex].hint}
             </p>
           </div>
 
           {/* Languages */}
-          <div className="px-7 py-5">
+          <div id="languages-section" className="px-7 py-5">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
                 Languages
@@ -1391,7 +1411,7 @@ function GuideEditorContent() {
               </button>
             </div>
             <div className="overflow-y-auto flex-1">
-              <Translations defaultGuideId={id} />
+              <Translations defaultGuideId={id} languages={selectedLanguages} onCompletionChange={setTranslationsComplete} />
             </div>
           </div>
         </div>
@@ -1836,6 +1856,8 @@ function GuideEditorContent() {
         const isBack = pendingPhase.direction === "back";
         const target = PHASES.find(p => p.id === pendingPhase.phase)!;
         const warning = isBack ? BACK_WARNINGS[productionPhase] : null;
+        const noLangs = !isBack && pendingPhase.phase === "translating" && translationLanguages.length === 0;
+        const hintText = warning ?? (pendingPhase.phase === "translating" ? translatingHintJSX : target.hint);
         return (
           <div className="fixed inset-0 bg-zinc-950/50 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
@@ -1843,7 +1865,7 @@ function GuideEditorContent() {
               <div className="px-7 pt-8 pb-7">
                 <div className="mb-5">
                   <div className="size-12 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-lg shadow-zinc-900/20">
-                    {isBack
+                    {isBack || noLangs
                       ? <AlertCircle className="size-5 text-white" />
                       : <Check className="size-5 text-white" />
                     }
@@ -1853,23 +1875,44 @@ function GuideEditorContent() {
                   {isBack ? `Back to ${target.label}?` : `Start ${target.label}?`}
                 </p>
                 <p className="text-[13px] text-zinc-400 leading-relaxed">
-                  {warning ?? target.hint}
+                  {hintText}
                 </p>
                 <div className="mt-7 flex flex-col gap-2">
-                  <button
-                    onClick={() => {
-                      setProductionPhase(pendingPhase.phase);
-                      setPendingPhase(null);
-                      if (!pendingPhase.direction || pendingPhase.direction === "forward") {
-                        if (pendingPhase.phase === "translating") setActiveModal("translations");
-                        if (pendingPhase.phase === "voicing") setActiveModal("voicing");
-                        if (pendingPhase.phase === "review") setActiveModal("publish");
-                      }
-                    }}
-                    className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
-                  >
-                    {isBack ? "Go back" : "Confirm"}
-                  </button>
+                  {noLangs ? (
+                    <>
+                      <button
+                        onClick={() => { setPendingPhase(null); setTimeout(() => document.getElementById("languages-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); }}
+                        className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-medium rounded-xl hover:bg-zinc-700 transition-all"
+                      >
+                        Add a language
+                      </button>
+                      <button
+                        onClick={() => {
+                          setProductionPhase("voicing");
+                          setPendingPhase(null);
+                          setActiveModal("voicing");
+                        }}
+                        className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
+                      >
+                        Skip to Voicing →
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setProductionPhase(pendingPhase.phase);
+                        setPendingPhase(null);
+                        if (!pendingPhase.direction || pendingPhase.direction === "forward") {
+                          if (pendingPhase.phase === "translating") setActiveModal("translations");
+                          if (pendingPhase.phase === "voicing") setActiveModal("voicing");
+                          if (pendingPhase.phase === "review") setActiveModal("publish");
+                        }
+                      }}
+                      className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
+                    >
+                      {isBack ? "Go back" : "Confirm"}
+                    </button>
+                  )}
                   <button
                     onClick={() => setPendingPhase(null)}
                     className="w-full py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all"

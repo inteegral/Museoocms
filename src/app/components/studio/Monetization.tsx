@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import {
   QrCode, Download, Plus, Check, X, ChevronDown,
   Package, FileDown, Truck, Clock, CheckCircle2,
@@ -310,162 +311,14 @@ export function Monetization() {
               </div>
             </div>
 
-            {/* In-loco */}
-            <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
-              <div className="px-6 py-5 flex items-center gap-4">
-                <div className="size-9 rounded-xl bg-sky-50 flex items-center justify-center flex-shrink-0">
-                  <Tag className="size-4 text-sky-600" strokeWidth={1.5} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[14px] font-semibold text-zinc-900">In-loco</p>
-                  <p className="text-[12px] text-zinc-500">Text codes to distribute at the ticket desk, reception or in brochures</p>
-                </div>
-                <button onClick={() => { setShowInloco(!showInloco); setShowQr(false); }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
-                  <Plus className="size-3.5" />Generate batch
-                </button>
+            {/* Online purchase — connector callout */}
+            <div className="flex items-center gap-4 px-5 py-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+              <div className="size-9 rounded-xl bg-white border border-zinc-200 flex items-center justify-center flex-shrink-0">
+                <Globe className="size-4 text-zinc-400" strokeWidth={1.5} />
               </div>
-              {showInloco && (
-                <div className="px-6 pb-5 border-t border-zinc-100">
-                  <div className="pt-4 flex items-end gap-3">
-                    <div className="flex-1">
-                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Audio guide</label>
-                      <div className="relative">
-                        <select value={inlocoGuide} onChange={e => setInlocoGuide(e.target.value)}
-                          className="w-full appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900">
-                          {paidGuides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Quantity</label>
-                      <div className="relative">
-                        <select value={inlocoQty} onChange={e => setInlocoQty(parseInt(e.target.value))}
-                          className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900">
-                          {QTY_OPTIONS.map(n => <option key={n} value={n}>{n.toLocaleString()}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    <button onClick={() => generateBatch("inloco", inlocoGuide, inlocoQty)}
-                      className="px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all whitespace-nowrap">
-                      Generate &amp; download CSV
-                    </button>
-                    <button onClick={() => setShowInloco(false)} className="p-2.5 text-zinc-400 hover:text-zinc-700 transition-colors">
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                  <p className="mt-2 text-[11px] text-zinc-400">Alphabet: A–Z and 2–9 · excluding <span className="font-mono">0 O 1 I</span> to avoid visual ambiguity in print</p>
-                </div>
-              )}
-            </div>
-
-            {/* QR personali */}
-            <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
-              <div className="px-6 py-5 flex items-center gap-4">
-                <div className="size-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
-                  <QrCode className="size-4 text-violet-600" strokeWidth={1.5} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[14px] font-semibold text-zinc-900">Personal QR</p>
-                  <p className="text-[12px] text-zinc-500">Each code with its own scannable QR — ideal for groups, schools, events</p>
-                </div>
-                <button onClick={() => { setShowQr(!showQr); setShowInloco(false); }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
-                  <Plus className="size-3.5" />Generate with QR
-                </button>
-              </div>
-              {showQr && (
-                <div className="px-6 pb-5 border-t border-zinc-100">
-                  <div className="pt-4 flex items-end gap-3">
-                    <div className="flex-1">
-                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Audio guide</label>
-                      <div className="relative">
-                        <select value={qrGuide} onChange={e => setQrGuide(e.target.value)}
-                          className="w-full appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900">
-                          {paidGuides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Quantity</label>
-                      <div className="relative">
-                        <select value={qrQty} onChange={e => setQrQty(parseInt(e.target.value))}
-                          className="appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900">
-                          {QTY_OPTIONS.map(n => <option key={n} value={n}>{n.toLocaleString()}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    <button onClick={() => generateBatch("qr", qrGuide, qrQty)}
-                      className="px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all whitespace-nowrap">
-                      Generate &amp; download ZIP
-                    </button>
-                    <button onClick={() => setShowQr(false)} className="p-2.5 text-zinc-400 hover:text-zinc-700 transition-colors">
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                  <p className="mt-2 text-[11px] text-zinc-400">ZIP con un PNG per ogni QR, nominato con il codice — es. <span className="font-mono">X7K2M.png</span></p>
-                </div>
-              )}
-            </div>
-
-            {/* Online / webhook */}
-            <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
-              <div className="px-6 py-5 flex items-center gap-4">
-                <div className="size-9 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <Globe className="size-4 text-amber-600" strokeWidth={1.5} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[14px] font-semibold text-zinc-900">Online purchase</p>
-                  <p className="text-[12px] text-zinc-500">Your payment system calls the webhook · Museoo issues and sends the code by email to the visitor</p>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-lg flex-shrink-0">
-                  <span className="size-1.5 rounded-full bg-emerald-400" />
-                  <span className="text-[12px] text-emerald-700 font-medium">Active</span>
-                </div>
-              </div>
-              <div className="px-6 pb-6 border-t border-zinc-100 pt-5 space-y-4">
-                <div>
-                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">Webhook endpoint</label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg font-mono text-[12px] text-zinc-700 truncate select-all">{WEBHOOK_URL}</div>
-                    <button onClick={() => copy(WEBHOOK_URL, "webhook")}
-                      className="px-3.5 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex items-center gap-1.5 text-[12px] font-medium flex-shrink-0">
-                      {copiedWebhook ? <><Check className="size-3.5 text-emerald-500" />Copied</> : <><Copy className="size-3.5" />Copy</>}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">API key</label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg font-mono text-[12px] text-zinc-700 truncate">
-                      {showApiKey ? API_KEY : "msk_live_" + "•".repeat(16)}
-                    </div>
-                    <button onClick={() => setShowApiKey(!showApiKey)}
-                      className="px-3 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex-shrink-0">
-                      {showApiKey ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                    </button>
-                    <button onClick={() => copy(API_KEY, "apikey")}
-                      className="px-3.5 py-2.5 bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 rounded-lg transition-all flex items-center gap-1.5 text-[12px] font-medium flex-shrink-0">
-                      {copiedApiKey ? <><Check className="size-3.5 text-emerald-500" />Copied</> : <><Copy className="size-3.5" />Copy</>}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between py-3.5 px-4 bg-zinc-50 rounded-xl">
-                  <div>
-                    <p className="text-[13px] font-semibold text-zinc-900">Automatic email to visitor</p>
-                    <p className="text-[12px] text-zinc-500 mt-0.5">Send the code as soon as the webhook is received successfully</p>
-                  </div>
-                  <button onClick={() => setEmailEnabled(!emailEnabled)}
-                    className="relative flex-shrink-0 rounded-full transition-colors duration-200 ml-6"
-                    style={{ width: 36, height: 20, backgroundColor: emailEnabled ? "#18181b" : "#e4e4e7" }}>
-                    <span className="absolute rounded-full transition-all duration-200"
-                      style={{ width: 14, height: 14, top: 3, left: emailEnabled ? 19 : 3, backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }} />
-                  </button>
-                </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-zinc-900">Online purchase</p>
+                <p className="text-[12px] text-zinc-500 mt-0.5">Connect your payment system via webhook to issue codes automatically. Configure it in <Link to="/connectors?highlight=webhook" className="text-zinc-700 underline underline-offset-2 hover:text-zinc-900 transition-colors">Connectors →</Link></p>
               </div>
             </div>
 

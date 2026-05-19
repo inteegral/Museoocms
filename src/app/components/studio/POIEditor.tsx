@@ -252,9 +252,14 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideContex
   const [coCuratorInput, setCoCuratorInput] = useState(`${poi.title}\n\n${poi.description}`);
   const [coCuratorPhase, setCoCuratorPhase] = useState<"idle" | "generating" | "done">("idle");
   const [generatedScript, setGeneratedScript] = useState("");
-  const [coCuratorDocIds, setCoCuratorDocIds] = useState<string[]>([]);
+  const [coCuratorDocIds, setCoCuratorDocIds] = useState<string[]>(() => {
+    const poiTagged = mockDocuments.filter(d => d.tags.includes(poi.id));
+    if (poiTagged.length > 0) return poiTagged.map(d => d.id);
+    return mockDocuments.filter(d => d.tags.includes("museo")).map(d => d.id);
+  });
   const [showDocModal, setShowDocModal] = useState(false);
   const [docSearch, setDocSearch] = useState("");
+  const [docTab, setDocTab] = useState<"poi" | "audioguide" | "general">("poi");
 
   const assignedGuides = formData.assignedToGuides
     ? mockGuides.filter(g => formData.assignedToGuides!.includes(g.id))
@@ -837,7 +842,7 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideContex
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Sources</p>
                       <button
-                        onClick={() => setShowDocModal(true)}
+                        onClick={() => { setShowDocModal(true); setDocTab("poi"); }}
                         className="text-[11px] px-2.5 py-1 rounded-lg border border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 transition-all"
                       >
                         Browse
@@ -949,24 +954,26 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideContex
       )}
 
       {showDocModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={() => setShowDocModal(false)}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" onClick={() => { setShowDocModal(false); setDocTab("poi"); }}>
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
           <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
-              <p className="text-[14px] font-semibold text-zinc-900">Document library</p>
-              <button onClick={() => setShowDocModal(false)} className="text-zinc-300 hover:text-zinc-500 transition-colors">
+              <p className="text-[14px] font-semibold text-zinc-900">Knowledge Base</p>
+              <button onClick={() => { setShowDocModal(false); setDocTab("poi"); }} className="text-zinc-300 hover:text-zinc-500 transition-colors">
                 <X className="size-4" />
               </button>
             </div>
 
+            {/* Search */}
             <div className="px-5 py-3 border-b border-zinc-100">
-              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 rounded-lg border border-zinc-200">
+              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 rounded-lg border border-zinc-200 focus-within:border-zinc-400 transition-colors">
                 <Search className="size-3.5 text-zinc-400 flex-shrink-0" />
                 <input
                   type="text"
                   value={docSearch}
                   onChange={e => setDocSearch(e.target.value)}
-                  placeholder="Search documents…"
+                  placeholder="Cerca documenti…"
                   className="flex-1 text-[13px] bg-transparent focus:outline-none text-zinc-700 placeholder:text-zinc-400"
                   autoFocus
                 />
@@ -978,9 +985,46 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideContex
               </div>
             </div>
 
-            <div className="overflow-y-auto max-h-72 px-3 py-2">
-              {mockDocuments
-                .filter(d => d.filename.toLowerCase().includes(docSearch.toLowerCase()))
+            {/* Tabs */}
+            <div className="flex border-b border-zinc-100">
+              {(["poi", "audioguide", "general"] as const).map((tab) => {
+                const labels = { poi: "POI", audioguide: "Audioguide", general: "General" };
+                const active = docTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setDocTab(tab)}
+                    className={`flex-1 py-2.5 text-[12px] font-medium transition-colors border-b-2 ${
+                      active
+                        ? "border-zinc-900 text-zinc-900"
+                        : "border-transparent text-zinc-400 hover:text-zinc-600"
+                    }`}
+                  >
+                    {labels[tab]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Document list */}
+            <div className="overflow-y-auto max-h-64 px-3 py-2">
+              {[...mockDocuments]
+                .filter(d => {
+                  const matchesTab =
+                    docTab === "poi" ? d.tags.some(t => t.startsWith("poi-")) :
+                    docTab === "audioguide" ? d.tags.some(t => t.startsWith("guide-")) :
+                    d.tags.includes("museo");
+                  return matchesTab && d.filename.toLowerCase().includes(docSearch.toLowerCase());
+                })
+                .sort((a, b) => {
+                  const aSelected = coCuratorDocIds.includes(a.id);
+                  const bSelected = coCuratorDocIds.includes(b.id);
+                  if (aSelected !== bSelected) return aSelected ? -1 : 1;
+                  const aMuseo = a.tags.includes("museo");
+                  const bMuseo = b.tags.includes("museo");
+                  if (aMuseo !== bMuseo) return aMuseo ? -1 : 1;
+                  return 0;
+                })
                 .map(doc => {
                   const selected = coCuratorDocIds.includes(doc.id);
                   return (
@@ -991,24 +1035,31 @@ export function POIEditor({ poi, onClose, onSave, onDelete, guideId, guideContex
                       )}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all hover:bg-zinc-50 ${selected ? "bg-zinc-50" : ""}`}
                     >
-                      <div className={`size-5 rounded flex items-center justify-center flex-shrink-0 border transition-all ${selected ? "bg-zinc-900 border-zinc-900" : "border-zinc-300"}`}>
+                      <div className={`size-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-all ${selected ? "bg-zinc-900 border-zinc-900" : "border-zinc-300"}`}>
                         {selected && <Check className="size-3 text-white" />}
                       </div>
                       <FileText className="size-3.5 text-zinc-400 flex-shrink-0" />
                       <span className="text-[13px] text-zinc-700 flex-1 truncate">{doc.filename}</span>
-                      <span className="text-[12px] text-zinc-400 flex-shrink-0">{doc.size}</span>
+                      <div className="flex gap-1 flex-shrink-0 items-center">
+                        {doc.tags.includes(poi.id) && !selected && (
+                          <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded-full bg-amber-50 text-amber-500">questo POI</span>
+                        )}
+                        {doc.tags.includes("museo") && !doc.tags.includes(poi.id) && !selected && (
+                          <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded-full bg-blue-50 text-blue-500">suggerito</span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
             </div>
 
             <div className="px-5 py-4 border-t border-zinc-100 flex items-center justify-between">
-              <p className="text-[12px] text-zinc-400">{coCuratorDocIds.length} selected</p>
+              <p className="text-[12px] text-zinc-400">{coCuratorDocIds.length} selezionati</p>
               <button
-                onClick={() => setShowDocModal(false)}
+                onClick={() => { setShowDocModal(false); setDocTab("poi"); }}
                 className="px-4 py-2 text-[13px] bg-[#D33333] text-white rounded-lg hover:bg-[#b82c2c] transition-colors"
               >
-                Done
+                Conferma
               </button>
             </div>
           </div>

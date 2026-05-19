@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import {
   Search, Sparkles, CheckCircle2, Mic, Play, Pause,
-  X, ChevronDown, FileText, ArrowRight, RotateCcw,
+  X, ChevronDown, ArrowRight, RotateCcw,
   Clock, Eye, Lock, ChevronLeft, ChevronRight, User,
   ShieldCheck, MessageSquare,
 } from "lucide-react";
@@ -63,14 +63,15 @@ const initialGuides: Guide[] = [
   { id: "guide-3", name: "Family Tour", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: null, ES: null } },
 ];
 
+const draft = { text: "", status: "draft" as const, audioStatus: "none" as const };
+
 const initialPOIs: POI[] = [
   {
     id: "p1", name: "Renaissance Hall",
     sourceText: "This magnificent hall showcases the finest examples of Renaissance art from the 15th and 16th centuries. The space was designed to immerse visitors in the grandeur of the period, with soaring ceilings and carefully curated lighting that brings each masterpiece to life.",
     translations: {
       IT: { text: "Questa magnifica sala presenta i migliori esempi dell'arte rinascimentale del XV e XVI secolo.", status: "approved", audioStatus: "ready" },
-      ES: { text: "Esta magnífica sala presenta los mejores ejemplos del arte renacentista de los siglos XV y XVI.", status: "review", audioStatus: "review", aiDrafted: true },
-      FR: { text: "Cette magnifique salle présente les plus beaux exemples de l'art de la Renaissance des XVe et XVIe siècles.", status: "draft", audioStatus: "none", aiDrafted: true },
+      ES: draft, FR: draft,
     },
   },
   {
@@ -78,8 +79,7 @@ const initialPOIs: POI[] = [
     sourceText: "Step into the recreated workshop of Leonardo da Vinci, where genius and craftsmanship converged. This space replicates the environment where Leonardo developed his groundbreaking inventions and created his most celebrated artworks.",
     translations: {
       IT: { text: "Entra nel laboratorio ricreato di Leonardo da Vinci, dove genio e maestria si incontrano.", status: "approved", audioStatus: "ready" },
-      ES: { text: "Entra en el taller recreado de Leonardo da Vinci, donde el genio y la artesanía se fusionaron.", status: "review", audioStatus: "none", aiDrafted: true },
-      FR: { text: "", status: "draft", audioStatus: "none" },
+      ES: draft, FR: draft,
     },
   },
   {
@@ -87,19 +87,24 @@ const initialPOIs: POI[] = [
     sourceText: "This room houses a faithful reproduction of The Last Supper by Leonardo da Vinci. Visitors can study the intricate details of this masterpiece, including the emotional expressions of the apostles.",
     translations: {
       IT: { text: "Questa sala ospita una fedele riproduzione dell'Ultima Cena di Leonardo da Vinci.", status: "approved", audioStatus: "ready" },
-      ES: { text: "Esta sala alberga una reproducción fiel de La Última Cena de Leonardo da Vinci.", status: "approved", audioStatus: "ready" },
-      FR: { text: "", status: "draft", audioStatus: "none" },
+      ES: draft, FR: draft,
     },
   },
   {
     id: "p4", name: "Michelangelo's Sculptures",
     sourceText: "Marvel at the mastery of Michelangelo's sculptural works. The raw power and emotional depth captured in marble continues to astonish viewers five centuries after their creation.",
-    translations: { IT: { text: "", status: "draft", audioStatus: "none" }, ES: { text: "", status: "draft", audioStatus: "none" }, FR: { text: "", status: "draft", audioStatus: "none" } },
+    translations: {
+      IT: { text: "Ammira la maestria delle opere scultoree di Michelangelo. La potenza e la profondità emotiva catturate nel marmo continuano a stupire i visitatori cinque secoli dopo la loro creazione.", status: "approved", audioStatus: "none" },
+      ES: draft, FR: draft,
+    },
   },
   {
     id: "p5", name: "Raphael Gallery",
     sourceText: "Explore the harmonious compositions of Raphael, whose work represents the pinnacle of Renaissance artistic achievement. The gallery presents a curated selection of his most significant paintings.",
-    translations: { IT: { text: "", status: "draft", audioStatus: "none" }, ES: { text: "", status: "draft", audioStatus: "none" }, FR: { text: "", status: "draft", audioStatus: "none" } },
+    translations: {
+      IT: { text: "Esplora le composizioni armoniose di Raffaello, la cui opera rappresenta il vertice del Rinascimento artistico. La galleria presenta una selezione curata dei suoi dipinti più significativi.", status: "approved", audioStatus: "none" },
+      ES: draft, FR: draft,
+    },
   },
 ];
 
@@ -207,35 +212,6 @@ function ReviewerRow({ r, onSelect, highlight }: { r: CertifiedReviewer; onSelec
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-type SlotState = "empty" | "active" | "review" | "done";
-const slotColor: Record<SlotState, string> = { empty: "#e4e4e7", active: "#93c5fd", review: "#fcd34d", done: "#4ade80" };
-
-function textSlot(status: TextStatus, text: string): SlotState {
-  if (status === "approved") return "done";
-  if (status === "expert-done" || status === "review") return "review";
-  if (status === "expert-review" || text) return "active";
-  return "empty";
-}
-function audioSlot(status: AudioStatus): SlotState {
-  if (status === "ready") return "done";
-  if (status === "review") return "review";
-  if (status === "pending") return "active";
-  return "empty";
-}
-
-function SplitPill({ t, v }: { t: SlotState; v: SlotState }) {
-  return (
-    <div className="flex items-center rounded-full overflow-hidden flex-shrink-0" style={{ border: "1.5px solid #e4e4e7" }}>
-      <div className="w-5 h-4 flex items-center justify-center" style={{ backgroundColor: slotColor[t] }}>
-        <FileText className="size-2 text-white/80" strokeWidth={3} />
-      </div>
-      <div className="w-px h-full bg-white/60" />
-      <div className="w-5 h-4 flex items-center justify-center" style={{ backgroundColor: slotColor[v] }}>
-        <Mic className="size-2 text-white/80" strokeWidth={3} />
-      </div>
-    </div>
-  );
-}
 
 // ─── Voice Panel ───────────────────────────────────────────────────────────────
 function VoicePanel({ textApproved, audioStatus, voice, lang, showPicker, voiceSearch,
@@ -331,13 +307,16 @@ function VoicePanel({ textApproved, audioStatus, voice, lang, showPicker, voiceS
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
-export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {}) {
+export function Translations({ defaultGuideId, languages, onCompletionChange }: { defaultGuideId?: string; languages?: string[]; onCompletionChange?: (done: boolean) => void } = {}) {
   const locked = !!defaultGuideId;
   const [pois, setPois] = useState<POI[]>(initialPOIs);
-  const [guides] = useState<Guide[]>(initialGuides);
-  const initialGuide = initialGuides.find(g => g.id === defaultGuideId) ?? initialGuides[0];
+  const resolvedGuides = languages && defaultGuideId
+    ? initialGuides.map(g => g.id === defaultGuideId ? { ...g, targetLanguages: languages.map(l => l.toUpperCase()) } : g)
+    : initialGuides;
+  const [guides] = useState<Guide[]>(resolvedGuides);
+  const initialGuide = resolvedGuides.find(g => g.id === defaultGuideId) ?? resolvedGuides[0];
   const [guideId, setGuideId] = useState(initialGuide.id);
-  const [lang, setLang] = useState(initialGuide.targetLanguages[0]);
+  const [lang, setLang] = useState(initialGuide.targetLanguages[1] ?? initialGuide.targetLanguages[0]);
   const [poiId, setPoiId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [search, setSearch] = useState("");
@@ -351,6 +330,13 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
   const [showReviewerPicker, setShowReviewerPicker] = useState(false);
 
   const guide = guides.find(g => g.id === guideId)!;
+  const translationLangs = guide.targetLanguages.slice(1);
+
+  useEffect(() => {
+    if (!onCompletionChange || translationLangs.length === 0) return;
+    const allDone = pois.every(p => translationLangs.every(l => p.translations[l]?.status === "approved"));
+    onCompletionChange(allDone);
+  }, [pois, guideId]);
   const poi = pois.find(p => p.id === poiId) ?? null;
   const trans = poi ? poi.translations[lang] : undefined;
   const voiceId = voiceAssignments[guideId]?.[lang] ?? null;
@@ -381,7 +367,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
     if (match) openPOI(match);
     setSearchParams({}, { replace: true });
   }, []);
-  const changeGuide = (id: string) => { const g = guides.find(x => x.id === id)!; setGuideId(id); setLang(g.targetLanguages[0]); setPoiId(null); };
+  const changeGuide = (id: string) => { const g = guides.find(x => x.id === id)!; setGuideId(id); setLang(g.targetLanguages[1] ?? g.targetLanguages[0]); setPoiId(null); };
   const changeLang = (l: string) => { setLang(l); if (poi) setEditingText(poi.translations[l]?.text ?? ""); };
   const togglePlay = (id: string) => { setPlayingVoice(prev => { if (prev === id) return null; setTimeout(() => setPlayingVoice(null), 3000); return id; }); };
   const assignVoice = (v: Voice) => { setVoiceAssignments(prev => ({ ...prev, [guideId]: { ...prev[guideId], [lang]: v.id } })); patch({ audioStatus: "pending" }); setShowVoicePicker(false); setVoiceSearch(""); };
@@ -482,7 +468,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
               <h1 className="text-[20px] font-semibold text-zinc-900 tracking-tight truncate">{poi.name}</h1>
             </div>
             <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-xl p-1 flex-shrink-0">
-              {guide.targetLanguages.map(l => (
+              {translationLangs.map(l => (
                 <button key={l} onClick={() => changeLang(l)}
                   className={`px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${lang === l ? "bg-white text-zinc-900 shadow-sm border border-zinc-200" : "text-zinc-500 hover:text-zinc-800"}`}>{l}</button>
               ))}
@@ -679,7 +665,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
             </div>
           )}
           <div className="flex items-center gap-1 bg-zinc-50 border border-zinc-200 rounded-xl p-1">
-            {guide.targetLanguages.map(l => (
+            {translationLangs.map(l => (
               <button key={l} onClick={() => setLang(l)}
                 className={`px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${lang === l ? "bg-white text-zinc-900 shadow-sm border border-zinc-200" : "text-zinc-500 hover:text-zinc-800"}`}>{l}</button>
             ))}
@@ -701,19 +687,14 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
         <div className="space-y-2">
           {filteredPOIs.map((p, i) => {
             const t = p.translations[lang];
-            const ts = textSlot(t?.status ?? "draft", t?.text ?? "");
-            const as_ = audioSlot(t?.audioStatus ?? "none");
-            const isDone = ts === "done";
-            const isExpertState = t?.status === "expert-review" || t?.status === "expert-done";
-            const isAI = t?.aiDrafted && t?.status !== "approved" && !isExpertState;
+            const isDone = t?.status === "approved";
+            const isUnderReview = t?.status === "review" || t?.status === "expert-review" || t?.status === "expert-done";
 
-            const statusLabel = isDone ? "Complete"
-              : t?.status === "expert-done" ? "Expert reviewed"
-              : t?.status === "expert-review" ? "Expert review"
-              : t?.status === "approved" ? "Approved"
-              : t?.status === "review" ? "In review"
-              : t?.text ? "Draft"
-              : "Not started";
+            const { label, cls } = isDone
+              ? { label: "Translation Complete",     cls: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+              : isUnderReview
+              ? { label: "Translation Under Review", cls: "bg-amber-50 text-amber-700 border-amber-200" }
+              : { label: "Translation Draft",        cls: "bg-zinc-100 text-zinc-500 border-zinc-200" };
 
             return (
               <button key={p.id} onClick={() => openPOI(p)}
@@ -721,10 +702,7 @@ export function Translations({ defaultGuideId }: { defaultGuideId?: string } = {
                 style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
                 <span className="text-[11px] font-medium text-zinc-400 w-5 flex-shrink-0">{String(i + 1).padStart(2, "0")}</span>
                 <span className={`flex-1 text-[14px] font-semibold truncate ${isDone ? "text-emerald-800" : "text-zinc-900"}`}>{p.name}</span>
-                {isAI && <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-50 text-violet-600 border border-violet-100 flex-shrink-0"><Sparkles className="size-2.5" />AI draft</span>}
-                {isExpertState && <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-100 flex-shrink-0"><ShieldCheck className="size-2.5" />{t?.status === "expert-done" ? "Expert reviewed" : "Expert review"}</span>}
-                <SplitPill t={ts} v={as_} />
-                <span className="text-[12px] font-semibold text-zinc-400 group-hover:text-zinc-700 transition-colors ml-1 w-24 text-right flex-shrink-0">{statusLabel}</span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex-shrink-0 ${cls}`}>{label}</span>
                 <ChevronRight className="size-4 text-zinc-300 group-hover:text-zinc-500 transition-colors flex-shrink-0" />
               </button>
             );

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router";
-import { Plus, LayoutGrid, List, PenLine, Copy, Sparkles, GitFork, AlignLeft, X, Smartphone, ChevronRight, Calendar, Ticket, Unlock, Upload, FileText, BookOpen } from "lucide-react";
+import { Plus, LayoutGrid, List, PenLine, Copy, Sparkles, GitFork, X, Smartphone, ChevronRight, Calendar, Ticket, Unlock, Upload, FileText, BookOpen } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockGuides, mockDocuments } from "../../data/mockData";
 import { useState, useEffect, useRef } from "react";
@@ -13,12 +13,6 @@ const NEW_GUIDE_PATHS = [
     desc: "Build your itinerary step by step, adding stops manually.",
   },
   {
-    id: "ai",
-    icon: Sparkles,
-    title: "Generate with AI",
-    desc: "Describe your tour and let Museoo draft the content for you.",
-  },
-  {
     id: "adapt",
     icon: Copy,
     title: "Adapt an existing itinerary",
@@ -29,12 +23,6 @@ const NEW_GUIDE_PATHS = [
     icon: GitFork,
     title: "Create a variant",
     desc: "Branch off a published guide — different language, audience, or length.",
-  },
-  {
-    id: "manual",
-    icon: AlignLeft,
-    title: "I already have my texts",
-    desc: "Paste or import your own content and publish directly.",
   },
 ];
 
@@ -275,6 +263,7 @@ export function GuidesList() {
   const [catalogueDragOver, setCatalogueDragOver] = useState(false);
   const [showLibraryPicker, setShowLibraryPicker] = useState(false);
   const [selectedLibraryDocs, setSelectedLibraryDocs] = useState<string[]>([]);
+  const [libraryTagFilter, setLibraryTagFilter] = useState<string | null>(null);
   const catalogueInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -304,6 +293,7 @@ export function GuidesList() {
     setCatalogueIdea("");
     setShowLibraryPicker(false);
     setSelectedLibraryDocs([]);
+    setLibraryTagFilter(null);
   };
 
   const toggleLibraryDoc = (id: string) =>
@@ -553,24 +543,63 @@ export function GuidesList() {
 
               {/* Library picker */}
               {showLibraryPicker && (
-                <div className="border border-zinc-100 rounded-2xl overflow-hidden">
-                  {mockDocuments.map(doc => {
-                    const selected = selectedLibraryDocs.includes(doc.id);
-                    return (
+                <div>
+                  {/* Tag filter chips */}
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    <button
+                      onClick={() => setLibraryTagFilter(null)}
+                      className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-all ${libraryTagFilter === null ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"}`}
+                    >
+                      Tutti
+                    </button>
+                    <button
+                      onClick={() => setLibraryTagFilter("museo")}
+                      className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-all ${libraryTagFilter === "museo" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
+                    >
+                      #museo
+                    </button>
+                    {mockGuides.map(g => (
                       <button
-                        key={doc.id}
-                        onClick={() => toggleLibraryDoc(doc.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-zinc-100 last:border-0 transition-colors ${selected ? "bg-zinc-50" : "hover:bg-zinc-50"}`}
+                        key={g.id}
+                        onClick={() => setLibraryTagFilter(g.id)}
+                        className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-all ${libraryTagFilter === g.id ? "bg-violet-600 text-white" : "bg-violet-50 text-violet-600 hover:bg-violet-100"}`}
                       >
-                        <div className={`size-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "bg-zinc-900 border-zinc-900" : "border-zinc-300"}`}>
-                          {selected && <X className="size-2.5 text-white" strokeWidth={3} />}
-                        </div>
-                        <FileText className="size-4 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
-                        <span className="text-[13px] font-medium text-zinc-700 flex-1 truncate">{doc.filename}</span>
-                        <span className="text-[11px] text-zinc-400 flex-shrink-0">{doc.size}</span>
+                        {g.title.split(" ").slice(0, 2).join(" ")}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
+                  <div className="border border-zinc-100 rounded-2xl overflow-hidden">
+                    {mockDocuments
+                      .filter(doc => libraryTagFilter === null || doc.tags.includes(libraryTagFilter))
+                      .map(doc => {
+                        const selected = selectedLibraryDocs.includes(doc.id);
+                        return (
+                          <button
+                            key={doc.id}
+                            onClick={() => toggleLibraryDoc(doc.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-zinc-100 last:border-0 transition-colors ${selected ? "bg-zinc-50" : "hover:bg-zinc-50"}`}
+                          >
+                            <div className={`size-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "bg-zinc-900 border-zinc-900" : "border-zinc-300"}`}>
+                              {selected && <X className="size-2.5 text-white" strokeWidth={3} />}
+                            </div>
+                            <FileText className="size-4 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
+                            <span className="text-[13px] font-medium text-zinc-700 flex-1 truncate">{doc.filename}</span>
+                            <div className="flex gap-1 flex-shrink-0">
+                              {doc.tags.slice(0, 2).map(tag => (
+                                <span key={tag} className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-full ${
+                                  tag === "museo" ? "bg-blue-50 text-blue-500" :
+                                  tag.startsWith("guide-") ? "bg-violet-50 text-violet-500" :
+                                  "bg-amber-50 text-amber-500"
+                                }`}>
+                                  {tag === "museo" ? "#museo" : tag.startsWith("guide-") ? mockGuides.find(g => g.id === tag)?.title.split(" ")[0] : tag}
+                                </span>
+                              ))}
+                            </div>
+                            <span className="text-[11px] text-zinc-400 flex-shrink-0 ml-1">{doc.size}</span>
+                          </button>
+                        );
+                      })}
+                  </div>
                 </div>
               )}
 

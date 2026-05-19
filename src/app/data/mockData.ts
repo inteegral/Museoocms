@@ -73,7 +73,7 @@ export const mockGuides = [
     description: "The most important works in 30 minutes",
     status: "draft" as const,
     editorialStatus: "under-revision" as const,
-    productionPhase: "translating" as const,
+    productionPhase: "scripting" as const,
     poiCount: 4,
     poiIds: ["poi-3", "poi-5"],
     languages: ["it"],
@@ -108,21 +108,59 @@ export const mockGuides = [
 export const mockDocuments = [
   {
     id: "doc-1",
-    filename: "catalogo-collezione-greca.pdf",
-    uploadedAt: "2026-03-10",
-    size: "2.4 MB",
+    filename: "storia-museo.pdf",
+    uploadedAt: "2026-03-01",
+    size: "1.2 MB",
+    type: "pdf" as const,
+    tags: ["museo"],
   },
   {
     id: "doc-2",
-    filename: "schede-didattiche-2024.docx",
-    uploadedAt: "2026-03-12",
-    size: "1.1 MB",
+    filename: "guida-accessibilita.pdf",
+    uploadedAt: "2026-03-05",
+    size: "890 KB",
+    type: "pdf" as const,
+    tags: ["museo"],
   },
   {
     id: "doc-3",
-    filename: "storia-museo.txt",
+    filename: "collezione-permanente-overview.pdf",
+    uploadedAt: "2026-03-08",
+    size: "3.2 MB",
+    type: "pdf" as const,
+    tags: ["museo", "guide-1"],
+  },
+  {
+    id: "doc-4",
+    filename: "catalogo-collezione-greca.pdf",
+    uploadedAt: "2026-03-10",
+    size: "2.4 MB",
+    type: "pdf" as const,
+    tags: ["guide-1", "guide-2"],
+  },
+  {
+    id: "doc-5",
+    filename: "schede-didattiche-famiglie.docx",
+    uploadedAt: "2026-03-12",
+    size: "1.1 MB",
+    type: "docx" as const,
+    tags: ["guide-3"],
+  },
+  {
+    id: "doc-6",
+    filename: "nota-anfora-attica.txt",
     uploadedAt: "2026-03-14",
     size: "45 KB",
+    type: "txt" as const,
+    tags: ["poi-2"],
+  },
+  {
+    id: "doc-7",
+    filename: "restauro-mosaico-romano.pdf",
+    uploadedAt: "2026-03-18",
+    size: "3.1 MB",
+    type: "pdf" as const,
+    tags: ["poi-3"],
   },
 ];
 
@@ -201,17 +239,6 @@ export const mockAnalytics = {
 };
 
 export const mockEvents = [
-  {
-    id: "event-1",
-    title: "Greek Ceramics — Special Exhibition",
-    description: "An extraordinary selection of Attic ceramics never before exhibited together, on loan from four European collections.",
-    startDate: "2026-04-15",
-    endDate: "2026-07-30",
-    location: "Hall B, Ground Floor",
-    imageUrl: "https://images.unsplash.com/photo-1580974852861-c381510bc98d?w=800&q=80",
-    status: "upcoming" as const,
-    linkedGuides: ["guide-1", "guide-2"],
-  },
   {
     id: "event-2",
     title: "Curator Talk: Bronze Age Mediterranean",
