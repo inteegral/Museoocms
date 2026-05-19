@@ -157,7 +157,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-9 w-80 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+        <div className="fixed top-14 left-2 w-80 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
             <span className="text-[13px] font-semibold text-zinc-900">Notifications</span>
