@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Users, UserPlus, Crown, ShieldCheck, PenLine, Eye,
-  MoreHorizontal, X, Check, Trash2, Headphones, Mail,
+  MoreHorizontal, X, Check, Trash2, Headphones, Mail, Camera,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockGuides } from "../../data/mockData";
@@ -29,7 +29,7 @@ function RoleBadge({ role }: { role: Role }) {
   );
 }
 
-function Avatar({ name, size = 32 }: { name: string; size?: number }) {
+function Avatar({ name, src, size = 32 }: { name: string; src?: string; size?: number }) {
   const initials = name
     ? name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
     : "?";
@@ -42,6 +42,16 @@ function Avatar({ name, size = 32 }: { name: string; size?: number }) {
     "bg-zinc-100 text-zinc-600",
   ];
   const idx = name ? name.charCodeAt(0) % colors.length : 5;
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        className="rounded-full object-cover flex-shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   return (
     <div
       className={`rounded-full flex items-center justify-center font-semibold flex-shrink-0 ${colors[idx]}`}
@@ -213,6 +223,25 @@ export function Team() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<TeamMember | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarTarget, setAvatarTarget] = useState<string | null>(null);
+
+  const handleAvatarClick = (memberId: string) => {
+    setAvatarTarget(memberId);
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !avatarTarget) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setMembers((prev) => prev.map((m) => m.id === avatarTarget ? { ...m, avatar: dataUrl } : m));
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   const displayed = filter === "all" ? members : members.filter((m) => m.role === filter);
 
@@ -324,8 +353,17 @@ export function Team() {
                 className={`flex items-start gap-4 px-5 py-4 ${i < displayed.length - 1 ? "border-b border-zinc-50" : ""} ${isPending ? "bg-amber-50/40" : "hover:bg-zinc-50/60"} transition-colors`}
               >
                 {/* Avatar */}
-                <div className="relative flex-shrink-0 mt-0.5">
-                  <Avatar name={member.name} size={36} />
+                <div className="relative flex-shrink-0 mt-0.5 group">
+                  <button
+                    onClick={() => handleAvatarClick(member.id)}
+                    className="relative block rounded-full overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                    title="Change photo"
+                  >
+                    <Avatar name={member.name} src={member.avatar} size={36} />
+                    <div className="absolute inset-0 bg-zinc-900/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="size-3.5 text-white" strokeWidth={1.5} />
+                    </div>
+                  </button>
                   {isPending && <div className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-amber-400 border-2 border-white" />}
                 </div>
 
@@ -457,6 +495,14 @@ export function Team() {
         <InviteModal onInvite={handleInvite} onClose={() => setInviteOpen(false)} />
       )}
       {menuOpen && <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarFile}
+      />
     </PageShell>
   );
 }
