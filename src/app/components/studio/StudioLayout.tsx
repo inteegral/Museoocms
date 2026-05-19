@@ -3,10 +3,12 @@ import {
   LayoutDashboard, Headphones, MapPin, Map,
   Megaphone, DollarSign, MessageSquare,
   Trophy, ClipboardList, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, ChevronLeft, Smartphone, Users, CalendarDays, Zap, BookOpen,
+  Bell, Languages, UserCheck, TicketX, Mic, Star, BookCheck,
 } from "lucide-react";
 import { mockMuseum } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
-import { useState, useEffect } from "react";
+import { mockNotifications, type Notification, type NotifType } from "../../data/notificationsData";
+import { useState, useEffect, useRef } from "react";
 import { OnboardingWizard } from "./OnboardingWizard";
 import MainLogoVariant from "../../../imports/MainLogoVariant5";
 import { GuidePreviewModal } from "./GuidePreviewModal";
@@ -96,6 +98,111 @@ function BadgeEl({ badge }: { badge: Badge }) {
       className="ml-auto size-2 rounded-full flex-shrink-0"
       style={{ backgroundColor: badge.color }}
     />
+  );
+}
+
+const NOTIF_ICON: Record<NotifType, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
+  translation: Languages,
+  team: UserCheck,
+  codes: TicketX,
+  guide: Mic,
+  review: Star,
+};
+
+const NOTIF_COLOR: Record<NotifType, string> = {
+  translation: "bg-violet-100 text-violet-600",
+  team: "bg-emerald-100 text-emerald-600",
+  codes: "bg-amber-100 text-amber-600",
+  guide: "bg-sky-100 text-sky-600",
+  review: "bg-yellow-100 text-yellow-600",
+};
+
+function NotificationBell() {
+  const navigate = useNavigate();
+  const [notifs, setNotifs] = useState<Notification[]>(mockNotifications);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const unread = notifs.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const markAllRead = () => setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+
+  const handleClick = (n: Notification) => {
+    setNotifs((prev) => prev.map((x) => x.id === n.id ? { ...x, read: true } : x));
+    setOpen(false);
+    if (n.link) navigate(n.link);
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="relative p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-md transition-colors"
+        title="Notifications"
+      >
+        <Bell className="size-4" strokeWidth={1.5} />
+        {unread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-[#D33333] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+            {unread}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-9 w-80 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
+            <span className="text-[13px] font-semibold text-zinc-900">Notifications</span>
+            {unread > 0 && (
+              <button onClick={markAllRead} className="text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors">
+                Mark all read
+              </button>
+            )}
+          </div>
+
+          {/* List */}
+          <div className="max-h-80 overflow-y-auto divide-y divide-zinc-50">
+            {notifs.map((n) => {
+              const Icon = NOTIF_ICON[n.type];
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => handleClick(n)}
+                  className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-zinc-50 ${n.read ? "opacity-60" : ""}`}
+                >
+                  <div className={`size-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${NOTIF_COLOR[n.type]}`}>
+                    <Icon className="size-3.5" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-[12px] leading-snug ${n.read ? "text-zinc-500" : "text-zinc-900 font-semibold"}`}>
+                        {n.title}
+                      </p>
+                      {!n.read && <span className="size-1.5 rounded-full bg-[#D33333] flex-shrink-0 mt-1.5" />}
+                    </div>
+                    <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">{n.description}</p>
+                    <p className="text-[10px] text-zinc-300 mt-1">{n.time}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="px-4 py-2.5 border-t border-zinc-100 text-center">
+            <span className="text-[11px] text-zinc-300">Showing last {notifs.length} notifications</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -296,13 +403,16 @@ export function StudioLayout() {
               )}
             </Link>
             {!collapsed && (
-              <button
-                onClick={() => setCollapsed(true)}
-                className="ml-auto p-1 text-zinc-300 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors"
-                title="Collapse sidebar"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
+              <div className="flex items-center gap-1 ml-auto">
+                <NotificationBell />
+                <button
+                  onClick={() => setCollapsed(true)}
+                  className="p-1 text-zinc-300 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors"
+                  title="Collapse sidebar"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+              </div>
             )}
           </div>
 
