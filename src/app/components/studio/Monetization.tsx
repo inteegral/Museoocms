@@ -214,7 +214,7 @@ export function Monetization() {
                         <p className="text-[13px] font-semibold text-zinc-900">{guide.name}</p>
                         {isPaid && distrib && (
                           <p className="text-[11px] text-zinc-400 mt-0.5">
-                            {distrib === "online" ? "Online sales · monthly billing" : "Physical distribution · prepaid codes"}
+                            {distrib === "online" ? "Online sales · monthly billing" : "On-site distribution · prepaid codes"}
                           </p>
                         )}
                       </div>
@@ -406,8 +406,8 @@ export function Monetization() {
                           {distrib === "physical" && <span className="size-1.5 rounded-full bg-white" />}
                         </div>
                       </div>
-                      <p className="text-[13px] font-semibold text-zinc-900 mb-1">Physical distribution</p>
-                      <p className="text-[12px] text-zinc-500 leading-relaxed">Generate a prepaid batch of codes. Download as CSV or JSON and distribute manually.</p>
+                      <p className="text-[13px] font-semibold text-zinc-900 mb-1">On-site distribution</p>
+                      <p className="text-[12px] text-zinc-500 leading-relaxed">Generate a prepaid batch of codes. Download as CSV or JSON and hand them out on site.</p>
                     </button>
                   </div>
                 </div>
