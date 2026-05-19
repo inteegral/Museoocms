@@ -35,7 +35,7 @@ interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "admin" | "editor";
+  role: "owner" | "admin" | "curator" | "viewer";
   avatar?: string;
   status: "active" | "pending";
   joinedAt: string;
@@ -62,7 +62,7 @@ const mockTeamMembers: TeamMember[] = [
     id: "3",
     name: "Laura Bianchi",
     email: "l.bianchi@museo.it",
-    role: "editor",
+    role: "curator",
     status: "pending",
     joinedAt: "Mar 2024",
   },
@@ -71,14 +71,15 @@ const mockTeamMembers: TeamMember[] = [
 const roleConfig = {
   owner: { label: "Owner", color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-200" },
   admin: { label: "Admin", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200" },
-  editor: { label: "Editor", color: "text-zinc-700", bg: "bg-zinc-50", border: "border-zinc-200" },
+  curator: { label: "Curator", color: "text-violet-700", bg: "bg-violet-50", border: "border-violet-200" },
+  viewer: { label: "Viewer", color: "text-zinc-500", bg: "bg-zinc-50", border: "border-zinc-200" },
 };
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"admin" | "editor">("editor");
+  const [inviteRole, setInviteRole] = useState<"admin" | "curator" | "viewer">("curator");
 
   // Museum data
   const [museumName, setMuseumName] = useState("City Museum of Art");
@@ -406,11 +407,15 @@ export function Settings() {
                     </div>
                     <div className="flex gap-3">
                       <div className="font-semibold text-blue-700 min-w-[80px]">Admin</div>
-                      <div className="text-zinc-600">Can manage guides, POIs, and invite editors</div>
+                      <div className="text-zinc-600">Can manage guides, POIs, and invite team members</div>
                     </div>
                     <div className="flex gap-3">
-                      <div className="font-semibold text-zinc-700 min-w-[80px]">Editor</div>
-                      <div className="text-zinc-600">Can create and edit guides and POIs</div>
+                      <div className="font-semibold text-violet-700 min-w-[80px]">Curator</div>
+                      <div className="text-zinc-600">Can edit only the guides assigned to them</div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="font-semibold text-zinc-500 min-w-[80px]">Viewer</div>
+                      <div className="text-zinc-600">Read-only access to all content</div>
                     </div>
                   </div>
                 </div>
@@ -1093,8 +1098,9 @@ export function Settings() {
                   onChange={(e) => setInviteRole(e.target.value as any)}
                   className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
                 >
-                  <option value="editor">Editor</option>
+                  <option value="curator">Curator</option>
                   <option value="admin">Admin</option>
+                  <option value="viewer">Viewer</option>
                 </select>
               </div>
             </div>
