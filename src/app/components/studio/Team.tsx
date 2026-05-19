@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import {
   Users, UserPlus, Crown, ShieldCheck, PenLine, Eye,
-  MoreHorizontal, X, Check, Trash2, Headphones, Mail, Camera,
+  MoreHorizontal, X, Check, Trash2, Headphones, Mail, Camera, Pencil,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { mockGuides } from "../../data/mockData";
@@ -225,6 +225,18 @@ export function Team() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarTarget, setAvatarTarget] = useState<string | null>(null);
+  const [editingBio, setEditingBio] = useState<string | null>(null);
+  const [bioValue, setBioValue] = useState("");
+
+  const startBioEdit = (member: TeamMember) => {
+    setEditingBio(member.id);
+    setBioValue(member.bio);
+  };
+
+  const saveBio = (memberId: string) => {
+    setMembers((prev) => prev.map((m) => m.id === memberId ? { ...m, bio: bioValue.trim() } : m));
+    setEditingBio(null);
+  };
 
   const handleAvatarClick = (memberId: string) => {
     setAvatarTarget(memberId);
@@ -381,8 +393,30 @@ export function Team() {
                   <p className="text-[12px] text-zinc-400 mt-0.5 truncate">{member.email}</p>
 
                   {/* Bio */}
-                  {member.bio && (
-                    <p className="text-[11px] text-zinc-400 italic mt-1 leading-snug line-clamp-1">{member.bio}</p>
+                  {!isPending && (
+                    editingBio === member.id ? (
+                      <textarea
+                        autoFocus
+                        value={bioValue}
+                        onChange={(e) => setBioValue(e.target.value)}
+                        onBlur={() => saveBio(member.id)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveBio(member.id); } if (e.key === "Escape") setEditingBio(null); }}
+                        rows={2}
+                        className="mt-1 w-full text-[11px] text-zinc-700 border border-violet-300 rounded-md px-2 py-1 resize-none focus:outline-none focus:ring-2 focus:ring-violet-200 leading-snug"
+                        placeholder="Add a short bio…"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => startBioEdit(member)}
+                        className="group/bio flex items-start gap-1 mt-1 text-left w-full"
+                        title="Edit bio"
+                      >
+                        <span className={`text-[11px] leading-snug line-clamp-1 ${member.bio ? "text-zinc-400 italic" : "text-zinc-300"}`}>
+                          {member.bio || "Add bio…"}
+                        </span>
+                        <Pencil className="size-2.5 text-zinc-300 group-hover/bio:text-zinc-500 flex-shrink-0 mt-0.5 transition-colors" strokeWidth={1.5} />
+                      </button>
+                    )
                   )}
 
                   {/* Guide assignments */}
