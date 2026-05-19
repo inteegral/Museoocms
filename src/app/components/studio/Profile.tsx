@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Check, Crown, ShieldCheck, PenLine, Eye } from "lucide-react";
+import { useState, useRef } from "react";
+import { Check, Crown, ShieldCheck, PenLine, Eye, Camera } from "lucide-react";
 import { PageShell } from "./PageShell";
 import { teamMembers, CURRENT_USER_ID, type Role } from "../../data/teamData";
 
@@ -10,7 +10,7 @@ const ROLE_META: Record<Role, { label: string; color: string; icon: React.Compon
   viewer: { label: "Viewer", color: "text-zinc-400", icon: Eye },
 };
 
-function Avatar({ name, size = 72 }: { name: string; size?: number }) {
+function Avatar({ name, src, size = 72 }: { name: string; src?: string; size?: number }) {
   const initials = name
     ? name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
     : "?";
@@ -23,6 +23,11 @@ function Avatar({ name, size = 72 }: { name: string; size?: number }) {
     "bg-zinc-100 text-zinc-600",
   ];
   const idx = name ? name.charCodeAt(0) % colors.length : 5;
+  if (src) {
+    return (
+      <img src={src} alt={name} className="rounded-full object-cover flex-shrink-0" style={{ width: size, height: size }} />
+    );
+  }
   return (
     <div
       className={`rounded-full flex items-center justify-center font-semibold flex-shrink-0 ${colors[idx]}`}
@@ -38,21 +43,33 @@ export function Profile() {
 
   const [name, setName] = useState(source.name);
   const [bio, setBio] = useState(source.bio);
+  const [avatar, setAvatar] = useState<string | undefined>(source.avatar);
   const [saved, setSaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setAvatar(ev.target?.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+    setSaved(false);
+  };
 
   const BIO_MAX = 160;
   const roleMeta = ROLE_META[source.role];
   const RoleIcon = roleMeta.icon;
 
   const handleSave = () => {
-    // In a real app this would persist to the backend
     source.name = name;
     source.bio = bio;
+    source.avatar = avatar;
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const dirty = name !== source.name || bio !== source.bio;
+  const dirty = name !== source.name || bio !== source.bio || avatar !== source.avatar;
 
   return (
     <PageShell>
@@ -68,7 +85,16 @@ export function Profile() {
         <div className="bg-white border border-zinc-100 rounded-2xl overflow-hidden">
           {/* Avatar row */}
           <div className="px-6 py-6 border-b border-zinc-50 flex items-center gap-5">
-            <Avatar name={name} size={64} />
+            <div className="relative group flex-shrink-0">
+              <Avatar name={name} src={avatar} size={64} />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 rounded-full bg-zinc-900/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus-visible:opacity-100"
+                title="Change photo"
+              >
+                <Camera className="size-5 text-white" strokeWidth={1.5} />
+              </button>
+            </div>
             <div>
               <p className="text-[15px] font-semibold text-zinc-900">{name || "—"}</p>
               <div className={`flex items-center gap-1.5 mt-1 ${roleMeta.color}`}>
@@ -76,6 +102,12 @@ export function Profile() {
                 <span className="text-[12px] font-medium">{roleMeta.label}</span>
               </div>
               <p className="text-[11px] text-zinc-400 mt-0.5">{source.email}</p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-1.5 text-[11px] text-zinc-400 hover:text-zinc-700 underline underline-offset-2 transition-colors"
+              >
+                Change photo
+              </button>
             </div>
           </div>
 
@@ -140,6 +172,7 @@ export function Profile() {
           </div>
         </div>
       </div>
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarFile} />
     </PageShell>
   );
 }
