@@ -28,7 +28,7 @@ export const teamMembers: TeamMember[] = [
     status: "active",
     joinedAt: "Jan 2024",
     bio: "Museum director with 20 years of experience in heritage management and cultural programming.",
-    avatar: "https://i.pravatar.cc/150?u=marco.rossi@museum.it",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     assignments: [],
   },
   {
@@ -39,7 +39,7 @@ export const teamMembers: TeamMember[] = [
     status: "active",
     joinedAt: "Mar 2024",
     bio: "Content strategist focused on making art accessible to diverse audiences through storytelling.",
-    avatar: "https://i.pravatar.cc/150?u=anna.ferretti@museum.it",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
     assignments: [],
   },
   {
@@ -50,7 +50,7 @@ export const teamMembers: TeamMember[] = [
     status: "active",
     joinedAt: "Apr 2024",
     bio: "Art historian specialising in Renaissance painting. PhD from La Sapienza, Rome.",
-    avatar: "https://i.pravatar.cc/150?u=luca.bianchi@museum.it",
+    avatar: "https://randomuser.me/api/portraits/men/25.jpg",
     assignments: [
       { id: "guide-1", title: "Complete Museum Tour" },
       { id: "guide-2", title: "Highlights - Must-See Masterpieces" },
@@ -64,7 +64,7 @@ export const teamMembers: TeamMember[] = [
     status: "active",
     joinedAt: "Jun 2024",
     bio: "Egyptologist and education specialist. Former researcher at the British Museum.",
-    avatar: "https://i.pravatar.cc/150?u=sofia.chen@museum.it",
+    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
     assignments: [
       { id: "guide-3", title: "Family Tour" },
     ],
@@ -77,7 +77,7 @@ export const teamMembers: TeamMember[] = [
     status: "active",
     joinedAt: "Sep 2024",
     bio: "",
-    avatar: "https://i.pravatar.cc/150?u=thomas.weber@museum.it",
+    avatar: "https://randomuser.me/api/portraits/men/15.jpg",
     assignments: [],
   },
   {
