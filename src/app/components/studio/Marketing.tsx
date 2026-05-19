@@ -1,8 +1,6 @@
 import {
-  Globe,
   QrCode,
   FileText,
-  Share2,
   Plus,
   Eye,
   Edit,
@@ -12,26 +10,23 @@ import {
   ExternalLink,
   Check,
   X,
-  Code,
-  Image as ImageIcon,
   ChevronRight,
+  LayoutTemplate,
 } from "lucide-react";
+
 import { useState } from "react";
 import { PageShell } from "./PageShell";
 import { GuidePreviewModal } from "./GuidePreviewModal";
-import { LandingPagePreviewModal } from "./LandingPagePreviewModal";
 import { RedemptionPagePreviewModal } from "./RedemptionPagePreviewModal";
 import { RedemptionPageEditModal } from "./RedemptionPageEditModal";
 
-interface LandingPage {
+interface Widget {
   id: string;
   guideName: string;
-  url: string;
-  status: "published" | "draft";
-  views: number;
-  scans: number;
+  status: "active" | "inactive";
+  impressions: number;
+  clicks: number;
   thumbnail: string;
-  createdAt: string;
 }
 
 interface QRCodeItem {
@@ -75,10 +70,10 @@ const allGuideNames = [
   "Sculpture Garden Tour",
 ];
 
-const mockLandingPages: LandingPage[] = [
-  { id: "1", guideName: "Renaissance Masterpieces", url: "museodarte.app/renaissance", status: "published", views: 1234, scans: 456, thumbnail: "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=400", createdAt: "2024-03-15" },
-  { id: "2", guideName: "Ancient Egypt Collection",  url: "museodarte.app/egypt",       status: "published", views: 892,  scans: 267, thumbnail: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400", createdAt: "2024-03-10" },
-  { id: "3", guideName: "Modern Art Gallery",        url: "museodarte.app/modern-art",  status: "draft",     views: 0,    scans: 0,   thumbnail: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400", createdAt: "2024-03-28" },
+const mockWidgets: Widget[] = [
+  { id: "1", guideName: "Renaissance Masterpieces", status: "active",   impressions: 1234, clicks: 456, thumbnail: "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=400" },
+  { id: "2", guideName: "Ancient Egypt Collection",  status: "active",   impressions: 892,  clicks: 267, thumbnail: "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=400" },
+  { id: "3", guideName: "Modern Art Gallery",        status: "inactive", impressions: 0,    clicks: 0,   thumbnail: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400" },
 ];
 
 const mockQRCodes: QRCodeItem[] = [
@@ -94,10 +89,9 @@ const mockAssets: Asset[] = [
 ];
 
 const TOOLS = [
-  { key: "landing",      label: "Landing Page",  Icon: Globe    },
-  { key: "qr",           label: "QR Code",       Icon: QrCode   },
-  { key: "assets",       label: "Print Assets",  Icon: FileText },
-  { key: "distribution", label: "Distribution",  Icon: Share2   },
+  { key: "widget", label: "Embed Widget", Icon: LayoutTemplate },
+  { key: "qr",     label: "QR Code",     Icon: QrCode         },
+  { key: "assets", label: "Print Assets", Icon: FileText       },
 ] as const;
 
 type ToolKey = typeof TOOLS[number]["key"];
@@ -120,15 +114,14 @@ function StatusPill({ children, variant }: { children: React.ReactNode; variant:
 export function Marketing() {
   const [selectedGuide, setSelectedGuide] = useState<string>("all");
   const [activeTool, setActiveTool] = useState<ToolKey>("landing");
-  const [landingPages, setLandingPages] = useState<LandingPage[]>(mockLandingPages);
+  const [widgets, setWidgets] = useState<Widget[]>(mockWidgets);
   const [qrCodes, setQRCodes] = useState<QRCodeItem[]>(mockQRCodes);
   const [assets, setAssets] = useState<Asset[]>(mockAssets);
-  const [showCreateLanding, setShowCreateLanding] = useState(false);
   const [showCreateQR, setShowCreateQR] = useState(false);
   const [showCreateAsset, setShowCreateAsset] = useState(false);
   const [copiedText, setCopiedText] = useState("");
+  const [widgetStyle, setWidgetStyle] = useState<"compact" | "showcase" | "button">("compact");
   const [previewGuide, setPreviewGuide] = useState<string | null>(null);
-  const [previewLandingPage, setPreviewLandingPage] = useState<LandingPage | null>(null);
   const [showRedemptionPreview, setShowRedemptionPreview] = useState(false);
   const [showRedemptionEdit, setShowRedemptionEdit] = useState(false);
   const [redemptionContent, setRedemptionContent] = useState({ title: selectedGuide, description: "Enter the code from your ticket to access the audio guide.", buttonText: "Access guide →" });
@@ -148,18 +141,19 @@ export function Marketing() {
     return labels[type] || type;
   };
 
-  const filteredLanding = selectedGuide === "all" ? landingPages : landingPages.filter(p => p.guideName === selectedGuide);
-  const filteredQR      = selectedGuide === "all" ? qrCodes      : qrCodes.filter(q => q.guideName === selectedGuide);
-  const filteredAssets  = selectedGuide === "all" ? assets        : assets.filter(a => a.guideName === selectedGuide);
+  const filteredWidgets = selectedGuide === "all" ? widgets : widgets.filter(w => w.guideName === selectedGuide);
+  const filteredQR      = selectedGuide === "all" ? qrCodes : qrCodes.filter(q => q.guideName === selectedGuide);
+  const filteredAssets  = selectedGuide === "all" ? assets  : assets.filter(a => a.guideName === selectedGuide);
   const isPaid          = selectedGuide !== "all" && getAccess(selectedGuide) === "paid";
   const redemptionSlug  = selectedGuide !== "all" ? selectedGuide.toLowerCase().replace(/ /g, "-") : "";
   const redemptionUrl   = `museodarte.app/${redemptionSlug}`;
+  const guideWidget     = selectedGuide !== "all" ? widgets.find(w => w.guideName === selectedGuide) : undefined;
 
   const guideMarketing = (name: string) => {
-    const lp  = landingPages.find(p => p.guideName === name);
-    const qrs = qrCodes.filter(q => q.guideName === name);
-    const ast = assets.filter(a => a.guideName === name);
-    return { lp, qrs, ast };
+    const widget = widgets.find(w => w.guideName === name);
+    const qrs    = qrCodes.filter(q => q.guideName === name);
+    const ast    = assets.filter(a => a.guideName === name);
+    return { widget, qrs, ast };
   };
 
   return (
@@ -179,7 +173,7 @@ export function Marketing() {
             return (
               <button
                 key={name}
-                onClick={() => { setSelectedGuide(name); if (name !== "all") setActiveTool("landing"); }}
+                onClick={() => { setSelectedGuide(name); if (name !== "all") setActiveTool("widget"); }}
                 className={`px-3.5 py-2 rounded-lg border text-[12px] font-semibold transition-all ${
                   selected ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900"
                 }`}
@@ -206,7 +200,7 @@ export function Marketing() {
 
             {/* Guide rows */}
             {allGuideNames.map((name, i) => {
-              const { lp, qrs, ast } = guideMarketing(name);
+              const { widget, qrs, ast } = guideMarketing(name);
               const isLast = i === allGuideNames.length - 1;
               return (
                 <div
@@ -230,11 +224,11 @@ export function Marketing() {
                     </div>
                   </div>
 
-                  {/* Landing Page */}
+                  {/* Widget */}
                   <div className="px-4 py-4 flex items-center">
-                    {lp ? (
-                      <StatusPill variant={lp.status === "published" ? "live" : "draft"}>
-                        {lp.status === "published" ? "Live" : "Draft"}
+                    {widget ? (
+                      <StatusPill variant={widget.status === "active" ? "live" : "draft"}>
+                        {widget.status === "active" ? "Embedded" : "Inactive"}
                       </StatusPill>
                     ) : (
                       <span className="text-[12px] text-zinc-300">—</span>
@@ -263,7 +257,7 @@ export function Marketing() {
 
                   {/* Distribution */}
                   <div className="px-4 py-4 flex items-center">
-                    {(qrs.length > 0 || lp?.status === "published") ? (
+                    {(qrs.length > 0 || widget?.status === "active") ? (
                       <StatusPill variant="live">Active</StatusPill>
                     ) : (
                       <span className="text-[12px] text-zinc-300">—</span>
@@ -314,124 +308,222 @@ export function Marketing() {
               ))}
             </div>
 
-            {/* LANDING PAGE */}
-            {activeTool === "landing" && (
-              <>
-                {isPaid ? (
-                  /* ── PAID: Redemption page card ── */
-                  <>
-                    <div className="flex items-center justify-between mb-5">
-                      <p className="text-[13px] text-zinc-500">1 redemption page</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      <div className="group bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md hover:border-zinc-300 transition-all" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.06)" }}>
-                        <div className="relative h-40 bg-zinc-100">
-                          <img
-                            src={mockLandingPages.find(p => p.guideName === selectedGuide)?.thumbnail ?? "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=400"}
-                            alt={selectedGuide}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                          <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-500 text-white">
-                            Paid access
-                          </span>
-                        </div>
-                        <div className="p-5">
-                          <div className="flex items-center gap-1.5 mb-4">
-                            <span className="text-[12px] text-zinc-500 truncate">{redemptionUrl}</span>
-                            <button onClick={() => handleCopy(redemptionUrl, "redemption-base")} className="text-zinc-400 hover:text-zinc-700 transition-colors flex-shrink-0">
-                              {copiedText === "redemption-base" ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-6 mb-4 pb-4 border-b border-zinc-100">
-                            <div>
-                              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Redeemed</p>
-                              <p className="text-[18px] font-light text-zinc-900">{filteredQR.reduce((s, q) => s + q.scans, 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Page visits</p>
-                              <p className="text-[18px] font-light text-zinc-900">{filteredLanding.reduce((s, p) => s + p.views, 0).toLocaleString()}</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => setShowRedemptionPreview(true)} className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
-                              <Eye className="size-3.5 inline mr-1.5" />Preview
-                            </button>
-                            <button onClick={() => setShowRedemptionEdit(true)} className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
-                              <Edit className="size-3.5 inline mr-1.5" />Edit
-                            </button>
-                          </div>
-                        </div>
+            {/* EMBED WIDGET */}
+            {activeTool === "widget" && (() => {
+              const mode = isPaid ? "redeem" : "free";
+              const snippet = `<div\n  id="museoo-widget"\n  data-guide="${redemptionSlug}"\n  data-mode="${mode}"\n  data-style="${widgetStyle}"\n></div>\n<script src="https://museoo.app/widget.js"></script>`;
+              const thumbnail = guideWidget?.thumbnail ?? "https://images.unsplash.com/photo-1580477667995-2b94f01c9516?w=400";
+
+              const STYLES = [
+                { id: "compact"  as const, label: "Compact",  desc: "Small card — sidebar or inline" },
+                { id: "showcase" as const, label: "Showcase", desc: "Rich card — like a promo block"  },
+                { id: "button"   as const, label: "Button",   desc: "CTA only — minimal footprint"   },
+              ];
+
+              return (
+                <div className="space-y-6">
+
+                  {/* Stats row */}
+                  {guideWidget?.status === "active" && (
+                    <div className="flex items-center gap-8 px-0.5">
+                      <div>
+                        <span className="text-[22px] font-light text-zinc-900">{guideWidget.impressions.toLocaleString()}</span>
+                        <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Impressions</span>
                       </div>
+                      <div className="w-px h-5 bg-zinc-200" />
+                      <div>
+                        <span className="text-[22px] font-light text-zinc-900">{guideWidget.clicks.toLocaleString()}</span>
+                        <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">{isPaid ? "Code entries" : "Clicks"}</span>
+                      </div>
+                      <div className="w-px h-5 bg-zinc-200" />
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                        <span className="size-1.5 rounded-full bg-emerald-400" />Embedded
+                      </span>
                     </div>
-                  </>
-                ) : (
-                  /* ── FREE: Landing page builder ── */
-                  <>
-                    <div className="flex items-center justify-between mb-5">
-                      <p className="text-[13px] text-zinc-500">{filteredLanding.length} {filteredLanding.length === 1 ? "page" : "pages"}</p>
-                      <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
-                        <Plus className="size-4" />Create Landing Page
-                      </button>
-                    </div>
-                    {filteredLanding.length === 0 ? (
-                      <div className="text-center py-16">
-                        <div className="size-12 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4"><Globe className="size-6 text-zinc-400" /></div>
-                        <p className="text-[14px] font-semibold text-zinc-900 mb-1">No landing page yet</p>
-                        <p className="text-[13px] text-zinc-500 mb-6">Create a landing page to promote this guide</p>
-                        <button onClick={() => setShowCreateLanding(true)} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
-                          <Plus className="size-4" />Create Landing Page
+                  )}
+
+                  {/* Style picker */}
+                  <div>
+                    <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">Style</p>
+                    <div className="flex gap-2">
+                      {STYLES.map(({ id, label, desc }) => (
+                        <button key={id} onClick={() => setWidgetStyle(id)}
+                          className={`flex-1 py-2.5 px-3 rounded-lg border text-left transition-all ${widgetStyle === id ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-300"}`}>
+                          <p className={`text-[12px] font-semibold ${widgetStyle === id ? "text-zinc-900" : "text-zinc-500"}`}>{label}</p>
+                          <p className="text-[10px] text-zinc-400 leading-snug mt-0.5">{desc}</p>
                         </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Two-column layout: preview + code */}
+                  <div className="grid grid-cols-[1fr_1.2fr] gap-6 items-start">
+
+                    {/* Left: Widget visual preview */}
+                    <div>
+                      <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Preview</p>
+                      <div className="bg-zinc-100 rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
+
+                        {/* ── COMPACT ── */}
+                        {widgetStyle === "compact" && (
+                          <div className="w-60 bg-white rounded-2xl shadow-xl overflow-hidden border border-zinc-200/60">
+                            <div className="relative h-28">
+                              <img src={thumbnail} alt={selectedGuide} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              <div className="absolute bottom-2.5 left-3 right-3">
+                                <p className="text-white text-[11px] font-bold leading-tight truncate">{selectedGuide}</p>
+                                {isPaid && <span className="inline-block mt-0.5 px-1.5 py-0.5 bg-amber-500 text-white text-[9px] font-semibold rounded">Paid</span>}
+                              </div>
+                            </div>
+                            <div className="p-3">
+                              <div className="flex items-center gap-1 mb-2.5">
+                                <span className="text-[11px]">🇮🇹</span><span className="text-[11px]">🇬🇧</span>
+                                <span className="ml-auto text-[10px] text-zinc-400">~45 min</span>
+                              </div>
+                              {isPaid ? (
+                                <div className="flex gap-1.5">
+                                  <div className="flex-1 h-7 bg-zinc-100 border border-zinc-200 rounded-md flex items-center px-2">
+                                    <span className="text-[10px] text-zinc-400">Enter code…</span>
+                                  </div>
+                                  <div className="size-7 bg-[#D33333] rounded-md flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white text-[11px] font-bold">→</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="h-7 bg-[#D33333] rounded-md flex items-center justify-center">
+                                  <span className="text-white text-[11px] font-semibold">Listen now →</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── SHOWCASE ── */}
+                        {widgetStyle === "showcase" && (
+                          <div className="w-72 bg-white rounded-2xl shadow-xl overflow-hidden border border-zinc-200/60">
+                            {/* Tall thumbnail */}
+                            <div className="relative h-44">
+                              <img src={thumbnail} alt={selectedGuide} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                              {isPaid && (
+                                <span className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500 text-white text-[9px] font-bold rounded-full uppercase tracking-wide">Paid access</span>
+                              )}
+                              <div className="absolute bottom-0 left-0 right-0 p-4">
+                                <p className="text-white text-[14px] font-bold leading-tight">{selectedGuide}</p>
+                                <p className="text-white/70 text-[10px] mt-0.5">Museo Nazionale · Audio Guide</p>
+                              </div>
+                            </div>
+                            {/* Body */}
+                            <div className="p-4">
+                              <p className="text-[11px] text-zinc-500 leading-relaxed mb-3">
+                                Discover the collection through a guided audio experience available in multiple languages.
+                              </p>
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="flex gap-1">
+                                  <span className="text-[12px]">🇮🇹</span><span className="text-[12px]">🇬🇧</span>
+                                </div>
+                                <span className="text-zinc-300">·</span>
+                                <span className="text-[11px] text-zinc-400">~45 min</span>
+                                <span className="text-zinc-300">·</span>
+                                <span className="text-[11px] text-zinc-400">{(guideWidget?.impressions ?? 1234).toLocaleString()} visitors</span>
+                              </div>
+                              {/* Stats row */}
+                              <div className="flex gap-4 mb-4 pb-4 border-b border-zinc-100">
+                                <div>
+                                  <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-widest">{isPaid ? "Redeemed" : "Plays"}</p>
+                                  <p className="text-[16px] font-light text-zinc-900">{(guideWidget?.clicks ?? 456).toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-widest">Rating</p>
+                                  <p className="text-[16px] font-light text-zinc-900">4.8 ★</p>
+                                </div>
+                              </div>
+                              {isPaid ? (
+                                <div className="flex gap-2">
+                                  <div className="flex-1 h-8 bg-zinc-100 border border-zinc-200 rounded-lg flex items-center px-3">
+                                    <span className="text-[11px] text-zinc-400">Enter your code…</span>
+                                  </div>
+                                  <div className="size-8 bg-[#D33333] rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white text-[13px] font-bold">→</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <div className="flex-1 h-8 bg-[#D33333] rounded-lg flex items-center justify-center">
+                                    <span className="text-white text-[12px] font-semibold">Listen now →</span>
+                                  </div>
+                                  <div className="size-8 bg-zinc-100 rounded-lg flex items-center justify-center">
+                                    <QrCode className="size-4 text-zinc-500" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ── BUTTON ── */}
+                        {widgetStyle === "button" && (
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="flex items-center gap-3 px-5 py-3 bg-[#D33333] text-white rounded-xl shadow-lg">
+                              <div className="size-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span className="text-[14px]">🎧</span>
+                              </div>
+                              <div>
+                                <p className="text-[11px] text-white/70 leading-none mb-0.5">Audio guide</p>
+                                <p className="text-[13px] font-semibold leading-none">{selectedGuide}</p>
+                              </div>
+                              <span className="ml-2 text-white/80 text-[14px]">→</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400">🇮🇹 🇬🇧  ·  ~45 min  ·  Free</p>
+                          </div>
+                        )}
+
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {filteredLanding.map((page) => (
-                          <div key={page.id} className="group bg-white border border-zinc-200 rounded-xl overflow-hidden hover:shadow-md hover:border-zinc-300 transition-all" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.06)" }}>
-                            <div className="relative h-40 bg-zinc-100">
-                              <img src={page.thumbnail} alt={page.guideName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                              <span className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold ${page.status === "published" ? "bg-emerald-500 text-white" : "bg-zinc-700/80 text-white"}`}>
-                                {page.status === "published" && <span className="size-1.5 rounded-full bg-white animate-pulse" />}
-                                {page.status === "published" ? "Live" : "Draft"}
-                              </span>
-                            </div>
-                            <div className="p-5">
-                              <div className="flex items-center gap-1.5 mb-4">
-                                <span className="text-[12px] text-zinc-500 truncate">{page.url}</span>
-                                <button onClick={() => handleCopy(page.url, `url-${page.id}`)} className="text-zinc-400 hover:text-zinc-700 transition-colors flex-shrink-0">
-                                  {copiedText === `url-${page.id}` ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
-                                </button>
-                              </div>
-                              <div className="flex items-center gap-6 mb-4 pb-4 border-b border-zinc-100">
-                                <div>
-                                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Views</p>
-                                  <p className="text-[18px] font-light text-zinc-900">{page.views.toLocaleString()}</p>
-                                </div>
-                                <div>
-                                  <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Scans</p>
-                                  <p className="text-[18px] font-light text-zinc-900">{page.scans.toLocaleString()}</p>
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <button onClick={() => setPreviewLandingPage(page)} className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
-                                  <Eye className="size-3.5 inline mr-1.5" />Preview
-                                </button>
-                                <button className="flex-1 px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-all">
-                                  <Edit className="size-3.5 inline mr-1.5" />Edit
-                                </button>
-                                <button className="px-3 py-1.5 bg-white border border-zinc-200 text-zinc-500 hover:text-red-600 hover:border-red-200 text-[12px] rounded-lg transition-all">
-                                  <Trash2 className="size-3.5" />
-                                </button>
-                              </div>
-                            </div>
+                      <p className="text-[11px] text-zinc-400 text-center mt-2">Paste this widget on any page of your website</p>
+                    </div>
+
+                    {/* Right: Embed snippet + instructions */}
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">Embed code</p>
+                        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
+                          <div className="p-4 bg-zinc-950 rounded-t-xl">
+                            <pre className="font-mono text-[11px] text-zinc-300 leading-relaxed overflow-x-auto whitespace-pre">{snippet}</pre>
+                          </div>
+                          <div className="px-4 py-3 flex items-center justify-between">
+                            <span className="text-[11px] text-zinc-400">Paste inside your website's &lt;body&gt;</span>
+                            <button onClick={() => handleCopy(snippet, "widget-snippet")}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
+                              {copiedText === "widget-snippet"
+                                ? <><Check className="size-3.5" />Copied!</>
+                                : <><Copy className="size-3.5" />Copy code</>
+                              }
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Instructions */}
+                      <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2">
+                        <p className="text-[12px] font-semibold text-zinc-700">How to install</p>
+                        {[
+                          "Paste the snippet inside the <body> of the page where you want the widget to appear",
+                          isPaid
+                            ? "Visitors enter their access code directly in the widget — no redirect needed"
+                            : "Visitors click 'Listen now' and are taken to the audio guide player",
+                          "The widget adapts automatically to your page's width",
+                        ].map((step, i) => (
+                          <div key={i} className="flex gap-2.5">
+                            <span className="size-4 rounded-full bg-zinc-200 text-zinc-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                            <p className="text-[12px] text-zinc-500 leading-relaxed">{step}</p>
                           </div>
                         ))}
                       </div>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* QR CODES */}
             {activeTool === "qr" && (() => {
@@ -614,132 +706,6 @@ export function Marketing() {
               </>
             )}
 
-            {/* DISTRIBUTION */}
-            {activeTool === "distribution" && (
-              <div className="space-y-8">
-
-                {/* Embed Widgets */}
-                <div>
-                  <h2 className="text-[14px] font-semibold text-zinc-900 mb-1">Embed Widgets</h2>
-                  <p className="text-[12px] text-zinc-400 mb-4">Paste on the museum website — no app required</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {isPaid ? (
-                      /* Paid widgets */
-                      <>
-                        {[
-                          {
-                            icon: ExternalLink,
-                            title: "Buy Access Button",
-                            desc: '"Buy access" button that opens the purchase flow',
-                            code: `<a href="https://${redemptionUrl}/buy" class="museoo-btn" data-guide="${redemptionSlug}">Get audio guide</a>\n<script src="https://museoo.app/widget.js"></script>`,
-                            copyKey: "embed-buy",
-                          },
-                          {
-                            icon: Code,
-                            title: "Code Input Widget",
-                            desc: "Embeddable code redemption form — ideal on the purchase confirmation page",
-                            code: `<div id="museoo-redeem" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/redeem.js"></script>`,
-                            copyKey: "embed-redeem",
-                          },
-                        ].map(({ icon: Icon, title, desc, code, copyKey }) => (
-                          <div key={copyKey} className="p-5 bg-white border border-zinc-200 rounded-xl" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
-                            <div className="flex items-center gap-2.5 mb-2">
-                              <Icon className="size-4 text-zinc-400" strokeWidth={1.5} />
-                              <h3 className="text-[13px] font-semibold text-zinc-900">{title}</h3>
-                            </div>
-                            <p className="text-[12px] text-zinc-500 mb-3">{desc}</p>
-                            <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg mb-3 font-mono text-[11px] text-zinc-600 overflow-x-auto whitespace-pre">{code}</div>
-                            <button onClick={() => handleCopy(code, copyKey)} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
-                              {copiedText === copyKey ? <><Check className="size-3.5" />Copiato!</> : <><Copy className="size-3.5" />Copia codice</>}
-                            </button>
-                          </div>
-                        ))}
-                      </>
-                    ) : (
-                      /* Free widgets */
-                      <div className="p-5 bg-white border border-zinc-200 rounded-xl" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
-                        <div className="flex items-center gap-2.5 mb-2">
-                          <QrCode className="size-4 text-zinc-400" strokeWidth={1.5} />
-                          <h3 className="text-[13px] font-semibold text-zinc-900">QR Widget</h3>
-                        </div>
-                        <p className="text-[12px] text-zinc-500 mb-3">Display a QR code lightbox on your homepage</p>
-                        <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg mb-3 font-mono text-[11px] text-zinc-600 overflow-x-auto whitespace-pre">{`<div id="museoo-qr" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/widget.js"></script>`}</div>
-                        <button onClick={() => handleCopy(`<div id="museoo-qr" data-guide="${redemptionSlug}"></div>\n<script src="https://museoo.app/widget.js"></script>`, "embed-qr")} className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">
-                          {copiedText === "embed-qr" ? <><Check className="size-3.5" />Copied!</> : <><Copy className="size-3.5" />Copy Code</>}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Smart Link */}
-                <div>
-                  <h2 className="text-[14px] font-semibold text-zinc-900 mb-1">Smart Link</h2>
-                  <p className="text-[12px] text-zinc-400 mb-4">
-                    {isPaid ? "Redemption page URL — include in confirmation emails and digital tickets" : "Direct link to the guide — use in emails, social, newsletters"}
-                  </p>
-                  <div className="p-5 bg-white border border-zinc-200 rounded-xl" style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
-                    <div className="space-y-2">
-                      {isPaid ? (
-                        <>
-                          {[
-                            { label: "Base",    value: `https://${redemptionUrl}`,             key: "paid-base" },
-                            { label: "With code", value: `https://${redemptionUrl}?code=XXXXX`, key: "paid-code" },
-                          ].map(({ label, value, key }) => (
-                            <div key={key} className="flex items-center gap-3">
-                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest w-20 flex-shrink-0">{label}</span>
-                              <code className={`flex-1 px-3 py-2 border rounded text-[11px] overflow-x-auto font-mono ${key === "paid-code" ? "bg-amber-50 border-amber-200 text-amber-700 font-semibold" : "bg-zinc-50 border-zinc-200 text-zinc-600"}`}>{value}</code>
-                              <button onClick={() => handleCopy(value, key)} className="p-2 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex-shrink-0">
-                                {copiedText === key ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5 text-zinc-500" />}
-                              </button>
-                            </div>
-                          ))}
-                        </>
-                      ) : (
-                        <>
-                          {[
-                            { label: "Long",  value: `https://museoo.app/guide/${redemptionSlug}`, key: "long" },
-                            { label: "Short", value: `https://audio.guide/${getAbbr(selectedGuide).toLowerCase()}`, key: "short" },
-                          ].map(({ label, value, key }) => (
-                            <div key={key} className="flex items-center gap-3">
-                              <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest w-10">{label}</span>
-                              <code className={`flex-1 px-3 py-2 border rounded text-[11px] overflow-x-auto font-mono ${key === "short" ? "bg-blue-50 border-blue-200 text-blue-700 font-semibold" : "bg-zinc-50 border-zinc-200 text-zinc-600"}`}>{value}</code>
-                              {key === "short" && (
-                                <button onClick={() => handleCopy(value, "short")} className="p-2 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all">
-                                  {copiedText === "short" ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5 text-zinc-500" />}
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Channel Performance */}
-                <div>
-                  <h2 className="text-[14px] font-semibold text-zinc-900 mb-4">Channel Performance</h2>
-                  <div className="flex items-center gap-6 mb-5 px-0.5">
-                    {(isPaid
-                      ? [
-                          { label: "Codes redeemed", value: filteredQR.reduce((s, q) => s + q.scans, 0).toLocaleString() },
-                          { label: "Redemption page", value: filteredLanding.reduce((s, p) => s + p.views, 0).toLocaleString() },
-                        ]
-                      : [
-                          { label: "QR Scans",   value: filteredQR.reduce((s, q) => s + q.scans, 0).toLocaleString() },
-                          { label: "Page Views", value: filteredLanding.reduce((s, p) => s + p.views, 0).toLocaleString() },
-                        ]
-                    ).map(({ label, value }) => (
-                      <div key={label}>
-                        <span className="text-[22px] font-light text-zinc-900">{value}</span>
-                        <span className="ml-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
 
@@ -748,9 +714,6 @@ export function Marketing() {
       {/* Modals */}
       {previewGuide && (
         <GuidePreviewModal guideName={previewGuide} onClose={() => setPreviewGuide(null)} />
-      )}
-      {previewLandingPage && (
-        <LandingPagePreviewModal page={previewLandingPage} onClose={() => setPreviewLandingPage(null)} />
       )}
       {showRedemptionPreview && (
         <RedemptionPagePreviewModal
@@ -770,18 +733,6 @@ export function Marketing() {
         />
       )}
 
-      {showCreateLanding && (
-        <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[16px] font-semibold text-zinc-900">Create Landing Page</h2>
-              <button onClick={() => setShowCreateLanding(false)} className="text-zinc-400 hover:text-zinc-700 transition-colors"><X className="size-5" /></button>
-            </div>
-            <p className="text-[14px] text-zinc-500 mb-6">Landing page builder coming soon…</p>
-            <button onClick={() => setShowCreateLanding(false)} className="w-full px-4 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all">Close</button>
-          </div>
-        </div>
-      )}
       {showCreateQR && (
         <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6">
