@@ -157,7 +157,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="fixed top-14 left-2 w-80 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
             <span className="text-[13px] font-semibold text-zinc-900">Notifications</span>
@@ -203,6 +203,51 @@ function NotificationBell() {
         </div>
       )}
     </div>
+  );
+}
+
+const PAGE_TITLES: { path: string; label: string }[] = [
+  { path: "/pois", label: "Points of Interest" },
+  { path: "/guides", label: "Audio Guides" },
+  { path: "/map", label: "Map" },
+  { path: "/marketing", label: "Marketing" },
+  { path: "/monetization", label: "Monetization" },
+  { path: "/team", label: "Team" },
+  { path: "/settings", label: "Settings" },
+  { path: "/reviews", label: "Reviews" },
+  { path: "/events", label: "Events" },
+  { path: "/challenge", label: "Gamification" },
+  { path: "/surveys", label: "Surveys" },
+  { path: "/documents", label: "Knowledge Base" },
+  { path: "/connectors", label: "Connectors" },
+  { path: "/profile", label: "My Profile" },
+  { path: "/", label: "Dashboard" },
+];
+
+function TopBar({ collapsed }: { collapsed: boolean }) {
+  const location = useLocation();
+  const leftOffset = collapsed ? "lg:left-[64px]" : "lg:left-[220px]";
+  const title = PAGE_TITLES.find((p) =>
+    p.path === "/" ? location.pathname === "/" : location.pathname.startsWith(p.path)
+  )?.label ?? "";
+  const initials = currentUser.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
+
+  return (
+    <header className={`hidden lg:flex fixed top-0 right-0 ${leftOffset} z-30 h-12 items-center justify-between px-6 bg-white border-b border-zinc-100 transition-all duration-300 ease-in-out`}>
+      <span className="text-[14px] font-semibold text-zinc-800 tracking-tight">{title}</span>
+      <div className="flex items-center gap-3">
+        <NotificationBell />
+        <Link to="/profile" title="My Profile">
+          {currentUser.avatar ? (
+            <img src={currentUser.avatar} alt={currentUser.name} className="size-7 rounded-full object-cover ring-2 ring-zinc-100 hover:ring-zinc-300 transition-all" />
+          ) : (
+            <div className="size-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[10px] ring-2 ring-zinc-100 hover:ring-zinc-300 transition-all">
+              {initials}
+            </div>
+          )}
+        </Link>
+      </div>
+    </header>
   );
 }
 
@@ -384,6 +429,9 @@ export function StudioLayout() {
 
   return (
     <div className="min-h-screen bg-zinc-50">
+      {/* Desktop TopBar */}
+      <TopBar collapsed={collapsed} />
+
       {/* Desktop Sidebar */}
       <aside className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r border-zinc-200 bg-white transition-all duration-300 ease-in-out ${sidebarWidth}`}>
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -403,16 +451,13 @@ export function StudioLayout() {
               )}
             </Link>
             {!collapsed && (
-              <div className="flex items-center gap-1 ml-auto">
-                <NotificationBell />
-                <button
-                  onClick={() => setCollapsed(true)}
-                  className="p-1 text-zinc-300 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors"
-                  title="Collapse sidebar"
-                >
-                  <ChevronLeft className="size-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => setCollapsed(true)}
+                className="ml-auto p-1 text-zinc-300 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors"
+                title="Collapse sidebar"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
             )}
           </div>
 
@@ -577,7 +622,7 @@ export function StudioLayout() {
       </nav>
 
       {/* Main Content */}
-      <main className={`${mainPadding} pt-14 pb-20 lg:pt-0 lg:pb-0 bg-white min-h-screen transition-all duration-300 ease-in-out`}>
+      <main className={`${mainPadding} pt-14 pb-20 lg:pt-12 lg:pb-0 bg-white min-h-screen transition-all duration-300 ease-in-out`}>
         <Outlet />
       </main>
 
