@@ -9,7 +9,7 @@ import { PageShell } from "./PageShell";
 
 type MonTab      = "access" | "log";
 type CodeStatus   = "available" | "redeemed" | "expired";
-type CodeChannel  = "inloco" | "qr" | "online";
+type CodeChannel  = "onsite" | "online";
 
 interface GuideEntry {
   id: string; name: string; access: "free" | "paid"; status: "draft" | "published";
@@ -28,15 +28,15 @@ const MOCK_GUIDES: GuideEntry[] = [
 ];
 
 const ACCESS_CODES: AccessCode[] = [
-  { id: "c1",  code: "X7K2M", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "redeemed",  issuedAt: "2026-03-28", redeemedAt: "2026-04-01" },
-  { id: "c2",  code: "P4N9R", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "redeemed",  issuedAt: "2026-03-28", redeemedAt: "2026-04-02" },
-  { id: "c3",  code: "T6H3W", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "available", issuedAt: "2026-03-28" },
-  { id: "c4",  code: "B8F2V", guideId: "2", guideName: "Ancient Egypt Collection", channel: "inloco", status: "available", issuedAt: "2026-03-28" },
-  { id: "c5",  code: "M5K7N", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "inloco", status: "redeemed",  issuedAt: "2026-03-20", redeemedAt: "2026-03-22" },
-  { id: "c6",  code: "R3T9H", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "inloco", status: "available", issuedAt: "2026-03-20" },
-  { id: "c7",  code: "W2X8P", guideId: "2", guideName: "Ancient Egypt Collection", channel: "qr",     status: "redeemed",  issuedAt: "2026-03-15", redeemedAt: "2026-03-16" },
-  { id: "c8",  code: "F9M4K", guideId: "2", guideName: "Ancient Egypt Collection", channel: "qr",     status: "available", issuedAt: "2026-03-15" },
-  { id: "c9",  code: "N7B3T", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "qr",     status: "available", issuedAt: "2026-04-10" },
+  { id: "c1",  code: "X7K2M", guideId: "2", guideName: "Ancient Egypt Collection", channel: "onsite", status: "redeemed",  issuedAt: "2026-03-28", redeemedAt: "2026-04-01" },
+  { id: "c2",  code: "P4N9R", guideId: "2", guideName: "Ancient Egypt Collection", channel: "onsite", status: "redeemed",  issuedAt: "2026-03-28", redeemedAt: "2026-04-02" },
+  { id: "c3",  code: "T6H3W", guideId: "2", guideName: "Ancient Egypt Collection", channel: "onsite", status: "available", issuedAt: "2026-03-28" },
+  { id: "c4",  code: "B8F2V", guideId: "2", guideName: "Ancient Egypt Collection", channel: "onsite", status: "available", issuedAt: "2026-03-28" },
+  { id: "c5",  code: "M5K7N", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "onsite", status: "redeemed",  issuedAt: "2026-03-20", redeemedAt: "2026-03-22" },
+  { id: "c6",  code: "R3T9H", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "onsite", status: "available", issuedAt: "2026-03-20" },
+  { id: "c7",  code: "W2X8P", guideId: "2", guideName: "Ancient Egypt Collection", channel: "onsite", status: "redeemed",  issuedAt: "2026-03-15", redeemedAt: "2026-03-16" },
+  { id: "c8",  code: "F9M4K", guideId: "2", guideName: "Ancient Egypt Collection", channel: "onsite", status: "available", issuedAt: "2026-03-15" },
+  { id: "c9",  code: "N7B3T", guideId: "4", guideName: "Sculpture Garden Tour",    channel: "onsite", status: "available", issuedAt: "2026-04-10" },
   { id: "c10", code: "H4V6Z", guideId: "2", guideName: "Ancient Egypt Collection", channel: "online", status: "redeemed",  issuedAt: "2026-04-05", redeemedAt: "2026-04-05" },
   { id: "c11", code: "K2P8Y", guideId: "2", guideName: "Ancient Egypt Collection", channel: "online", status: "redeemed",  issuedAt: "2026-04-06", redeemedAt: "2026-04-07" },
   { id: "c12", code: "G5W3N", guideId: "2", guideName: "Ancient Egypt Collection", channel: "online", status: "available", issuedAt: "2026-04-08" },
@@ -67,9 +67,8 @@ const CODE_STATUS_CFG: Record<CodeStatus, { label: string; dot: string; text: st
 };
 
 const CHANNEL_CFG: Record<CodeChannel, { label: string; text: string; bg: string }> = {
-  inloco: { label: "In-loco",  text: "text-sky-700",    bg: "bg-sky-50"    },
-  qr:     { label: "QR print", text: "text-violet-700", bg: "bg-violet-50" },
-  online: { label: "Online",   text: "text-amber-700",  bg: "bg-amber-50"  },
+  onsite: { label: "On site", text: "text-sky-700",   bg: "bg-sky-50"   },
+  online: { label: "Online",  text: "text-amber-700", bg: "bg-amber-50" },
 };
 
 function downloadCSV(codes: { code: string; guideName: string; channel: string; issuedAt: string; status: string }[], guideName: string) {
@@ -115,7 +114,7 @@ export function Monetization() {
     const today = new Date().toISOString().split("T")[0];
     const batch = Array.from({ length: Math.min(qty, 100) }, (_, i) => ({
       id: `gen-${Date.now()}-${i}`, code: genCode(), guideId: guide.id,
-      guideName: guide.name, channel: "inloco" as CodeChannel, status: "available" as CodeStatus, issuedAt: today,
+      guideName: guide.name, channel: "onsite" as CodeChannel, status: "available" as CodeStatus, issuedAt: today,
     }));
     downloadCSV(batch, guide.name);
   }
@@ -300,8 +299,7 @@ export function Monetization() {
                   <select value={logFilterChannel} onChange={e => setLogFilterChannel(e.target.value as CodeChannel | "all")}
                     className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-[12px] text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer">
                     <option value="all">All channels</option>
-                    <option value="inloco">In-loco</option>
-                    <option value="qr">QR print</option>
+                    <option value="onsite">On site</option>
                     <option value="online">Online</option>
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3 text-zinc-400 pointer-events-none" />
