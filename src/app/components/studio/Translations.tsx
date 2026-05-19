@@ -696,15 +696,30 @@ export function Translations({ defaultGuideId, languages, onCompletionChange }: 
               ? { label: "Translation Under Review", cls: "bg-amber-50 text-amber-700 border-amber-200" }
               : { label: "Translation Draft",        cls: "bg-zinc-100 text-zinc-500 border-zinc-200" };
 
+            const toggleStatus = (e: React.MouseEvent) => {
+              e.stopPropagation();
+              setPois(prev => prev.map(x =>
+                x.id === p.id
+                  ? { ...x, translations: { ...x.translations, [lang]: { ...(x.translations[lang] ?? { audioStatus: "none" as const }), status: isDone ? "draft" : "approved", text: x.translations[lang]?.text ?? "" } } }
+                  : x
+              ));
+            };
+
             return (
-              <button key={p.id} onClick={() => openPOI(p)}
-                className={`w-full group flex items-center gap-4 px-5 py-4 bg-white rounded-xl border transition-all text-left hover:shadow-sm ${isDone ? "border-emerald-200 hover:border-emerald-300" : "border-zinc-200 hover:border-zinc-300"}`}
+              <div key={p.id}
+                className={`w-full group flex items-center gap-4 px-5 py-4 bg-white rounded-xl border transition-all ${isDone ? "border-emerald-200" : "border-zinc-200"}`}
                 style={{ boxShadow: "0 1px 3px 0 rgba(0,0,0,0.04)" }}>
                 <span className="text-[11px] font-medium text-zinc-400 w-5 flex-shrink-0">{String(i + 1).padStart(2, "0")}</span>
-                <span className={`flex-1 text-[14px] font-semibold truncate ${isDone ? "text-emerald-800" : "text-zinc-900"}`}>{p.name}</span>
-                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex-shrink-0 ${cls}`}>{label}</span>
-                <ChevronRight className="size-4 text-zinc-300 group-hover:text-zinc-500 transition-colors flex-shrink-0" />
-              </button>
+                <button onClick={() => openPOI(p)} className={`flex-1 text-[14px] font-semibold truncate text-left ${isDone ? "text-emerald-800" : "text-zinc-900"}`}>{p.name}</button>
+                <button onClick={toggleStatus}
+                  title={isDone ? "Mark as draft" : "Mark as complete"}
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex-shrink-0 transition-all hover:opacity-75 ${cls}`}>
+                  {label}
+                </button>
+                <button onClick={() => openPOI(p)} className="flex-shrink-0">
+                  <ChevronRight className="size-4 text-zinc-300 group-hover:text-zinc-500 transition-colors" />
+                </button>
+              </div>
             );
           })}
         </div>
