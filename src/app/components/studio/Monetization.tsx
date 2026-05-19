@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import {
-  QrCode, Download, Plus, Check, X, ChevronDown,
-  Package, FileDown, Truck, Clock, CheckCircle2,
-  Globe, Eye, EyeOff, RotateCcw, Copy, Tag, Info, AlertTriangle,
+  Download, X, ChevronDown,
+  Package, FileDown, Truck,
+  Globe, RotateCcw, Info, AlertTriangle,
 } from "lucide-react";
 import { PageShell } from "./PageShell";
 
@@ -123,19 +123,11 @@ export function Monetization() {
   const [editAccess,    setEditAccess]    = useState<"free" | "paid">("free");
   const [confirmAccessChange, setConfirmAccessChange] = useState<{ guide: GuideEntry; newAccess: "free" | "paid" } | null>(null);
 
-  // Distribution channels
-  const [showInloco,  setShowInloco]  = useState(false);
-  const [inlocoGuide, setInlocoGuide] = useState("2");
-  const [inlocoQty,   setInlocoQty]   = useState(500);
-  const [showQr,      setShowQr]      = useState(false);
-  const [qrGuide,     setQrGuide]     = useState("2");
-  const [qrQty,       setQrQty]       = useState(500);
-
-  // Online / webhook
-  const [showApiKey,    setShowApiKey]    = useState(false);
-  const [emailEnabled,  setEmailEnabled]  = useState(true);
-  const [copiedWebhook, setCopiedWebhook] = useState(false);
-  const [copiedApiKey,  setCopiedApiKey]  = useState(false);
+  // Distribution settings per guide
+  const [settingsGuide, setSettingsGuide] = useState<GuideEntry | null>(null);
+  const [guideDistribution, setGuideDistribution] = useState<Record<string, "online" | "physical">>({ "2": "physical", "4": "online" });
+  const [physicalQty,    setPhysicalQty]    = useState<Record<string, number>>({});
+  const [physicalFormat, setPhysicalFormat] = useState<Record<string, "csv" | "json">>({});
 
   // Orders
   const [orders,      setOrders]      = useState<Order[]>(MOCK_ORDERS);
@@ -156,22 +148,15 @@ export function Monetization() {
   const totalRedeemed = ACCESS_CODES.filter(c => c.status === "redeemed").length;
   const totalAvailable = ACCESS_CODES.filter(c => c.status === "available").length;
 
-  function copy(text: string, which: "webhook" | "apikey") {
-    navigator.clipboard.writeText(text).catch(() => {});
-    if (which === "webhook") { setCopiedWebhook(true); setTimeout(() => setCopiedWebhook(false), 2000); }
-    else                     { setCopiedApiKey(true);  setTimeout(() => setCopiedApiKey(false),  2000); }
-  }
-
-  function generateBatch(channel: "inloco" | "qr", guideId: string, qty: number) {
+  function generatePhysicalBatch(guideId: string) {
     const guide = guides.find(g => g.id === guideId)!;
+    const qty = physicalQty[guideId] ?? 500;
     const today = new Date().toISOString().split("T")[0];
     const batch = Array.from({ length: Math.min(qty, 100) }, (_, i) => ({
       id: `gen-${Date.now()}-${i}`, code: genCode(), guideId: guide.id,
-      guideName: guide.name, channel, status: "available" as CodeStatus, issuedAt: today,
+      guideName: guide.name, channel: "inloco" as CodeChannel, status: "available" as CodeStatus, issuedAt: today,
     }));
     downloadCSV(batch, guide.name);
-    if (channel === "inloco") setShowInloco(false);
-    else setShowQr(false);
   }
 
   function saveEditAccess() {
@@ -271,9 +256,9 @@ export function Monetization() {
         {tab === "access" && (
           <div className="space-y-4">
 
-            {/* Guide access table */}
+            {/* Guide access + distribution settings */}
             <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.05)" }}>
-              <div className="px-6 py-3 border-b border-zinc-100 bg-zinc-50 grid grid-cols-[1fr_140px_120px]">
+              <div className="px-6 py-3 border-b border-zinc-100 bg-zinc-50 grid grid-cols-[1fr_160px_100px]">
                 <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Audio guide</span>
                 <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">Access</span>
                 <span />
@@ -281,17 +266,21 @@ export function Monetization() {
               <div className="divide-y divide-zinc-100">
                 {guides.map(guide => {
                   const isPaid = guide.access === "paid";
-                  const avail  = ACCESS_CODES.filter(c => c.guideId === guide.id && c.status === "available").length;
+                  const distrib = guideDistribution[guide.id];
                   return (
-                    <div key={guide.id} className="px-6 py-4 grid grid-cols-[1fr_140px_120px] items-center">
+                    <div key={guide.id} className="px-6 py-4 grid grid-cols-[1fr_160px_100px] items-center">
                       <div>
-                        <p className="text-[13px] font-semibold text-zinc-900 mb-0.5">{guide.name}</p>
-                        {isPaid && <p className="text-[11px] text-zinc-400">{avail} codes available</p>}
+                        <p className="text-[13px] font-semibold text-zinc-900">{guide.name}</p>
+                        {isPaid && distrib && (
+                          <p className="text-[11px] text-zinc-400 mt-0.5">
+                            {distrib === "online" ? "Online sales · monthly billing" : "Physical distribution · prepaid codes"}
+                          </p>
+                        )}
                       </div>
                       <button onClick={() => { setEditingAccess(guide); setEditAccess(guide.access); }}
                         className="flex items-center gap-3 w-fit hover:opacity-75 transition-opacity">
                         <div className="relative flex-shrink-0 rounded-full transition-colors duration-200"
-                          style={{ width: 36, height: 20, backgroundColor: isPaid ? "#a1a1aa" : "#e4e4e7" }}>
+                          style={{ width: 36, height: 20, backgroundColor: isPaid ? "#18181b" : "#e4e4e7" }}>
                           <span className="absolute rounded-full transition-all duration-200"
                             style={{ width: 14, height: 14, top: 3, left: isPaid ? 19 : 3, backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }} />
                         </div>
@@ -299,9 +288,11 @@ export function Monetization() {
                       </button>
                       <div className="flex justify-end">
                         {isPaid && (
-                          <button onClick={() => { setOrderGuide(guide); setOrderDelivery("digital"); setOrderQty(500); setShowOrderModal(true); }}
-                            className="inline-flex items-center gap-1.5 text-zinc-500 text-[12px] font-medium hover:text-zinc-900 transition-colors">
-                            <Plus className="size-3.5" />New order
+                          <button
+                            onClick={() => setSettingsGuide(guide)}
+                            className="text-[12px] font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+                          >
+                            Settings →
                           </button>
                         )}
                       </div>
@@ -311,19 +302,7 @@ export function Monetization() {
               </div>
             </div>
 
-            {/* Online purchase — connector callout */}
-            <div className="flex items-center gap-4 px-5 py-4 bg-zinc-50 border border-zinc-200 rounded-xl">
-              <div className="size-9 rounded-xl bg-white border border-zinc-200 flex items-center justify-center flex-shrink-0">
-                <Globe className="size-4 text-zinc-400" strokeWidth={1.5} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-zinc-900">Online purchase</p>
-                <p className="text-[12px] text-zinc-500 mt-0.5">Connect your payment system via webhook to issue codes automatically. Configure it in <Link to="/connectors?highlight=webhook" className="text-zinc-700 underline underline-offset-2 hover:text-zinc-900 transition-colors">Connectors →</Link></p>
-              </div>
-            </div>
-
-            {/* Device lock — inline note */}
-            <div className="flex items-start gap-2.5 px-1">
+            <div className="flex items-start gap-2 px-1">
               <Info className="size-3.5 text-zinc-400 flex-shrink-0 mt-0.5" />
               <p className="text-[12px] text-zinc-400 leading-relaxed">
                 Paid codes are locked to the visitor's device on first use — non-transferable. Free guides use a universal QR without device lock.
@@ -509,6 +488,130 @@ export function Monetization() {
           </div>
         )}
       </div>
+
+      {/* Distribution Settings Modal */}
+      {settingsGuide && (() => {
+        const guide = settingsGuide;
+        const distrib = guideDistribution[guide.id];
+        return (
+          <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-zinc-200 overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200">
+                <div>
+                  <h2 className="text-[15px] font-semibold text-zinc-900">Distribution settings</h2>
+                  <p className="text-[12px] text-zinc-400 mt-0.5">{guide.name}</p>
+                </div>
+                <button onClick={() => setSettingsGuide(null)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                <div>
+                  <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">How do visitors get access?</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Online */}
+                    <button
+                      onClick={() => setGuideDistribution(prev => ({ ...prev, [guide.id]: "online" }))}
+                      className={`text-left p-5 rounded-xl border-2 transition-all ${distrib === "online" ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-300"}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="size-9 rounded-lg bg-sky-50 flex items-center justify-center">
+                          <Globe className="size-4 text-sky-600" strokeWidth={1.5} />
+                        </div>
+                        <div className={`size-4 rounded-full border-2 mt-0.5 flex items-center justify-center flex-shrink-0 ${distrib === "online" ? "border-zinc-900 bg-zinc-900" : "border-zinc-300"}`}>
+                          {distrib === "online" && <span className="size-1.5 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                      <p className="text-[13px] font-semibold text-zinc-900 mb-1">Online sales</p>
+                      <p className="text-[12px] text-zinc-500 leading-relaxed">Your payment system triggers code issuance via webhook. Billed monthly on actual accesses.</p>
+                    </button>
+
+                    {/* Physical */}
+                    <button
+                      onClick={() => setGuideDistribution(prev => ({ ...prev, [guide.id]: "physical" }))}
+                      className={`text-left p-5 rounded-xl border-2 transition-all ${distrib === "physical" ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 bg-white hover:border-zinc-300"}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="size-9 rounded-lg bg-amber-50 flex items-center justify-center">
+                          <Package className="size-4 text-amber-600" strokeWidth={1.5} />
+                        </div>
+                        <div className={`size-4 rounded-full border-2 mt-0.5 flex items-center justify-center flex-shrink-0 ${distrib === "physical" ? "border-zinc-900 bg-zinc-900" : "border-zinc-300"}`}>
+                          {distrib === "physical" && <span className="size-1.5 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                      <p className="text-[13px] font-semibold text-zinc-900 mb-1">Physical distribution</p>
+                      <p className="text-[12px] text-zinc-500 leading-relaxed">Generate a prepaid batch of codes. Download as CSV or JSON and distribute manually.</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Online: webhook callout */}
+                {distrib === "online" && (
+                  <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-4 flex items-start gap-3">
+                    <Globe className="size-4 text-sky-500 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+                    <div>
+                      <p className="text-[13px] font-semibold text-sky-900 mb-0.5">Webhook not configured yet</p>
+                      <p className="text-[12px] text-sky-700 leading-relaxed mb-2">
+                        Connect your payment system to automatically issue access codes on purchase.
+                      </p>
+                      <Link
+                        to="/connectors?highlight=webhook"
+                        onClick={() => setSettingsGuide(null)}
+                        className="inline-block text-[12px] font-semibold text-sky-700 underline underline-offset-2 hover:text-sky-900 transition-colors"
+                      >
+                        Configure webhook in Connectors →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Physical: batch generator */}
+                {distrib === "physical" && (
+                  <div className="border border-zinc-200 rounded-xl p-4 space-y-4">
+                    <p className="text-[12px] font-semibold text-zinc-700">Generate a code batch</p>
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1">
+                        <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Quantity</label>
+                        <div className="relative">
+                          <select value={physicalQty[guide.id] ?? 500} onChange={e => setPhysicalQty(prev => ({ ...prev, [guide.id]: parseInt(e.target.value) }))}
+                            className="w-full appearance-none pl-3 pr-8 py-2.5 bg-white border border-zinc-200 rounded-lg text-[13px] text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900">
+                            {QTY_OPTIONS.map(n => <option key={n} value={n}>{n.toLocaleString()}</option>)}
+                          </select>
+                          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-1.5">Format</label>
+                        <div className="flex rounded-lg border border-zinc-200 overflow-hidden">
+                          {(["csv", "json"] as const).map(f => (
+                            <button key={f} onClick={() => setPhysicalFormat(prev => ({ ...prev, [guide.id]: f }))}
+                              className={`px-4 py-2.5 text-[12px] font-semibold transition-all ${(physicalFormat[guide.id] ?? "csv") === f ? "bg-zinc-900 text-white" : "bg-white text-zinc-500 hover:bg-zinc-50"}`}>
+                              .{f}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <button onClick={() => { generatePhysicalBatch(guide.id); }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all">
+                      <FileDown className="size-4" />
+                      Generate & download
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50">
+                <button onClick={() => setSettingsGuide(null)}
+                  className="w-full py-2.5 text-[13px] font-semibold text-zinc-700 hover:text-zinc-900 transition-colors">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Edit Access Modal */}
       {editingAccess && (
