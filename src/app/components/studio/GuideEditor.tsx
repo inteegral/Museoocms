@@ -734,7 +734,6 @@ function GuideEditorContent() {
           </div>
         </div>
 
-        {/* Body */}
         <div className="grid lg:grid-cols-3 gap-8 items-start">
           {/* Main — dominant zone */}
           <div className="lg:col-span-2 space-y-6">
@@ -1401,16 +1400,18 @@ function GuideEditorContent() {
 
       {/* Translations Modal */}
       {activeModal === "translations" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300 flex-shrink-0" />
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 flex-shrink-0">
-              <span className="text-[14px] font-semibold text-zinc-900">Translations — {title}</span>
-              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-900 transition-colors">
+        <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setActiveModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 flex-shrink-0">
+              <div>
+                <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Translations</p>
+                <p className="text-[14px] font-semibold text-zinc-900">{title}</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
                 <X className="size-5" />
               </button>
             </div>
-            <div className="overflow-y-auto flex-1">
+            <div className="flex-1 overflow-y-auto">
               <Translations defaultGuideId={id} languages={selectedLanguages} onCompletionChange={setTranslationsComplete} />
             </div>
           </div>
@@ -1419,16 +1420,18 @@ function GuideEditorContent() {
 
       {/* Voicing Modal */}
       {activeModal === "voicing" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300 flex-shrink-0" />
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 flex-shrink-0">
-              <span className="text-[14px] font-semibold text-zinc-900">Voicing — {title}</span>
-              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-900 transition-colors">
+        <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setActiveModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 flex-shrink-0">
+              <div>
+                <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Voicing</p>
+                <p className="text-[14px] font-semibold text-zinc-900">{title}</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
                 <X className="size-5" />
               </button>
             </div>
-            <div className="overflow-y-auto flex-1">
+            <div className="flex-1 overflow-y-auto">
               <VoiceTalent onPublish={() => setActiveModal("publish")} />
             </div>
           </div>

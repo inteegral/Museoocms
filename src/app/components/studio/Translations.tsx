@@ -58,7 +58,7 @@ const allVoices: Voice[] = [
 ];
 
 const initialGuides: Guide[] = [
-  { id: "guide-1", name: "Complete Museum Tour", targetLanguages: ["IT", "ES", "FR"], voiceAssignments: { IT: "v2", ES: "v3", FR: null } },
+  { id: "guide-1", name: "Complete Museum Tour", targetLanguages: ["IT", "ES", "FR"], voiceAssignments: { IT: "v2", ES: null, FR: null } },
   { id: "guide-2", name: "Highlights - Must-See Masterpieces", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: "v2", ES: null } },
   { id: "guide-3", name: "Family Tour", targetLanguages: ["IT", "ES"], voiceAssignments: { IT: null, ES: null } },
 ];
@@ -94,7 +94,7 @@ const initialPOIs: POI[] = [
     id: "p4", name: "Michelangelo's Sculptures",
     sourceText: "Marvel at the mastery of Michelangelo's sculptural works. The raw power and emotional depth captured in marble continues to astonish viewers five centuries after their creation.",
     translations: {
-      IT: { text: "Ammira la maestria delle opere scultoree di Michelangelo. La potenza e la profondità emotiva catturate nel marmo continuano a stupire i visitatori cinque secoli dopo la loro creazione.", status: "approved", audioStatus: "none" },
+      IT: { text: "Ammira la maestria delle opere scultoree di Michelangelo. La potenza e la profondità emotiva catturate nel marmo continuano a stupire i visitatori cinque secoli dopo la loro creazione.", status: "approved", audioStatus: "pending" },
       ES: draft, FR: draft,
     },
   },
@@ -102,7 +102,7 @@ const initialPOIs: POI[] = [
     id: "p5", name: "Raphael Gallery",
     sourceText: "Explore the harmonious compositions of Raphael, whose work represents the pinnacle of Renaissance artistic achievement. The gallery presents a curated selection of his most significant paintings.",
     translations: {
-      IT: { text: "Esplora le composizioni armoniose di Raffaello, la cui opera rappresenta il vertice del Rinascimento artistico. La galleria presenta una selezione curata dei suoi dipinti più significativi.", status: "approved", audioStatus: "none" },
+      IT: { text: "Esplora le composizioni armoniose di Raffaello, la cui opera rappresenta il vertice del Rinascimento artistico. La galleria presenta una selezione curata dei suoi dipinti più significativi.", status: "approved", audioStatus: "pending" },
       ES: draft, FR: draft,
     },
   },
@@ -309,7 +309,12 @@ function VoicePanel({ textApproved, audioStatus, voice, lang, showPicker, voiceS
 // ─── Main ──────────────────────────────────────────────────────────────────────
 export function Translations({ defaultGuideId, languages, onCompletionChange }: { defaultGuideId?: string; languages?: string[]; onCompletionChange?: (done: boolean) => void } = {}) {
   const locked = !!defaultGuideId;
-  const [pois, setPois] = useState<POI[]>(initialPOIs);
+  const [pois, setPois] = useState<POI[]>(() => {
+    try {
+      const saved = localStorage.getItem("museoo_pois");
+      return saved ? JSON.parse(saved) : initialPOIs;
+    } catch { return initialPOIs; }
+  });
   const resolvedGuides = languages && defaultGuideId
     ? initialGuides.map(g => g.id === defaultGuideId ? { ...g, targetLanguages: languages.map(l => l.toUpperCase()) } : g)
     : initialGuides;
@@ -323,14 +328,25 @@ export function Translations({ defaultGuideId, languages, onCompletionChange }: 
   const [playingVoice, setPlayingVoice] = useState<string | null>(null);
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   const [voiceSearch, setVoiceSearch] = useState("");
-  const [voiceAssignments, setVoiceAssignments] = useState<Record<string, Record<string, string | null>>>(
-    Object.fromEntries(initialGuides.map(g => [g.id, { ...g.voiceAssignments }]))
-  );
+  const [voiceAssignments, setVoiceAssignments] = useState<Record<string, Record<string, string | null>>>(() => {
+    try {
+      const saved = localStorage.getItem("museoo_voiceAssignments");
+      return saved ? JSON.parse(saved) : Object.fromEntries(initialGuides.map(g => [g.id, { ...g.voiceAssignments }]));
+    } catch { return Object.fromEntries(initialGuides.map(g => [g.id, { ...g.voiceAssignments }])); }
+  });
   const [generating, setGenerating] = useState(false);
   const [showReviewerPicker, setShowReviewerPicker] = useState(false);
 
   const guide = guides.find(g => g.id === guideId)!;
   const translationLangs = guide.targetLanguages.slice(1);
+
+  useEffect(() => {
+    localStorage.setItem("museoo_pois", JSON.stringify(pois));
+  }, [pois]);
+
+  useEffect(() => {
+    localStorage.setItem("museoo_voiceAssignments", JSON.stringify(voiceAssignments));
+  }, [voiceAssignments]);
 
   useEffect(() => {
     if (!onCompletionChange || translationLangs.length === 0) return;
@@ -698,6 +714,7 @@ export function Translations({ defaultGuideId, languages, onCompletionChange }: 
 
             const toggleStatus = (e: React.MouseEvent) => {
               e.stopPropagation();
+              if (!isDone && !t?.text?.trim()) return;
               setPois(prev => prev.map(x =>
                 x.id === p.id
                   ? { ...x, translations: { ...x.translations, [lang]: { ...(x.translations[lang] ?? { audioStatus: "none" as const }), status: isDone ? "draft" : "approved", text: x.translations[lang]?.text ?? "" } } }

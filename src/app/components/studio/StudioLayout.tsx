@@ -437,7 +437,7 @@ export function StudioLayout() {
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 
           {/* Logo + toggle */}
-          <div className={`flex items-center border-b border-zinc-100 h-14 flex-shrink-0 relative ${collapsed ? "justify-center px-0" : "px-4 gap-2.5"}`}>
+          <div className={`flex items-center h-14 flex-shrink-0 relative ${collapsed ? "justify-center px-0" : "px-4 gap-2.5"}`}>
             <Link to="/" className="flex items-center gap-2.5 min-w-0 flex-1">
               {collapsed ? (
                 <div className="size-6 rounded bg-[#D33333] flex items-center justify-center flex-shrink-0">
