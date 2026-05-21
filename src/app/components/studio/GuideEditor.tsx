@@ -443,15 +443,6 @@ function GuideEditorContent() {
     setPendingPhase({ phase: targetPhase, direction: "forward" });
   };
 
-  const flagMap: Record<string, string> = { it: "🇮🇹", en: "🇬🇧", fr: "🇫🇷", de: "🇩🇪", es: "🇪🇸", pt: "🇵🇹", zh: "🇨🇳", ja: "🇯🇵", ar: "🇸🇦" };
-
-  const langRows = selectedLanguages.map((lang, i) => ({
-    lang,
-    hasContent: true,
-    hasTranslation: i === 0,
-    hasVoice: false,
-  }));
-
   const publishChecks = [
     {
       label: "All POI content complete",
@@ -466,26 +457,16 @@ function GuideEditorContent() {
       action: selectedLanguages.length <= 1 ? { label: "Add translations", onClick: () => setActiveModal("translations") } : undefined,
     },
     {
-      label: "Voice talent assigned",
-      ok: false,
-      detail: "No voice assigned yet",
-      action: { label: "Go to Voicing", onClick: () => setActiveModal("voicing") },
-    },
-    {
       label: "Pronunciations validated",
       ok: false,
       detail: "3 words to confirm",
       action: { label: "Go to Voicing", onClick: () => setActiveModal("voicing") },
     },
     {
-      label: "Guide metadata complete",
-      ok: title.length > 0 && description.length > 0,
-      detail: !title.length || !description.length ? "Add a title and description" : undefined,
-    },
-    {
-      label: "All media uploaded",
-      ok: selectedPOIs.length > 0 && selectedPOIs.every((p) => !!p.imageUrl),
-      detail: selectedPOIs.filter((p) => !p.imageUrl).length > 0 ? `${selectedPOIs.filter((p) => !p.imageUrl).length} POIs missing images` : undefined,
+      label: "Voice talent assigned",
+      ok: false,
+      detail: "No voice assigned yet",
+      action: { label: "Go to Voicing", onClick: () => setActiveModal("voicing") },
     },
   ];
   const checksOkCount = publishChecks.filter((c) => c.ok).length;
@@ -1498,40 +1479,6 @@ function GuideEditorContent() {
                 </div>
               </div>
 
-              {/* Language status */}
-              <div>
-                <h3 className="text-[13px] font-semibold text-zinc-900 mb-3">Language Status</h3>
-                <div className="rounded-xl overflow-hidden border border-zinc-200">
-                  <div className="grid grid-cols-6 text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-4 py-2.5 border-b border-zinc-100 bg-zinc-50">
-                    <span className="col-span-2">Language</span>
-                    <span className="text-center">Content</span>
-                    <span className="text-center">Translation</span>
-                    <span className="text-center">Voice</span>
-                    <span className="text-center">Status</span>
-                  </div>
-                  <div className="divide-y divide-zinc-100">
-                    {langRows.map((row) => (
-                      <div key={row.lang} className="grid grid-cols-6 items-center px-4 py-3">
-                        <span className="col-span-2 text-[13px] font-medium text-zinc-800">
-                          {flagMap[row.lang] ?? "🌐"} {languages.find((l) => l.code === row.lang)?.name ?? row.lang.toUpperCase()}
-                        </span>
-                        {[row.hasContent, row.hasTranslation, row.hasVoice].map((ok, i) => (
-                          <div key={i} className="flex justify-center">
-                            {ok
-                              ? <CheckCircle2 className="size-4 text-emerald-500" />
-                              : <div className="size-4 rounded-full border-2 border-zinc-200" />}
-                          </div>
-                        ))}
-                        <div className="flex justify-center">
-                          {row.hasContent && row.hasTranslation && row.hasVoice
-                            ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Ready</span>
-                            : <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500">In progress</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Review request banner (pending) */}

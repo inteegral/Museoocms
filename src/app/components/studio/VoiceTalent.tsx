@@ -425,7 +425,7 @@ function VoiceGenerationModal({ voice, onClose, onPublish }: { voice: VoiceTalen
               onClick={() => { onClose(); onPublish?.(); }}
               className="w-full py-3 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all flex items-center justify-center gap-2"
             >
-              Proceed to publish <ArrowRight className="size-3.5" />
+              {onPublish ? <><span>Proceed to publish</span><ArrowRight className="size-3.5" /></> : "Done"}
             </button>
           </div>
         )}
@@ -1139,7 +1139,7 @@ export function VoiceTalent({ onPublish }: { onPublish?: () => void } = {}) {
         <VoiceGenerationModal
           voice={selectedVoiceForAssignment}
           onClose={() => setSelectedVoiceForAssignment(null)}
-          onPublish={onPublish}
+          onPublish={GUIDE_LANGUAGES.every(lang => catalogAssignments[lang] != null) ? onPublish : undefined}
         />
       )}
     </PageShell>
