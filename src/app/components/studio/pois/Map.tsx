@@ -1,5 +1,5 @@
 import { MapEditor } from "./MapEditor";
-import { PageShell } from "./PageShell";
+import { PageShell } from "../_layout/PageShell";
 
 export function Map() {
   return (

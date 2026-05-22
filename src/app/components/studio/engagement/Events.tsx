@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Calendar, MapPin, X, BookOpen, Trash2, Pencil, Image as ImageIcon, Check } from "lucide-react";
-import { PageShell } from "./PageShell";
-import { mockEvents as initialMockEvents, mockGuides } from "../../data/mockData";
+import { PageShell } from "../_layout/PageShell";
+import { mockEvents as initialMockEvents, mockGuides } from "../../../data/mockData";
 
 const GALLERY = [
   "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?w=400&q=80",

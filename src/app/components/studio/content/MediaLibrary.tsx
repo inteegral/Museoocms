@@ -15,7 +15,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useState } from "react";
-import { PageShell } from "./PageShell";
+import { PageShell } from "../_layout/PageShell";
 interface POIRef {
   id: string;
   name: string;

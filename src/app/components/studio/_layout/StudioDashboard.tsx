@@ -10,7 +10,7 @@ import {
   ArrowDown,
   Smartphone,
 } from "lucide-react";
-import { mockMuseum, mockGuides, mockAnalytics } from "../../data/mockData";
+import { mockMuseum, mockGuides, mockAnalytics } from "../../../data/mockData";
 import {
   LineChart,
   Line,
@@ -29,7 +29,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import MainLogoVariant from "../../../imports/MainLogoVariant5";
+import MainLogoVariant from "../../../../imports/MainLogoVariant5";
 import { PageShell } from "./PageShell";
 
 const editorialStatusConfig = {

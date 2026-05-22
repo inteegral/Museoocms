@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Check, Crown, ShieldCheck, PenLine, Eye, Camera } from "lucide-react";
-import { PageShell } from "./PageShell";
-import { teamMembers, CURRENT_USER_ID, type Role } from "../../data/teamData";
+import { PageShell } from "../_layout/PageShell";
+import { teamMembers, CURRENT_USER_ID, type Role } from "../../../data/teamData";
 
 const ROLE_META: Record<Role, { label: string; color: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number }> }> = {
   owner: { label: "Owner", color: "text-zinc-900", icon: Crown },

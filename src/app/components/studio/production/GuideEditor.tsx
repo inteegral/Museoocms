@@ -2,16 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router";
 import { ArrowLeft, Plus, GripVertical, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye, Ticket, Unlock, Trophy, HelpCircle } from "lucide-react";
 import confetti from "canvas-confetti";
-import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents, mockChallenges } from "../../data/mockData";
+import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents, mockChallenges } from "../../../data/mockData";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { POIEditor, type QuizQuestion } from "./POIEditor";
-import { GuidePreviewModal } from "./GuidePreviewModal";
-import { PageShell } from "./PageShell";
-import { getMemberByGuideId, teamMembers, CURRENT_USER_ID, type TeamMember } from "../../data/teamData";
-import { Translations } from "./Translations";
-import { VoiceTalent } from "./VoiceTalent";
-import { Toggle } from "./Toggle";
+import { POIEditor, type QuizQuestion } from "../pois/POIEditor";
+import { GuidePreviewModal } from "../guides/GuidePreviewModal";
+import { PageShell } from "../_layout/PageShell";
+import { getMemberByGuideId, teamMembers, CURRENT_USER_ID, type TeamMember } from "../../../data/teamData";
+import { Translations } from "./translation/Translations";
+import { VoiceTalent } from "./voicing/VoiceTalent";
+import { Toggle } from "../_layout/Toggle";
 
 const COVER_GALLERY = [
   "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",

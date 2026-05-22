@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router";
 import { Plus, LayoutGrid, List, PenLine, Copy, Sparkles, GitFork, X, Smartphone, ChevronRight, Calendar, Ticket, Unlock, Upload, FileText, BookOpen } from "lucide-react";
-import { PageShell } from "./PageShell";
-import { mockGuides, mockDocuments } from "../../data/mockData";
+import { PageShell } from "../_layout/PageShell";
+import { mockGuides, mockDocuments } from "../../../data/mockData";
 import { useState, useEffect, useRef } from "react";
 import { GuidePreviewModal } from "./GuidePreviewModal";
 

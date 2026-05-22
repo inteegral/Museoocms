@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { X, Check, ChevronRight, Zap, Search, ChevronDown } from "lucide-react";
-import { PageShell } from "./PageShell";
+import { PageShell } from "../_layout/PageShell";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ConfigField {

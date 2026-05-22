@@ -3,9 +3,9 @@ import {
   Users, UserPlus, Crown, ShieldCheck, PenLine, Eye,
   MoreHorizontal, X, Check, Trash2, Headphones, Mail, Camera, Pencil,
 } from "lucide-react";
-import { PageShell } from "./PageShell";
-import { mockGuides } from "../../data/mockData";
-import { teamMembers as SOURCE, type TeamMember, type Role } from "../../data/teamData";
+import { PageShell } from "../_layout/PageShell";
+import { mockGuides } from "../../../data/mockData";
+import { teamMembers as SOURCE, type TeamMember, type Role } from "../../../data/teamData";
 
 type FilterRole = Role | "all";
 

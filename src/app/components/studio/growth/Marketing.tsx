@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 
 import { useState } from "react";
-import { PageShell } from "./PageShell";
-import { GuidePreviewModal } from "./GuidePreviewModal";
+import { PageShell } from "../_layout/PageShell";
+import { GuidePreviewModal } from "../guides/GuidePreviewModal";
 import { RedemptionPagePreviewModal } from "./RedemptionPagePreviewModal";
 import { RedemptionPageEditModal } from "./RedemptionPageEditModal";
 

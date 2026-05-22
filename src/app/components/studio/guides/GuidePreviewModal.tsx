@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Play, Pause, Map as MapIcon, ChevronLeft, MapPin, RotateCcw, RotateCw, Sparkles, Send, ArrowDown, Calendar } from "lucide-react";
-import { mockPOIs, mockEvents } from "../../data/mockData";
+import { mockPOIs, mockEvents } from "../../../data/mockData";
 
 interface GuidePreviewModalProps {
   guideName: string;

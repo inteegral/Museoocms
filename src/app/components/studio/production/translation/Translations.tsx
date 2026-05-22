@@ -6,7 +6,7 @@ import {
   Clock, Eye, Lock, ChevronLeft, ChevronRight, User,
   ShieldCheck, MessageSquare,
 } from "lucide-react";
-import { PageShell } from "./PageShell";
+import { PageShell } from "../../_layout/PageShell";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type TextStatus = "draft" | "review" | "approved" | "expert-review" | "expert-done";

@@ -5,7 +5,7 @@ import {
   Package, FileDown,
   Globe, RotateCcw, Info, AlertTriangle,
 } from "lucide-react";
-import { PageShell } from "./PageShell";
+import { PageShell } from "../_layout/PageShell";
 
 type MonTab      = "access" | "log";
 type CodeStatus   = "available" | "redeemed" | "expired";

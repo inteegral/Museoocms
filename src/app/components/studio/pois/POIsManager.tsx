@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import { Plus, MapPin, ChevronDown, FileText, BookOpen, AlertTriangle, X, UserCircle2 } from "lucide-react";
-import { PageShell } from "./PageShell";
+import { PageShell } from "../_layout/PageShell";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { POIEditor } from "./POIEditor";
-import { mockGuides } from "../../data/mockData";
-import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
-import type { POI, POIStatus } from "../../types";
+import { mockGuides } from "../../../data/mockData";
+import { teamMembers, CURRENT_USER_ID } from "../../../data/teamData";
+import type { POI, POIStatus } from "../../../types";
 
 const AVATAR_COLORS = ["bg-violet-100 text-violet-700","bg-sky-100 text-sky-700","bg-emerald-100 text-emerald-700","bg-amber-100 text-amber-700","bg-rose-100 text-rose-700","bg-zinc-100 text-zinc-600"];
 function avatarColor(name: string) { return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]; }

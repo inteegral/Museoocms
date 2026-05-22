@@ -1,6 +1,6 @@
 import { TrendingUp, Users, Globe, AlertCircle } from "lucide-react";
 import { PageShell } from "./PageShell";
-import { mockAnalytics, mockMuseum } from "../../data/mockData";
+import { mockAnalytics, mockMuseum } from "../../../data/mockData";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export function Analytics() {

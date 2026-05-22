@@ -16,8 +16,8 @@ import {
   Info,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { PageShell } from "./PageShell";
-import { mockPOIs } from "../../data/mockData";
+import { PageShell } from "../../_layout/PageShell";
+import { mockPOIs } from "../../../../data/mockData";
 
 interface VoiceTalent {
   id: string;

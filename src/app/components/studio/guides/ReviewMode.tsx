@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams } from "react-router";
 import { Eye, MessageSquare, X, Check, CheckCircle2, Send } from "lucide-react";
-import { mockGuides, mockPOIs } from "../../data/mockData";
-import { getMemberByGuideId } from "../../data/teamData";
+import { mockGuides, mockPOIs } from "../../../data/mockData";
+import { getMemberByGuideId } from "../../../data/teamData";
 import { GuidePhonePreview } from "./GuidePreviewModal";
 
 interface Annotation {

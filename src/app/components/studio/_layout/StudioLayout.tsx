@@ -5,14 +5,14 @@ import {
   Trophy, ClipboardList, Settings, LogOut, Menu, X, ChevronDown, ChevronRight, ChevronLeft, Smartphone, Users, CalendarDays, Zap, BookOpen,
   Bell, Languages, UserCheck, TicketX, Mic, Star, BookCheck,
 } from "lucide-react";
-import { mockMuseum } from "../../data/mockData";
-import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
-import { mockNotifications, type Notification, type NotifType } from "../../data/notificationsData";
+import { mockMuseum } from "../../../data/mockData";
+import { teamMembers, CURRENT_USER_ID } from "../../../data/teamData";
+import { mockNotifications, type Notification, type NotifType } from "../../../data/notificationsData";
 import { useState, useEffect, useRef } from "react";
-import { OnboardingWizard } from "./OnboardingWizard";
-import MainLogoVariant from "../../../imports/MainLogoVariant5";
-import { GuidePreviewModal } from "./GuidePreviewModal";
-import { AIAssistantDrawer } from "./AIAssistantDrawer";
+import { OnboardingWizard } from "../../onboarding/OnboardingWizard";
+import MainLogoVariant from "../../../../imports/MainLogoVariant5";
+import { GuidePreviewModal } from "../guides/GuidePreviewModal";
+import { AIAssistantDrawer } from "../content/ai/AIAssistantDrawer";
 
 const currentUser = teamMembers.find((m) => m.id === CURRENT_USER_ID)!;
 

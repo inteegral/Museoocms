@@ -4,8 +4,8 @@ import {
   Zap, Users, Award,
   CheckCircle2, Circle, GripVertical,
 } from "lucide-react";
-import { mockGuides, mockPOIs } from "../../data/mockData";
-import { PageShell } from "./PageShell";
+import { mockGuides, mockPOIs } from "../../../data/mockData";
+import { PageShell } from "../_layout/PageShell";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ChallengeQuestion {

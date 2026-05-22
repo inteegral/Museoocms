@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Toggle } from "./Toggle";
+import { Toggle } from "../_layout/Toggle";
 import { 
   Building2, 
   Users, 
@@ -27,7 +27,7 @@ import {
   Accessibility
 } from "lucide-react";
 import { AppearanceEditor } from "./AppearanceEditor";
-import { PageShell } from "./PageShell";
+import { PageShell } from "../_layout/PageShell";
 
 type SettingsTab = "general" | "team" | "billing" | "integrations" | "security" | "notifications" | "privacy" | "accessibility";
 

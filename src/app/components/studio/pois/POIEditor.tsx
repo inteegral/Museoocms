@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check, Globe, Mic, HelpCircle, Plus, Trophy } from "lucide-react";
-import { mockGuides, mockPOIs, mockDocuments } from "../../data/mockData";
-import { Toggle } from "./Toggle";
-import type { POI, POIStatus } from "../../types";
+import { mockGuides, mockPOIs, mockDocuments } from "../../../data/mockData";
+import { Toggle } from "../_layout/Toggle";
+import type { POI, POIStatus } from "../../../types";
 
 export interface QuizQuestion {
   question: string;

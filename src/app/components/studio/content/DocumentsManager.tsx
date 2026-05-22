@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from "react";
 import { FileText, Upload, X, Search, Plus } from "lucide-react";
-import { PageShell } from "./PageShell";
-import { mockPOIs, mockGuides, mockDocuments } from "../../data/mockData";
+import { PageShell } from "../_layout/PageShell";
+import { mockPOIs, mockGuides, mockDocuments } from "../../../data/mockData";
 
 type Doc = {
   id: string;

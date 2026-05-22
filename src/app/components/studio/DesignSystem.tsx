@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Toggle } from "./Toggle";
+import { Toggle } from "./_layout/Toggle";
 
 // ─── Section wrapper ─────────────────────────────────────────────────────────
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {

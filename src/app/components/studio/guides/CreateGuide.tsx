@@ -4,7 +4,7 @@ import {
   ArrowLeft, Upload, Sparkles, X, Wand2, FileText,
   Loader2, Users, Baby, GraduationCap, Eye, Church, Plus, Search, Check,
 } from "lucide-react";
-import { languages, mockDocuments, mockPOIs } from "../../data/mockData";
+import { languages, mockDocuments, mockPOIs } from "../../../data/mockData";
 
 type Language = "it" | "en" | "fr" | "de" | "es";
 type Target = "generic" | "kids" | "experts" | "disabilities" | "pilgrims" | "other";
