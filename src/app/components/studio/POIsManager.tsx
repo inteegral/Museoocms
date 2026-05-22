@@ -7,26 +7,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { POIEditor } from "./POIEditor";
 import { mockGuides } from "../../data/mockData";
 import { teamMembers, CURRENT_USER_ID } from "../../data/teamData";
-
-type POIStatus = "idea" | "in-progress" | "under-revision" | "complete";
-
-interface POI {
-  id: string;
-  title: string;
-  description: string;
-  status: POIStatus;
-  category: string;
-  imageUrl?: string;
-  audioScript?: string;
-  scriptValidated?: boolean;
-  translations?: string[]; // language codes with translated text
-  voices?: string[];       // language codes with generated audio
-  updatedAt: string;
-  isGeolocated?: boolean;
-  assignedToGuides?: string[];
-  assignee?: string;
-  assigneeNote?: string;
-}
+import type { POI, POIStatus } from "../../types";
 
 const AVATAR_COLORS = ["bg-violet-100 text-violet-700","bg-sky-100 text-sky-700","bg-emerald-100 text-emerald-700","bg-amber-100 text-amber-700","bg-rose-100 text-rose-700","bg-zinc-100 text-zinc-600"];
 function avatarColor(name: string) { return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length]; }

@@ -2,31 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { X, Save, Trash2, MapPin, Sparkles, ChevronDown, Upload, ImageIcon, Play, Pause, FileText, CheckCircle2, Wand2, Loader2, RotateCcw, Search, Check, Globe, Mic, HelpCircle, Plus, Trophy } from "lucide-react";
 import { mockGuides, mockPOIs, mockDocuments } from "../../data/mockData";
 import { Toggle } from "./Toggle";
-
-type POIStatus = "draft" | "in-progress" | "under-revision" | "complete";
+import type { POI, POIStatus } from "../../types";
 
 export interface QuizQuestion {
   question: string;
   options: [string, string, string, string];
   correct: 0 | 1 | 2 | 3;
-}
-
-interface POI {
-  id: string;
-  title: string;
-  description: string;
-  status: POIStatus;
-  category: string;
-  imageUrl?: string;
-  audioScript?: string;
-  scriptValidated?: boolean;
-  translations?: string[];
-  voices?: string[];
-  updatedAt: string;
-  isGeolocated?: boolean;
-  assignedToGuides?: string[];
-  assignee?: string;
-  assigneeNote?: string;
 }
 
 interface GuideContext {

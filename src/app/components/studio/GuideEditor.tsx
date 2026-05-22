@@ -28,7 +28,7 @@ const COVER_GALLERY = [
   "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80",
 ];
 
-interface POI {
+interface GuidePOI {
   id: string;
   title: string;
   body: string;
@@ -38,7 +38,7 @@ interface POI {
 }
 
 function POIItem({ poi, onRemove, onEdit, onQuiz, quizQuestion, hasChallenge, index, movePOI }: {
-  poi: POI;
+  poi: GuidePOI;
   onRemove: () => void;
   onEdit: () => void;
   onQuiz: () => void;
@@ -148,7 +148,7 @@ function POIItem({ poi, onRemove, onEdit, onQuiz, quizQuestion, hasChallenge, in
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
 function POIQuizModal({ poi, existing, onSave, onRemove, onClose }: {
-  poi: POI;
+  poi: GuidePOI;
   existing?: QuizQuestion;
   onSave: (q: QuizQuestion) => void;
   onRemove: () => void;
@@ -256,11 +256,11 @@ function POIQuizModal({ poi, existing, onSave, onRemove, onClose }: {
 function GuideEditorContent() {
   const { id } = useParams();
   const location = useLocation();
-  const incoming = location.state as { generatedName?: string; generatedDescription?: string; generatedPOIs?: POI[]; sources?: { name: string; type: "library" | "uploaded" }[]; scratch?: boolean } | null;
+  const incoming = location.state as { generatedName?: string; generatedDescription?: string; generatedPOIs?: GuidePOI[]; sources?: { name: string; type: "library" | "uploaded" }[]; scratch?: boolean } | null;
   const isScratch = incoming?.scratch === true;
   const currentUser = teamMembers.find((m) => m.id === CURRENT_USER_ID)!;
   const guide = mockGuides.find((g) => g.id === id);
-  const [selectedPOIs, setSelectedPOIs] = useState<POI[]>(incoming?.generatedPOIs ?? mockPOIs.slice(0, guide?.poiCount || 0));
+  const [selectedPOIs, setSelectedPOIs] = useState<GuidePOI[]>(incoming?.generatedPOIs ?? mockPOIs.slice(0, guide?.poiCount || 0));
   const isNew = incoming !== null;
   const [title, setTitle] = useState(isNew ? (incoming.generatedName ?? "") : (guide?.title || ""));
   const [description, setDescription] = useState(isNew ? (incoming.generatedDescription ?? "") : (guide?.description || ""));
@@ -358,7 +358,7 @@ function GuideEditorContent() {
     setSelectedPOIs(selectedPOIs.filter((p) => p.id !== poiId));
   };
 
-  const addPOI = (poi: POI) => {
+  const addPOI = (poi: GuidePOI) => {
     setSelectedPOIs([...selectedPOIs, poi]);
     setShowAddPOI(false);
   };
@@ -382,7 +382,7 @@ function GuideEditorContent() {
   });
 
   const handleNewPOISave = (saved: any) => {
-    const newPOI: POI = {
+    const newPOI: GuidePOI = {
       id: saved.id,
       title: saved.title,
       body: saved.audioScript ?? "",
@@ -395,7 +395,7 @@ function GuideEditorContent() {
     setShowAddPOI(false);
   };
 
-  const toEditorPOI = (poi: POI) => ({
+  const toEditorPOI = (poi: GuidePOI) => ({
     id: poi.id,
     title: poi.title,
     description: "",
