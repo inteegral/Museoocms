@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useParams, Link, useLocation } from "react-router";
-import { ArrowLeft, Plus, X, FileText, Pencil, MapPin, Check, Calendar, Eye, Ticket, Unlock, Trophy } from "lucide-react";
+import { ArrowLeft, FileText, X } from "lucide-react";
 import confetti from "canvas-confetti";
-import { mockGuides, mockPOIs, languages, mockEvents, mockChallenges } from "../../../data/mockData";
+import { mockGuides, mockPOIs, mockEvents, mockChallenges } from "../../../data/mockData";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { POIEditor, type QuizQuestion } from "../pois/POIEditor";
@@ -10,7 +10,6 @@ import { GuidePreviewModal } from "../guides/GuidePreviewModal";
 import { PageShell } from "../_layout/PageShell";
 import { getMemberByGuideId, teamMembers, CURRENT_USER_ID, type TeamMember } from "../../../data/teamData";
 import type { GuidePOI, POI, ProductionPhase } from "../../../types";
-import { POIItem } from "./scripting/POIItem";
 import { POIQuizModal } from "../engagement/POIQuizModal";
 import { CoverGalleryModal } from "./modals/CoverGalleryModal";
 import { AddPOIModal } from "./modals/AddPOIModal";
@@ -23,6 +22,9 @@ import { FinalReviewModal } from "./modals/FinalReviewModal";
 import { TranslationsModal } from "./TranslationsModal";
 import { VoicingModal } from "./VoicingModal";
 import { GuideEditorSidebar } from "./GuideEditorSidebar";
+import { GuideHeaderCard, PHASES } from "./GuideHeaderCard";
+import { POISection } from "./POISection";
+import { EventsSection } from "./EventsSection";
 
 
 function GuideEditorContent() {
@@ -66,40 +68,17 @@ function GuideEditorContent() {
   const [linkedChallengeId, setLinkedChallengeId] = useState<string>(guideChallenges[0]?.id ?? "");
   const [pendingAccessType, setPendingAccessType] = useState<"free" | "paid" | null>(null);
 
-  const PHASES: { id: ProductionPhase; label: string; hint: string }[] = [
-    { id: "scripting",   label: "Scripting",    hint: "Write and finalise the audio script for each POI." },
-    { id: "translating", label: "Translation",  hint: "Scripts are locked. Translations are being generated." },
-    { id: "voicing",     label: "Voicing",      hint: "Assign voices and generate TTS audio for all languages." },
-    { id: "review",      label: "Review",       hint: "Final check before publishing to visitors." },
-  ];
   const [productionPhase, setProductionPhase] = useState<ProductionPhase>(
     incoming ? "scripting" : (guide?.productionPhase as ProductionPhase | undefined) ?? "scripting"
   );
   const [pendingPhase, setPendingPhase] = useState<{ phase: ProductionPhase; direction: "forward" | "back" } | null>(null);
   const [phaseBlocker, setPhaseBlocker] = useState<{ title: string; detail: string } | null>(null);
-  const [showLangPicker, setShowLangPicker] = useState(false);
-  const langPickerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!showLangPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (langPickerRef.current && !langPickerRef.current.contains(e.target as Node)) setShowLangPicker(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showLangPicker]);
   const sources = incoming?.sources ?? [];
   const [showSources, setShowSources] = useState(false);
   const [poiQuestions, setPoiQuestions] = useState<Record<string, QuizQuestion>>({});
   const [editingQuizPOI, setEditingQuizPOI] = useState<POI | null>(null);
 
-  const phaseIndex = PHASES.findIndex(p => p.id === productionPhase);
-  const nextPhase = PHASES[phaseIndex + 1] ?? null;
-  const prevPhase = PHASES[phaseIndex - 1] ?? null;
-
   const translationLanguages = selectedLanguages.slice(1);
-  const translatingHint = translationLanguages.length > 0
-    ? `Scripts are locked. Translations in ${translationLanguages.map(l => l.toUpperCase()).join(", ")} are being generated.`
-    : "No additional languages configured. Add a language or skip directly to Voicing.";
   const translatingHintJSX = translationLanguages.length > 0 ? (
     <>Scripts are locked. Translations in {translationLanguages.map((l, i) => (
       <span key={l}><span className="text-[#D33333] font-semibold">{l.toUpperCase()}</span>{i < translationLanguages.length - 1 ? ", " : ""}</span>
@@ -254,6 +233,10 @@ function GuideEditorContent() {
     return <div className="p-8">Guide not found</div>;
   }
 
+  const isPaid = isNew ? false : guide.accessMode === "paid";
+  const accessBarUsed = isNew ? 0 : isPaid ? (guide.codesUsed ?? 0) : (guide.accessesUsed ?? 0);
+  const accessBarTotal = isNew ? 200 : isPaid ? (guide.codesTotal ?? 0) : (guide.accessesLimit ?? 0);
+
   return (
     <PageShell>
       <div className="max-w-5xl mx-auto">
@@ -266,201 +249,23 @@ function GuideEditorContent() {
           Back to Guides
         </Link>
 
-        {/* Guide Header Card */}
-        <div className="mb-8 bg-white border border-zinc-200 rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 4px 0 rgba(0,0,0,0.06)' }}>
-          {/* Title & meta */}
-          <div className="px-7 pt-7 pb-5 border-b border-zinc-100 group/header">
-            <div className="flex items-start justify-between gap-4 mb-1">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-[26px] font-semibold text-zinc-950 tracking-tight flex-1 border-none outline-none bg-transparent focus:ring-0 placeholder:text-zinc-300 cursor-text"
-                placeholder="Guide Title"
-              />
-              <div className="flex items-center gap-3 flex-shrink-0 mt-1.5">
-                <Pencil className="size-3.5 text-zinc-300 group-hover/header:text-zinc-400 transition-colors" />
-                <div className={`size-2 rounded-full ${status === 'published' ? 'bg-emerald-500' : 'bg-zinc-300'}`} />
-                <span className="text-[12px] font-semibold text-zinc-500 uppercase tracking-wide">
-                  {status === 'published' ? 'Published' : 'Draft'}
-                </span>
-              </div>
-            </div>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={1}
-              className="text-[14px] text-zinc-500 leading-relaxed w-full border-none outline-none bg-transparent resize-none focus:ring-0 placeholder:text-zinc-300 cursor-text"
-              placeholder="Add a description..."
-            />
-            {(() => {
-              const isPaid = isNew ? false : guide?.accessMode === "paid";
-              const used  = isNew ? 0 : isPaid ? (guide?.codesUsed    ?? 0) : (guide?.accessesUsed   ?? 0);
-              const total = isNew ? 200 : isPaid ? (guide?.codesTotal   ?? 0) : (guide?.accessesLimit  ?? 0);
-              const remaining = total - used;
-              const pct = total ? Math.round((used / total) * 100) : 0;
-              const isLow = total ? remaining / total < 0.15 : false;
-              const barColor = isLow ? "#f59e0b" : isPaid ? "#8b5cf6" : "#10b981";
-              return (
-                <div className="flex items-center gap-1.5 mt-2">
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${isPaid ? "bg-violet-50 text-violet-700 border border-violet-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"}`}>
-                    {isPaid ? <Ticket className="size-2.5" strokeWidth={2} /> : <Unlock className="size-2.5" strokeWidth={2} />}
-                    {isPaid ? "Paid access" : "Free access"}
-                  </span>
-                  <div className="w-14 h-1.5 bg-zinc-100 rounded-full overflow-hidden flex-shrink-0">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor }} />
-                  </div>
-                  <span className={`text-[10px] font-medium tabular-nums ${isLow ? "text-amber-600" : "text-zinc-400"}`}>
-                    {remaining.toLocaleString()} / {total.toLocaleString()} available
-                  </span>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Production phase stepper */}
-          <div className="px-7 py-3.5 border-b border-zinc-100">
-            <div className="flex items-center gap-3">
-              {/* Phase pills */}
-              <div className="flex items-center gap-1 flex-1 min-w-0">
-                {PHASES.map((phase, i) => {
-                  const isCurrent = phase.id === productionPhase;
-                  const isPast = i < phaseIndex;
-                  const modalKey = phase.id === "translating" ? "translations" as const : phase.id === "voicing" ? "voicing" as const : null;
-                  const isClickable = modalKey && (isCurrent || isPast);
-                  const pillClass = `flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                    isCurrent  ? "bg-[#D33333] text-white" :
-                    isPast     ? "bg-zinc-100 text-zinc-400 line-through decoration-zinc-300" :
-                                 "bg-zinc-50 text-zinc-300"
-                  }`;
-                  return (
-                    <div key={phase.id} className="flex items-center gap-1">
-                      {i > 0 && <div className={`w-5 h-px flex-shrink-0 ${isPast ? "bg-zinc-400" : "bg-zinc-200"}`} />}
-                      {isClickable ? (
-                        <button onClick={() => setActiveModal(modalKey)} className={`${pillClass} hover:opacity-75`}>
-                          {isPast && <Check className="size-2.5 flex-shrink-0" strokeWidth={3} />}
-                          {phase.label}
-                        </button>
-                      ) : (
-                        <div className={pillClass}>
-                          {isPast && <Check className="size-2.5 flex-shrink-0" strokeWidth={3} />}
-                          {phase.label}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {prevPhase && (
-                  <button
-                    onClick={() => setPendingPhase({ phase: prevPhase.id, direction: "back" })}
-                    className="text-[11px] font-medium text-zinc-400 hover:text-zinc-700 transition-colors px-2 py-1 rounded-lg hover:bg-zinc-50"
-                  >
-                    ← {prevPhase.label}
-                  </button>
-                )}
-                {nextPhase && (() => {
-                  const translationBlocked = nextPhase.id === "translating" && (selectedPOIs.length === 0 || completedPOIs < selectedPOIs.length);
-                  const voicingBlocked = nextPhase.id === "voicing" && translationLanguages.length > 0 && !translationsComplete;
-                  const isBlocked = translationBlocked || voicingBlocked;
-                  return (
-                    <button
-                      onClick={() => tryAdvancePhase(nextPhase.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all ${
-                        isBlocked
-                          ? "bg-zinc-300 text-zinc-400 cursor-not-allowed"
-                          : "bg-[#D33333] text-white hover:bg-[#b82c2c]"
-                      }`}
-                    >
-                      Start {nextPhase.label} →
-                    </button>
-                  );
-                })()}
-                <button
-                  onClick={() => setShowPreview(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-all text-[11px] font-medium"
-                >
-                  <Eye className="size-3.5" />
-                  Preview
-                </button>
-              </div>
-            </div>
-            {/* Current phase hint */}
-            <p className="text-[11px] text-zinc-400 mt-1.5 ml-0.5">
-              {productionPhase === "translating" ? translatingHintJSX : PHASES[phaseIndex].hint}
-            </p>
-          </div>
-
-          {/* Languages */}
-          <div id="languages-section" className="px-7 py-5">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
-                Languages
-              </span>
-              <span className="text-[11px] text-zinc-400">
-                Additional languages require a translation package
-              </span>
-            </div>
-            <div className="flex items-end gap-4">
-              {selectedLanguages.map((lang, i) => (
-                <div key={lang} className="flex flex-col items-center gap-1.5">
-                  <div className="relative group">
-                    <div
-                      className={`size-10 rounded-full flex items-center justify-center text-[12px] font-bold tracking-wider transition-all ${
-                        i === 0 ? "bg-[#D33333] text-white" : "bg-zinc-100 text-zinc-600 group-hover:opacity-40"
-                      }`}
-                      style={{ boxShadow: i === 0 ? '0 2px 8px 0 rgba(0,0,0,0.15)' : 'none' }}
-                    >
-                      {lang.toUpperCase()}
-                    </div>
-                    {i > 0 && (
-                      <button
-                        onClick={() => setSelectedLanguages(prev => prev.filter(c => c !== lang))}
-                        className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label={`Remove ${lang}`}
-                      >
-                        <X className="size-4 text-zinc-600" />
-                      </button>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">
-                    {i === 0 ? "Primary" : languages.find(l => l.code === lang)?.name}
-                  </span>
-                </div>
-              ))}
-              {languages.filter(l => !selectedLanguages.includes(l.code)).length > 0 && (
-                <div className="flex flex-col items-center gap-1.5" ref={langPickerRef}>
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowLangPicker(v => !v)}
-                      className="size-10 rounded-full border-2 border-dashed border-zinc-200 flex items-center justify-center text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 transition-all"
-                    >
-                      <Plus className="size-3.5" />
-                    </button>
-                    {showLangPicker && (
-                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border border-zinc-100 rounded-2xl shadow-xl z-30 p-1.5 min-w-[170px]">
-                        {languages.filter(l => !selectedLanguages.includes(l.code)).map(l => (
-                          <button
-                            key={l.code}
-                            onClick={() => { setSelectedLanguages(prev => [...prev, l.code]); setShowLangPicker(false); }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-zinc-700 hover:bg-zinc-50 transition-colors"
-                          >
-                            <span className="text-base">{l.flag}</span>
-                            <span className="font-medium">{l.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wide">Add</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <GuideHeaderCard
+          title={title} onTitleChange={setTitle}
+          description={description} onDescriptionChange={setDescription}
+          status={status}
+          accessBar={{ isPaid, used: accessBarUsed, total: accessBarTotal }}
+          productionPhase={productionPhase}
+          poiCount={selectedPOIs.length} completedPOIs={completedPOIs}
+          translationLanguages={translationLanguages} translationsComplete={translationsComplete}
+          translatingHintJSX={translatingHintJSX}
+          onOpenModal={setActiveModal}
+          onTryAdvancePhase={tryAdvancePhase}
+          onGoBack={(phase) => setPendingPhase({ phase, direction: "back" })}
+          onPreview={() => setShowPreview(true)}
+          selectedLanguages={selectedLanguages}
+          onLanguageAdd={(code) => setSelectedLanguages(prev => [...prev, code])}
+          onLanguageRemove={(code) => setSelectedLanguages(prev => prev.filter(c => c !== code))}
+        />
 
         {/* Stats strip — no card, just numbers inline */}
         <div className="flex items-center gap-8 mb-10 px-1">
@@ -483,160 +288,21 @@ function GuideEditorContent() {
         <div className="grid lg:grid-cols-3 gap-8 items-start">
           {/* Main — dominant zone */}
           <div className="lg:col-span-2 space-y-6">
-            {/* POIs Section */}
-            <div id="poi-section" className="bg-white rounded-xl border border-zinc-200 overflow-hidden" style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)' }}>
-              <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
-                <div>
-                  <h2 className="text-[15px] font-semibold text-zinc-900">Points of Interest</h2>
-                  <p className="text-[12px] text-zinc-400 mt-0.5">
-                    Drag to reorder · {selectedPOIs.length}/{maxPOIs} used
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowAddPOI(true)}
-                  disabled={selectedPOIs.length >= maxPOIs}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Plus className="size-4" />
-                  Add POI
-                </button>
-              </div>
+            <POISection
+              selectedPOIs={selectedPOIs} poiQuestions={poiQuestions}
+              linkedChallengeId={linkedChallengeId} maxPOIs={maxPOIs}
+              movePOI={movePOI} onAddPOI={() => setShowAddPOI(true)}
+              onCreatePOI={() => setCreatingPOI(true)}
+              onEditPOI={(poi) => setEditingPOI(poi as any)}
+              onRemovePOI={removePOI}
+              onQuizPOI={(poi) => setEditingQuizPOI(poi as any)}
+            />
 
-              {/* Challenge banner — shown only when no challenge exists */}
-              {linkedChallengeId === "" && selectedPOIs.length > 0 && (
-                <div className="mx-5 mt-4 flex items-center gap-3 px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl">
-                  <Trophy className="size-4 text-zinc-400 flex-shrink-0" strokeWidth={1.5} />
-                  <p className="text-[12px] text-zinc-500 flex-1">
-                    Create a <strong className="text-zinc-700">Challenge</strong> for this guide to enable quiz questions on each POI and reward visitors who complete them.
-                  </p>
-                  <Link
-                    to="/challenge"
-                    className="text-[12px] font-semibold text-zinc-700 hover:text-zinc-900 whitespace-nowrap transition-colors"
-                  >
-                    Set up →
-                  </Link>
-                </div>
-              )}
-
-              <div className="p-5">
-                {selectedPOIs.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="relative inline-flex items-center justify-center mb-5">
-                      <div className="size-16 bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-2xl flex items-center justify-center">
-                        <MapPin className="size-7 text-zinc-300" strokeWidth={1.5} />
-                      </div>
-                    </div>
-                    <p className="text-[15px] font-semibold text-zinc-800 mb-1.5">No points of interest yet</p>
-                    <p className="text-[12px] text-zinc-400 leading-relaxed max-w-[210px] mx-auto mb-6">
-                      POIs are the stops on your guide — each one has a script, image, and location.
-                    </p>
-                    <div className="relative inline-flex">
-                      <span className="absolute inset-0 rounded-xl animate-ping bg-zinc-300 opacity-50" />
-                      <button
-                        onClick={() => setCreatingPOI(true)}
-                        className="relative inline-flex items-center gap-2 px-5 py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
-                      >
-                        <Plus className="size-4" />
-                        Add your first POI
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {selectedPOIs.map((poi, index) => (
-                      <POIItem
-                        key={poi.id}
-                        poi={poi}
-                        index={index}
-                        onRemove={() => removePOI(poi.id)}
-                        onEdit={() => setEditingPOI(poi)}
-                        onQuiz={() => setEditingQuizPOI(poi)}
-                        quizQuestion={poiQuestions[poi.id]}
-                        hasChallenge={linkedChallengeId !== ""}
-                        movePOI={movePOI}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Events Section */}
-            <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden" style={{ boxShadow: "0 1px 4px 0 rgba(0,0,0,0.04)" }}>
-              <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
-                <div>
-                  <h2 className="text-[15px] font-semibold text-zinc-900">Events</h2>
-                  <p className="text-[12px] text-zinc-400 mt-0.5">
-                    Link global events to promote inside this guide. <Link to="/events" className="underline underline-offset-2 hover:text-zinc-600 transition-colors">Manage events →</Link>
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowAddEvent(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 text-[12px] font-semibold text-zinc-600 rounded-lg hover:bg-zinc-50 hover:border-zinc-300 transition-all"
-                >
-                  <Plus className="size-3.5" />
-                  Link Event
-                </button>
-              </div>
-
-              <div className="p-4">
-                {linkedEvents.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <div className="size-10 rounded-full bg-zinc-100 flex items-center justify-center mb-3">
-                      <Calendar className="size-5 text-zinc-300" />
-                    </div>
-                    <p className="text-[13px] text-zinc-500 mb-0.5">No events linked</p>
-                    <p className="text-[11px] text-zinc-400">Create events in <Link to="/events" className="underline underline-offset-2 hover:text-zinc-600 transition-colors">Events</Link>, then link them here</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {linkedEvents.map((event) => {
-                      const isSingleDay = event.startDate === event.endDate;
-                      const statusColors = {
-                        upcoming: "bg-blue-50 text-blue-700",
-                        ongoing: "bg-emerald-50 text-emerald-700",
-                        past: "bg-zinc-100 text-zinc-500",
-                      };
-                      const statusLabels = { upcoming: "Upcoming", ongoing: "Ongoing", past: "Past" };
-                      return (
-                        <div key={event.id} className="flex items-center gap-3 p-3 border border-zinc-200 rounded-xl hover:border-zinc-300 transition-colors">
-                          <div className="size-10 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-100">
-                            {event.imageUrl ? (
-                              <img src={event.imageUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Calendar className="size-4 text-zinc-300" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-zinc-900 truncate leading-tight">{event.title}</p>
-                            <p className="text-[11px] text-zinc-400 mt-0.5 flex items-center gap-1 truncate">
-                              <Calendar className="size-3 flex-shrink-0" />
-                              {isSingleDay
-                                ? new Date(event.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                                : `${new Date(event.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${new Date(event.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
-                              {event.location && <> · {event.location}</>}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusColors[event.status]}`}>
-                              {statusLabels[event.status]}
-                            </span>
-                            <button
-                              onClick={() => setLinkedEventIds((ids) => ids.filter((i) => i !== event.id))}
-                              className="p-1 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                            >
-                              <X className="size-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+            <EventsSection
+              linkedEvents={linkedEvents}
+              onAddEvent={() => setShowAddEvent(true)}
+              onUnlinkEvent={(eventId) => setLinkedEventIds(ids => ids.filter(i => i !== eventId))}
+            />
 
           </div>
 
