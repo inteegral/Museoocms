@@ -1,5 +1,7 @@
 // Shared domain types — import from here, don't redefine locally.
 
+export type ProductionPhase = "scripting" | "translating" | "voicing" | "review";
+
 export interface GuidePOI {
   id: string;
   title: string;

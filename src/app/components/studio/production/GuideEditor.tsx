@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router";
-import { ArrowLeft, Plus, X, Globe, FileText, CheckCircle2, AlertCircle, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Languages, Mic, Rocket, Check, Shield, Clock, ChevronDown, Calendar, ImageIcon, Eye, Ticket, Unlock, Trophy } from "lucide-react";
+import { ArrowLeft, Plus, X, Globe, FileText, CheckCircle2, DollarSign, LockOpen, Pencil, ClipboardList, UserCircle2, MapPin, Check, Calendar, ImageIcon, Eye, Ticket, Unlock, Trophy } from "lucide-react";
 import confetti from "canvas-confetti";
 import { mockGuides, mockPOIs, languages, mockSurveys, mockEvents, mockChallenges } from "../../../data/mockData";
 import { DndProvider } from "react-dnd";
@@ -9,26 +9,20 @@ import { POIEditor, type QuizQuestion } from "../pois/POIEditor";
 import { GuidePreviewModal } from "../guides/GuidePreviewModal";
 import { PageShell } from "../_layout/PageShell";
 import { getMemberByGuideId, teamMembers, CURRENT_USER_ID, type TeamMember } from "../../../data/teamData";
-import { Translations } from "./translation/Translations";
-import { VoiceTalent } from "./voicing/VoiceTalent";
-import type { GuidePOI, POI } from "../../../types";
+import type { GuidePOI, POI, ProductionPhase } from "../../../types";
 import { POIItem } from "./scripting/POIItem";
 import { POIQuizModal } from "../engagement/POIQuizModal";
+import { CoverGalleryModal } from "./modals/CoverGalleryModal";
+import { AddPOIModal } from "./modals/AddPOIModal";
+import { AddEventModal } from "./modals/AddEventModal";
+import { PhaseBlockerModal } from "./modals/PhaseBlockerModal";
+import { AccessTypeConfirmModal } from "./modals/AccessTypeConfirmModal";
+import { PhaseTransitionModal } from "./modals/PhaseTransitionModal";
+import { PublishModal } from "./modals/PublishModal";
+import { FinalReviewModal } from "./modals/FinalReviewModal";
+import { TranslationsModal } from "./TranslationsModal";
+import { VoicingModal } from "./VoicingModal";
 
-const COVER_GALLERY = [
-  "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",
-  "https://images.unsplash.com/photo-1541367777708-7905fe3296c0?w=800&q=80",
-  "https://images.unsplash.com/photo-1579541671172-43429ce17aca?w=800&q=80",
-  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
-  "https://images.unsplash.com/photo-1526779259212-939e64788e3c?w=800&q=80",
-  "https://images.unsplash.com/photo-1545987796-200677ee1011?w=800&q=80",
-  "https://images.unsplash.com/photo-1580974852861-c381510bc98d?w=800&q=80",
-  "https://images.unsplash.com/photo-1569779213435-ba3167dde7cc?w=800&q=80",
-  "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=800&q=80",
-  "https://images.unsplash.com/photo-1517697471339-4aa32003c11a?w=800&q=80",
-  "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=800&q=80",
-  "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80",
-];
 
 function GuideEditorContent() {
   const { id } = useParams();
@@ -66,10 +60,6 @@ function GuideEditorContent() {
   const [approvalState, setApprovalState] = useState<{ approvedBy: TeamMember; date: string } | null>(null);
   const [reviewRequest, setReviewRequest] = useState<{ to: TeamMember; date: string } | null>(null);
   const [showFinalReview, setShowFinalReview] = useState(false);
-  const [selectedReviewerId, setSelectedReviewerId] = useState("");
-  const [reviewNote, setReviewNote] = useState("");
-  const [reviewMode, setReviewMode] = useState<"member" | "invite">("member");
-  const [inviteEmail, setInviteEmail] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [thumbnail, setThumbnail] = useState<string>(isNew ? "" : (guide?.thumbnail ?? ""));
   const [showCoverGallery, setShowCoverGallery] = useState(false);
@@ -77,7 +67,6 @@ function GuideEditorContent() {
   const [linkedChallengeId, setLinkedChallengeId] = useState<string>(guideChallenges[0]?.id ?? "");
   const [pendingAccessType, setPendingAccessType] = useState<"free" | "paid" | null>(null);
 
-  type ProductionPhase = "scripting" | "translating" | "voicing" | "review";
   const PHASES: { id: ProductionPhase; label: string; hint: string }[] = [
     { id: "scripting",   label: "Scripting",    hint: "Write and finalise the audio script for each POI." },
     { id: "translating", label: "Translation",  hint: "Scripts are locked. Translations are being generated." },
@@ -987,138 +976,21 @@ function GuideEditorContent() {
 
       {/* Add POI Modal */}
       {showAddPOI && (
-        <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-[18px] font-semibold text-zinc-950">Add Point of Interest</h2>
-              <button
-                onClick={() => setShowAddPOI(false)}
-                className="text-zinc-400 hover:text-zinc-900 transition-colors"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-
-            {/* Subheader */}
-            <div className="px-6 pt-3 pb-3 flex items-center justify-between border-b border-zinc-100 flex-shrink-0">
-              <span className="text-[12px] text-zinc-400">
-                {availablePOIs.length} available in library
-              </span>
-              <button
-                onClick={() => { setShowAddPOI(false); setCreatingPOI(true); }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
-              >
-                <Plus className="size-3.5" />
-                Create New
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="space-y-3">
-                {availablePOIs.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-[14px] text-zinc-500 mb-1">All POIs are already added</p>
-                    <p className="text-[12px] text-zinc-400">Use "+ Create New" to add a new POI from scratch</p>
-                  </div>
-                ) : (
-                  availablePOIs.map((poi) => (
-                    <button
-                      key={poi.id}
-                      onClick={() => addPOI(poi)}
-                      className="w-full flex items-start gap-4 p-4 border border-zinc-200 rounded-lg hover:border-zinc-300 hover:bg-zinc-50 transition-all text-left"
-                    >
-                      {poi.imageUrl
-                        ? <img src={poi.imageUrl} alt={poi.title} className="size-16 rounded-lg object-cover flex-shrink-0" />
-                        : <div className="size-16 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                            <ImageIcon className="size-6 text-zinc-300" strokeWidth={1.5} />
-                          </div>
-                      }
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-[15px] text-zinc-950 mb-1">
-                          {poi.title}
-                        </h3>
-                        <p className="text-[13px] text-zinc-600 line-clamp-2">
-                          {poi.body.slice(0, 100)}...
-                        </p>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <AddPOIModal
+          availablePOIs={availablePOIs}
+          onAdd={addPOI}
+          onCreate={() => { setShowAddPOI(false); setCreatingPOI(true); }}
+          onClose={() => setShowAddPOI(false)}
+        />
       )}
 
       {/* Add Event Modal */}
       {showAddEvent && (
-        <div
-          className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setShowAddEvent(false)}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 flex-shrink-0">
-              <div>
-                <p className="text-[14px] font-semibold text-zinc-900">Link an Event</p>
-                <p className="text-[12px] text-zinc-400 mt-0.5">Select events to promote in this guide</p>
-              </div>
-              <button onClick={() => setShowAddEvent(false)} className="text-zinc-400 hover:text-zinc-700">
-                <X className="size-4" />
-              </button>
-            </div>
-            <div className="overflow-y-auto flex-1 p-3">
-              {availableEvents.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-[13px] text-zinc-500">All events are already linked.</p>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {availableEvents.map((event) => {
-                    const isSingleDay = event.startDate === event.endDate;
-                    const statusColors = {
-                      upcoming: "bg-blue-50 text-blue-700",
-                      ongoing: "bg-emerald-50 text-emerald-700",
-                      past: "bg-zinc-100 text-zinc-500",
-                    };
-                    const statusLabels = { upcoming: "Upcoming", ongoing: "Ongoing", past: "Past" };
-                    return (
-                      <button
-                        key={event.id}
-                        onClick={() => { setLinkedEventIds((ids) => [...ids, event.id]); setShowAddEvent(false); }}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-zinc-50 border border-transparent hover:border-zinc-200 transition-all text-left"
-                      >
-                        <div className="size-10 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-100">
-                          {event.imageUrl ? (
-                            <img src={event.imageUrl} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Calendar className="size-4 text-zinc-300" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold text-zinc-800 truncate">{event.title}</p>
-                          <p className="text-[11px] text-zinc-400 mt-0.5 flex items-center gap-1 truncate">
-                            <Calendar className="size-3 flex-shrink-0" />
-                            {isSingleDay
-                              ? new Date(event.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                              : `${new Date(event.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${new Date(event.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
-                          </p>
-                        </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${statusColors[event.status]}`}>
-                          {statusLabels[event.status]}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <AddEventModal
+          availableEvents={availableEvents}
+          onLink={(eventId) => { setLinkedEventIds((ids) => [...ids, eventId]); setShowAddEvent(false); }}
+          onClose={() => setShowAddEvent(false)}
+        />
       )}
 
       {/* Guide Preview Modal */}
@@ -1128,454 +1000,82 @@ function GuideEditorContent() {
 
       {/* Cover Gallery Modal */}
       {showCoverGallery && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4" onClick={() => setShowCoverGallery(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
-              <h3 className="text-[16px] font-semibold text-zinc-950">Choose Cover Image</h3>
-              <button onClick={() => setShowCoverGallery(false)} className="text-zinc-400 hover:text-zinc-900 transition-colors">
-                <X className="size-5" />
-              </button>
-            </div>
-            <div className="p-5 grid grid-cols-3 gap-3 max-h-[420px] overflow-y-auto">
-              {COVER_GALLERY.map((url) => (
-                <button
-                  key={url}
-                  onClick={() => { setThumbnail(url); setShowCoverGallery(false); }}
-                  className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${thumbnail === url ? "border-zinc-900" : "border-transparent hover:border-zinc-300"}`}
-                >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                  {thumbnail === url && (
-                    <div className="absolute inset-0 bg-zinc-900/30 flex items-center justify-center">
-                      <Check className="size-5 text-white drop-shadow" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <CoverGalleryModal
+          thumbnail={thumbnail}
+          onSelect={(url) => { setThumbnail(url); setShowCoverGallery(false); }}
+          onClose={() => setShowCoverGallery(false)}
+        />
       )}
 
       {/* Translations Modal */}
       {activeModal === "translations" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 flex-shrink-0">
-              <div>
-                <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Translations</p>
-                <p className="text-[14px] font-semibold text-zinc-900">{title}</p>
-              </div>
-              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
-                <X className="size-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <Translations defaultGuideId={id} languages={selectedLanguages} onCompletionChange={setTranslationsComplete} />
-            </div>
-          </div>
-        </div>
+        <TranslationsModal
+          title={title}
+          guideId={id}
+          selectedLanguages={selectedLanguages}
+          onClose={() => setActiveModal(null)}
+          onCompletionChange={setTranslationsComplete}
+        />
       )}
 
       {/* Voicing Modal */}
       {activeModal === "voicing" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 flex-shrink-0">
-              <div>
-                <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-0.5">Voicing</p>
-                <p className="text-[14px] font-semibold text-zinc-900">{title}</p>
-              </div>
-              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
-                <X className="size-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <VoiceTalent onPublish={() => setActiveModal("publish")} />
-            </div>
-          </div>
-        </div>
+        <VoicingModal
+          title={title}
+          onClose={() => setActiveModal(null)}
+          onPublish={() => setActiveModal("publish")}
+        />
       )}
 
       {/* Publish Modal */}
       {activeModal === "publish" && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/50 flex items-center justify-center p-6" onClick={() => setActiveModal(null)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300 flex-shrink-0" />
-
-            {/* Header */}
-            <div className="flex items-start justify-between px-6 py-4 border-b border-zinc-100 flex-shrink-0">
-              <div>
-                <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">Publication</p>
-                <p className="text-[15px] font-semibold text-zinc-900 leading-tight">{title}</p>
-                <p className="text-[12px] text-zinc-400 mt-0.5">{selectedPOIs.length} points of interest</p>
-              </div>
-              <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-zinc-900 transition-colors mt-0.5">
-                <X className="size-5" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="overflow-y-auto flex-1 p-6 space-y-6">
-
-              {/* Checklist */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[13px] font-semibold text-zinc-900">Publication Checklist</h3>
-                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${allChecksOk ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                    {publishReadyPct}% ready
-                  </span>
-                </div>
-                <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden mb-4">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${allChecksOk ? "bg-emerald-500" : "bg-amber-400"}`}
-                    style={{ width: `${publishReadyPct}%` }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  {publishChecks.map((check) => (
-                    <div key={check.label} className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-zinc-50">
-                      <div className={`size-6 rounded-full flex items-center justify-center flex-shrink-0 ${check.ok ? "bg-emerald-100" : "bg-amber-100"}`}>
-                        {check.ok
-                          ? <Check className="size-3.5 text-emerald-600" />
-                          : <AlertCircle className="size-3.5 text-amber-600" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-zinc-800">{check.label}</p>
-                        {check.detail && <p className="text-[11px] text-zinc-400">{check.detail}</p>}
-                      </div>
-                      {!check.ok && check.action && (
-                        <button
-                          onClick={check.action.onClick}
-                          className="text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 transition-colors whitespace-nowrap flex-shrink-0"
-                        >
-                          {check.action.label} →
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Review request banner (pending) */}
-            {reviewRequest && !approvalState && (
-              <div className="mx-6 mb-2 flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 rounded-xl border border-amber-100">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Clock className="size-4 text-amber-600 flex-shrink-0" />
-                  <p className="text-[12px] font-medium text-amber-800 truncate">
-                    Review requested from <span className="font-semibold">{reviewRequest.to.name}</span> · {reviewRequest.date}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <Link
-                    to={`/review/${id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 whitespace-nowrap underline underline-offset-2"
-                  >
-                    Open review link ↗
-                  </Link>
-                  <button
-                    onClick={() => setApprovalState({ approvedBy: reviewRequest.to, date: reviewRequest.date })}
-                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 whitespace-nowrap underline underline-offset-2"
-                  >
-                    Simulate approval
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Approval banner (approved) */}
-            {approvalState && (
-              <div className="mx-6 mb-2 flex items-center gap-2.5 px-4 py-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                <CheckCircle2 className="size-4 text-emerald-600 flex-shrink-0" />
-                <p className="text-[12px] font-medium text-emerald-800">
-                  Approved by <span className="font-semibold">{approvalState.approvedBy.name}</span> · {approvalState.date}
-                </p>
-              </div>
-            )}
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 flex-shrink-0">
-              {!approvalState ? (
-                <button
-                  onClick={() => setShowFinalReview(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-200 text-[13px] font-semibold text-zinc-700 rounded-lg hover:bg-zinc-50 transition-all"
-                >
-                  <Shield className="size-4" />
-                  Final Review
-                </button>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700">
-                  <CheckCircle2 className="size-4" /> Approved
-                </span>
-              )}
-              <button
-                disabled={!canPublish}
-                onClick={handlePublish}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-[#D33333] text-white text-[13px] font-medium rounded-lg hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Rocket className="size-4" />
-                Publish Guide
-              </button>
-            </div>
-          </div>
-        </div>
+        <PublishModal
+          title={title}
+          poiCount={selectedPOIs.length}
+          publishChecks={publishChecks}
+          allChecksOk={allChecksOk}
+          publishReadyPct={publishReadyPct}
+          canPublish={canPublish}
+          approvalState={approvalState}
+          reviewRequest={reviewRequest}
+          guideId={id}
+          onClose={() => setActiveModal(null)}
+          onPublish={handlePublish}
+          onFinalReview={() => setShowFinalReview(true)}
+          onSimulateApproval={() => reviewRequest && setApprovalState({ approvedBy: reviewRequest.to, date: reviewRequest.date })}
+        />
       )}
       {/* Access type change confirmation — published guides only */}
       {pendingAccessType && (
-        <div className="fixed inset-0 bg-zinc-950/50 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
-            <div className="px-7 pt-8 pb-7">
-              <div className="mb-5">
-                <div className="size-12 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-lg shadow-zinc-900/20">
-                  <AlertCircle className="size-5 text-white" />
-                </div>
-              </div>
-              <p className="text-[17px] font-semibold text-zinc-900 tracking-tight leading-snug mb-2">Change access on published guide</p>
-              <p className="text-[13px] text-zinc-400 leading-relaxed mb-5">
-                This guide is live. Switching to <span className="font-semibold text-zinc-600">{pendingAccessType}</span> access will take effect immediately for all visitors.
-              </p>
-              {pendingAccessType === "paid" ? (
-                <div className="bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3 mb-6 text-[12px] text-zinc-600 leading-relaxed">
-                  Visitors using the current universal QR will lose access. Unique codes will be required.
-                </div>
-              ) : (
-                <div className="bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3 mb-6 text-[12px] text-zinc-600 leading-relaxed">
-                  The guide will become freely accessible to anyone with the universal QR. Existing paid codes will stop being required.
-                </div>
-              )}
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => { setAccessType(pendingAccessType); setPendingAccessType(null); }}
-                  className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
-                >
-                  Yes, change it
-                </button>
-                <button
-                  onClick={() => setPendingAccessType(null)}
-                  className="w-full py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AccessTypeConfirmModal
+          pendingAccessType={pendingAccessType}
+          onConfirm={() => { setAccessType(pendingAccessType); setPendingAccessType(null); }}
+          onCancel={() => setPendingAccessType(null)}
+        />
       )}
 
       {/* Final Review sub-modal */}
       {showFinalReview && (
-        <div
-          className="fixed inset-0 z-[60] bg-zinc-950/50 flex items-center justify-center p-6"
-          onClick={() => setShowFinalReview(false)}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
-            {/* Header */}
-            <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-zinc-100">
-              <div>
-                <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">Final Review</p>
-                <p className="text-[15px] font-semibold text-zinc-900 leading-tight">{title}</p>
-              </div>
-              <button onClick={() => setShowFinalReview(false)} className="text-zinc-400 hover:text-zinc-700 mt-0.5">
-                <X className="size-4" />
-              </button>
-            </div>
-
-            <div className="px-6 py-5 space-y-5">
-
-              {/* Option 1 — Request review (primary) */}
-              <div>
-                <p className="text-[13px] font-semibold text-zinc-900 mb-0.5">Request review</p>
-                <p className="text-[12px] text-zinc-500 mb-3">Send to a team member or invite someone external.</p>
-
-                {/* Mode toggle */}
-                <div className="flex gap-1 p-1 bg-zinc-100 rounded-lg mb-3">
-                  {(["member", "invite"] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => { setReviewMode(mode); setSelectedReviewerId(""); setInviteEmail(""); }}
-                      className={`flex-1 py-1.5 text-[12px] font-semibold rounded-md transition-all ${
-                        reviewMode === mode
-                          ? "bg-white text-zinc-900 shadow-sm"
-                          : "text-zinc-400 hover:text-zinc-700"
-                      }`}
-                    >
-                      {mode === "member" ? "Team member" : "Invite by email"}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Team member picker */}
-                {reviewMode === "member" && (
-                  <>
-                    <div className="relative mb-3">
-                      <select
-                        value={selectedReviewerId}
-                        onChange={(e) => setSelectedReviewerId(e.target.value)}
-                        className="w-full appearance-none pl-3 pr-8 py-2 border border-zinc-200 rounded-lg text-[13px] text-zinc-800 bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900 cursor-pointer"
-                      >
-                        <option value="">Select reviewer…</option>
-                        {reviewableMembers.map((m) => (
-                          <option key={m.id} value={m.id}>{m.name} · {m.role}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-zinc-400 pointer-events-none" />
-                    </div>
-                    {selectedReviewerId && (() => {
-                      const member = reviewableMembers.find((m) => m.id === selectedReviewerId);
-                      if (!member) return null;
-                      return (
-                        <div className="flex items-center gap-3 px-3 py-2.5 bg-zinc-50 rounded-xl mb-3">
-                          <div className="size-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center font-semibold text-[11px] flex-shrink-0">
-                            {member.name.split(" ").map((n) => n[0]).join("")}
-                          </div>
-                          <div>
-                            <p className="text-[13px] font-semibold text-zinc-800">{member.name}</p>
-                            <p className="text-[11px] text-zinc-400 capitalize">{member.role}</p>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </>
-                )}
-
-                {/* Invite by email */}
-                {reviewMode === "invite" && (
-                  <div className="mb-3">
-                    <input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="colleague@example.com"
-                      className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-[13px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                    />
-                    <p className="text-[11px] text-zinc-400 mt-1.5">
-                      They'll receive a link to review this guide. No account needed.
-                    </p>
-                  </div>
-                )}
-
-                {/* Note */}
-                <textarea
-                  value={reviewNote}
-                  onChange={(e) => setReviewNote(e.target.value)}
-                  placeholder="Add a note… (optional)"
-                  rows={2}
-                  className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-[12px] text-zinc-900 placeholder:text-zinc-400 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900 mb-3"
-                />
-
-                <button
-                  disabled={reviewMode === "member" ? !selectedReviewerId : !inviteEmail.includes("@")}
-                  onClick={() => {
-                    const toMember: TeamMember = reviewMode === "member"
-                      ? reviewableMembers.find((m) => m.id === selectedReviewerId)!
-                      : { id: "invited", name: inviteEmail, email: inviteEmail, role: "curator", status: "pending", joinedAt: "", bio: "", assignments: [] };
-                    setReviewRequest({
-                      to: toMember,
-                      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
-                    });
-                    setSelectedReviewerId("");
-                    setInviteEmail("");
-                    setReviewNote("");
-                    setShowFinalReview(false);
-                  }}
-                  className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {reviewMode === "member" ? "Send for review →" : "Send invitation →"}
-                </button>
-              </div>
-
-              {/* Option 2 — Self-approve (secondary, only if allowed) */}
-              {canSelfApprove && (
-                <div className="pt-4 border-t border-zinc-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex-1 h-px bg-zinc-100" />
-                    <span className="text-[11px] text-zinc-400 font-medium">or</span>
-                    <div className="flex-1 h-px bg-zinc-100" />
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2.5 bg-zinc-50 rounded-xl mb-3">
-                    <div className="size-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-[10px] flex-shrink-0">
-                      {currentUser.name.split(" ").map((n) => n[0]).join("")}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-zinc-800">{currentUser.name}</p>
-                      <p className="text-[10px] text-zinc-400 capitalize">{currentUser.role}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setApprovalState({
-                        approvedBy: currentUser,
-                        date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
-                      });
-                      setShowFinalReview(false);
-                    }}
-                    className="w-full py-2 border border-zinc-200 text-[12px] font-semibold text-zinc-600 rounded-xl hover:bg-zinc-50 transition-all"
-                  >
-                    Approve directly as {currentUser.role}
-                  </button>
-                  <p className="mt-2.5 text-center text-[10px] text-zinc-400">
-                    <Link
-                      to={`/review/${id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline underline-offset-2 hover:text-zinc-600 transition-colors"
-                    >
-                      Go to review page
-                    </Link>
-                    {" "}· developer only
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <FinalReviewModal
+          title={title}
+          guideId={id}
+          currentUser={currentUser}
+          canSelfApprove={canSelfApprove}
+          reviewableMembers={reviewableMembers}
+          onClose={() => setShowFinalReview(false)}
+          onRequestReview={(to) => setReviewRequest({ to, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) })}
+          onSelfApprove={(user) => setApprovalState({ approvedBy: user, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) })}
+        />
       )}
 
       {/* Phase blocker — cannot advance */}
       {phaseBlocker && (
-        <div className="fixed inset-0 bg-zinc-950/50 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
-            {/* Top accent bar */}
-            <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
-            <div className="px-7 pt-8 pb-7">
-              {/* Icon */}
-              <div className="mb-5">
-                <div className="size-12 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-lg shadow-zinc-900/20">
-                  <AlertCircle className="size-5 text-white" />
-                </div>
-              </div>
-              {/* Text */}
-              <p className="text-[17px] font-semibold text-zinc-900 tracking-tight leading-snug mb-2">{phaseBlocker.title}</p>
-              <p className="text-[13px] text-zinc-400 leading-relaxed">{phaseBlocker.detail}</p>
-              {/* Actions */}
-              <div className="mt-7 flex flex-col gap-2">
-                <button
-                  onClick={() => {
-                    setPhaseBlocker(null);
-                    setTimeout(() => document.getElementById("poi-section")?.scrollIntoView({ behavior: "smooth" }), 50);
-                  }}
-                  className="w-full px-4 py-2.5 text-[13px] font-medium bg-[#D33333] text-white rounded-xl hover:bg-[#b82c2c] transition-all"
-                >
-                  Go to Scripting
-                </button>
-                <button
-                  onClick={() => setPhaseBlocker(null)}
-                  className="w-full px-4 py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all"
-                >
-                  Got it
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PhaseBlockerModal
+          title={phaseBlocker.title}
+          detail={phaseBlocker.detail}
+          onGotoScripting={() => { setPhaseBlocker(null); setTimeout(() => document.getElementById("poi-section")?.scrollIntoView({ behavior: "smooth" }), 50); }}
+          onClose={() => setPhaseBlocker(null)}
+        />
       )}
 
       {/* Phase transition confirmation */}
@@ -1586,70 +1086,24 @@ function GuideEditorContent() {
         const noLangs = !isBack && pendingPhase.phase === "translating" && translationLanguages.length === 0;
         const hintText = warning ?? (pendingPhase.phase === "translating" ? translatingHintJSX : target.hint);
         return (
-          <div className="fixed inset-0 bg-zinc-950/50 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
-              <div className="h-1 w-full bg-gradient-to-r from-zinc-300 via-zinc-500 to-zinc-300" />
-              <div className="px-7 pt-8 pb-7">
-                <div className="mb-5">
-                  <div className="size-12 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-lg shadow-zinc-900/20">
-                    {isBack || noLangs
-                      ? <AlertCircle className="size-5 text-white" />
-                      : <Check className="size-5 text-white" />
-                    }
-                  </div>
-                </div>
-                <p className="text-[17px] font-semibold text-zinc-900 tracking-tight leading-snug mb-2">
-                  {isBack ? `Back to ${target.label}?` : `Start ${target.label}?`}
-                </p>
-                <p className="text-[13px] text-zinc-400 leading-relaxed">
-                  {hintText}
-                </p>
-                <div className="mt-7 flex flex-col gap-2">
-                  {noLangs ? (
-                    <>
-                      <button
-                        onClick={() => { setPendingPhase(null); setTimeout(() => document.getElementById("languages-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); }}
-                        className="w-full py-2.5 bg-zinc-900 text-white text-[13px] font-medium rounded-xl hover:bg-zinc-700 transition-all"
-                      >
-                        Add a language
-                      </button>
-                      <button
-                        onClick={() => {
-                          setProductionPhase("voicing");
-                          setPendingPhase(null);
-                          setActiveModal("voicing");
-                        }}
-                        className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
-                      >
-                        Skip to Voicing →
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setProductionPhase(pendingPhase.phase);
-                        setPendingPhase(null);
-                        if (!pendingPhase.direction || pendingPhase.direction === "forward") {
-                          if (pendingPhase.phase === "translating") setActiveModal("translations");
-                          if (pendingPhase.phase === "voicing") setActiveModal("voicing");
-                          if (pendingPhase.phase === "review") setActiveModal("publish");
-                        }
-                      }}
-                      className="w-full py-2.5 bg-[#D33333] text-white text-[13px] font-medium rounded-xl hover:bg-[#b82c2c] transition-all"
-                    >
-                      {isBack ? "Go back" : "Confirm"}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setPendingPhase(null)}
-                    className="w-full py-2.5 text-[13px] font-medium text-zinc-400 hover:text-zinc-600 transition-all"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <PhaseTransitionModal
+            targetLabel={target.label}
+            isBack={isBack}
+            noLangs={noLangs}
+            hintText={hintText}
+            onConfirm={() => {
+              setProductionPhase(pendingPhase.phase);
+              setPendingPhase(null);
+              if (pendingPhase.direction === "forward") {
+                if (pendingPhase.phase === "translating") setActiveModal("translations");
+                if (pendingPhase.phase === "voicing") setActiveModal("voicing");
+                if (pendingPhase.phase === "review") setActiveModal("publish");
+              }
+            }}
+            onAddLanguage={() => { setPendingPhase(null); setTimeout(() => document.getElementById("languages-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); }}
+            onSkipToVoicing={() => { setProductionPhase("voicing"); setPendingPhase(null); setActiveModal("voicing"); }}
+            onCancel={() => setPendingPhase(null)}
+          />
         );
       })()}
 
