@@ -1,5 +1,15 @@
 // Shared domain types — import from here, don't redefine locally.
 
+export interface GuidePOI {
+  id: string;
+  title: string;
+  body: string;
+  imageUrl: string;
+  orderIndex: number;
+  status?: "draft" | "in-progress" | "under-revision" | "complete";
+}
+
+
 export type POIStatus = "idea" | "draft" | "in-progress" | "under-revision" | "complete";
 
 export interface POI {

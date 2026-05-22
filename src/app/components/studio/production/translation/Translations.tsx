@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import {
-  Search, Sparkles, CheckCircle2, Mic, Play, Pause,
-  X, ChevronDown, ArrowRight, RotateCcw,
-  Clock, Eye, Lock, ChevronLeft, ChevronRight, User,
+  Search, Sparkles, CheckCircle2,
+  ChevronDown, RotateCcw,
+  Clock, Eye, ChevronLeft, ChevronRight, User,
   ShieldCheck, MessageSquare,
 } from "lucide-react";
+import { ReviewerPicker, certifiedReviewers, type CertifiedReviewer } from "./ReviewerPicker";
+import { allVoices, type Voice, type AudioStatus } from "./TranslationAudioPanel";
 import { PageShell } from "../../_layout/PageShell";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type TextStatus = "draft" | "review" | "approved" | "expert-review" | "expert-done";
-type AudioStatus = "none" | "pending" | "review" | "ready";
 
 interface ExpertReview {
   reviewerId: string;
@@ -32,30 +33,11 @@ interface Translation {
 }
 
 interface POI { id: string; name: string; sourceText: string; translations: Record<string, Translation> }
-interface Voice { id: string; name: string; language: string; gender: string; style: string[]; avatarUrl: string }
 interface Guide { id: string; name: string; targetLanguages: string[]; voiceAssignments: Record<string, string | null> }
-
-interface CertifiedReviewer {
-  id: string; name: string; badge: string; languages: string[];
-  specialty: string; avatarUrl: string; turnaround: string;
-}
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 const CURATOR_NAME = "Anna Ferretti";
 
-const certifiedReviewers: CertifiedReviewer[] = [
-  { id: "cr1", name: "Prof. Elena Conti", badge: "Art History PhD", languages: ["IT", "FR", "ES"], specialty: "Renaissance & Baroque", avatarUrl: "https://images.unsplash.com/photo-1614436201459-156d322d38c6?w=200&h=200&fit=crop&crop=face", turnaround: "24h" },
-  { id: "cr2", name: "Dr. Carlos Mendez", badge: "Museum Curator", languages: ["ES", "FR"], specialty: "Classical Antiquity", avatarUrl: "https://images.unsplash.com/photo-1695266391814-a276948f1775?w=200&h=200&fit=crop&crop=face", turnaround: "48h" },
-  { id: "cr3", name: "Marie-Claire Dumont", badge: "Certified Translator", languages: ["FR", "IT"], specialty: "Modern & Contemporary", avatarUrl: "https://images.unsplash.com/photo-1768853972795-2739a9685567?w=200&h=200&fit=crop&crop=face", turnaround: "24h" },
-];
-
-const allVoices: Voice[] = [
-  { id: "v1", name: "Sarah Mitchell", language: "EN", gender: "Female", style: ["Warm", "Clear"], avatarUrl: "https://images.unsplash.com/photo-1768853972795-2739a9685567?w=200&h=200&fit=crop&crop=face" },
-  { id: "v2", name: "Marco Rossi", language: "IT", gender: "Male", style: ["Professional", "Deep"], avatarUrl: "https://images.unsplash.com/photo-1769636930047-4478f12cf430?w=200&h=200&fit=crop&crop=face" },
-  { id: "v3", name: "Sofia García", language: "ES", gender: "Female", style: ["Friendly", "Modern"], avatarUrl: "https://images.unsplash.com/photo-1614436201459-156d322d38c6?w=200&h=200&fit=crop&crop=face" },
-  { id: "v4", name: "Jean Dupont", language: "FR", gender: "Male", style: ["Calm", "Refined"], avatarUrl: "https://images.unsplash.com/photo-1695266391814-a276948f1775?w=200&h=200&fit=crop&crop=face" },
-  { id: "v5", name: "Emma Watson", language: "EN", gender: "Female", style: ["Conversational", "Bright"], avatarUrl: "https://images.unsplash.com/photo-1762522921456-cdfe882d36c3?w=200&h=200&fit=crop&crop=face" },
-];
 
 const initialGuides: Guide[] = [
   { id: "guide-1", name: "Complete Museum Tour", targetLanguages: ["IT", "ES", "FR"], voiceAssignments: { IT: "v2", ES: null, FR: null } },
@@ -140,168 +122,6 @@ function DiffView({ original, suggested }: { original: string; suggested: string
           <span key={i} className="underline decoration-2 text-emerald-700 bg-emerald-50 rounded px-0.5">{t.text}</span>
         );
       })}
-    </div>
-  );
-}
-
-// ─── Reviewer Picker ──────────────────────────────────────────────────────────
-function ReviewerPicker({ lang, onSelect, onClose }: {
-  lang: string;
-  onSelect: (r: CertifiedReviewer) => void;
-  onClose: () => void;
-}) {
-  const compatible = certifiedReviewers.filter(r => r.languages.includes(lang));
-  const rest = certifiedReviewers.filter(r => !r.languages.includes(lang));
-
-  return (
-    <div className="border border-zinc-200 rounded-xl overflow-hidden bg-white">
-      <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="size-4 text-teal-600" />
-          <span className="text-[13px] font-semibold text-zinc-800">Request Expert Review</span>
-        </div>
-        <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors">
-          <X className="size-4" />
-        </button>
-      </div>
-      <div className="p-3 space-y-2">
-        {compatible.length > 0 && (
-          <>
-            <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-1 mb-1">Recommended for {lang}</p>
-            {compatible.map(r => <ReviewerRow key={r.id} r={r} onSelect={onSelect} highlight />)}
-          </>
-        )}
-        {rest.length > 0 && (
-          <>
-            <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-1 mt-3 mb-1">Other reviewers</p>
-            {rest.map(r => <ReviewerRow key={r.id} r={r} onSelect={onSelect} />)}
-          </>
-        )}
-      </div>
-      <div className="px-4 py-3 bg-zinc-50 border-t border-zinc-100">
-        <p className="text-[11px] text-zinc-400 leading-relaxed">
-          The reviewer will receive the text by email and return corrections directly in the platform. The curator has the final word.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ReviewerRow({ r, onSelect, highlight }: { r: CertifiedReviewer; onSelect: (r: CertifiedReviewer) => void; highlight?: boolean }) {
-  return (
-    <button onClick={() => onSelect(r)}
-      className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left hover:shadow-sm ${
-        highlight ? "border-teal-200 bg-teal-50/40 hover:bg-teal-50" : "border-zinc-200 bg-white hover:bg-zinc-50"
-      }`}>
-      <img src={r.avatarUrl} alt={r.name} className="size-10 rounded-full object-cover flex-shrink-0" />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[13px] font-semibold text-zinc-900">{r.name}</span>
-          <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-teal-100 text-teal-700 text-[9px] font-bold rounded-full">
-            <ShieldCheck className="size-2.5" />{r.badge}
-          </span>
-        </div>
-        <p className="text-[11px] text-zinc-500">{r.specialty} · {r.languages.join(", ")}</p>
-      </div>
-      <div className="text-right flex-shrink-0">
-        <p className="text-[10px] font-semibold text-zinc-400 uppercase">Turnaround</p>
-        <p className="text-[12px] font-semibold text-zinc-700">{r.turnaround}</p>
-      </div>
-    </button>
-  );
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-// ─── Voice Panel ───────────────────────────────────────────────────────────────
-function VoicePanel({ textApproved, audioStatus, voice, lang, showPicker, voiceSearch,
-  onAdvance, onApprove, onReopen, onChooseVoice, onClosePicker, onVoiceSearch, onAssignVoice, onPlayToggle, playing }:
-{ textApproved: boolean; audioStatus: AudioStatus | undefined; voice: Voice | null; lang: string;
-  showPicker: boolean; voiceSearch: string;
-  onAdvance: () => void; onApprove: () => void; onReopen: () => void;
-  onChooseVoice: () => void; onClosePicker: () => void;
-  onVoiceSearch: (q: string) => void; onAssignVoice: (v: Voice) => void;
-  onPlayToggle: (id: string) => void; playing: string | null; }) {
-  if (!textApproved) {
-    return (
-      <div className="p-5 rounded-xl border border-zinc-200 bg-zinc-50 flex flex-col items-center text-center gap-2">
-        <Lock className="size-4 text-zinc-300 mt-1" />
-        <p className="text-[12px] font-semibold text-zinc-500">Locked</p>
-        <p className="text-[11px] text-zinc-400 leading-relaxed">Approve the translation to unlock voice over.</p>
-      </div>
-    );
-  }
-  if (showPicker) {
-    return (
-      <div className="border border-zinc-200 rounded-xl overflow-hidden bg-white flex flex-col" style={{ maxHeight: 320 }}>
-        <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between flex-shrink-0">
-          <span className="text-[12px] font-semibold text-zinc-700">Choose voice</span>
-          <button onClick={onClosePicker} className="text-zinc-400 hover:text-zinc-700"><X className="size-4" /></button>
-        </div>
-        <div className="px-3 py-2 border-b border-zinc-100 flex-shrink-0">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-400" />
-            <input value={voiceSearch} onChange={e => onVoiceSearch(e.target.value)} placeholder="Search…"
-              className="w-full pl-7 pr-3 py-1.5 border border-zinc-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-zinc-900" />
-          </div>
-        </div>
-        <div className="overflow-y-auto flex-1">
-          {allVoices.filter(v => v.name.toLowerCase().includes(voiceSearch.toLowerCase())).map(v => (
-            <button key={v.id} onClick={() => onAssignVoice(v)}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-zinc-50 transition-colors border-b border-zinc-50 last:border-0">
-              <img src={v.avatarUrl} alt={v.name} className="size-9 rounded-full object-cover flex-shrink-0" />
-              <div className="text-left flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-zinc-900 truncate">{v.name}</p>
-                <p className="text-[11px] text-zinc-400">{v.language} · {v.gender}</p>
-              </div>
-              <button onClick={e => { e.stopPropagation(); onPlayToggle(v.id); }}
-                className="size-7 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center flex-shrink-0">
-                {playing === v.id ? <Pause className="size-3 text-zinc-700" /> : <Play className="size-3 text-zinc-700 ml-0.5" />}
-              </button>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  if (!voice) {
-    return (
-      <div className="p-5 rounded-xl border border-zinc-200 bg-white flex flex-col gap-3">
-        <div className="flex items-center gap-2"><Mic className="size-4 text-blue-500" /><p className="text-[12px] font-semibold text-zinc-700">No voice assigned</p></div>
-        <p className="text-[11px] text-zinc-500 leading-relaxed">Assign a voice talent to start the {lang} recording.</p>
-        <button onClick={onChooseVoice} className="w-full py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-colors flex items-center justify-center gap-1.5">
-          Choose Voice <ArrowRight className="size-3.5" />
-        </button>
-      </div>
-    );
-  }
-  const stateMap: Record<string, { bg: string; border: string; icon: React.ReactNode; title: string; desc: string; action?: React.ReactNode }> = {
-    pending: { bg: "bg-white", border: "border-zinc-200", icon: <Clock className="size-4 text-zinc-400" />, title: "Awaiting recording", desc: `Awaiting recording from ${voice.name}.`, action: <button onClick={onAdvance} className="w-full py-2 border border-zinc-200 text-zinc-700 text-[12px] font-semibold rounded-lg hover:bg-zinc-50 transition-colors">Mark as Received</button> },
-    review: { bg: "bg-amber-50", border: "border-amber-200", icon: <Eye className="size-4 text-amber-600" />, title: "Under review", desc: "Listen and approve if quality meets standards.", action: <button onClick={onApprove} className="w-full py-2 bg-[#D33333] text-white text-[12px] font-medium rounded-lg hover:bg-[#b82c2c] transition-colors flex items-center justify-center gap-1.5"><CheckCircle2 className="size-3.5" />Approve Voice</button> },
-    ready: { bg: "bg-emerald-50", border: "border-emerald-200", icon: <CheckCircle2 className="size-4 text-emerald-600" />, title: "Voice approved", desc: `Recording by ${voice.name} is ready.`, action: <button onClick={onReopen} className="w-full py-2 border border-emerald-200 text-emerald-700 text-[12px] font-semibold rounded-lg hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1.5"><RotateCcw className="size-3.5" />Reopen</button> },
-  };
-  const s = stateMap[audioStatus ?? "pending"];
-  return (
-    <div className="space-y-4">
-      <div className={`p-4 rounded-xl border ${s.bg} ${s.border} flex flex-col gap-2`}>
-        <div className="flex items-center gap-2">{s.icon}<p className="text-[12px] font-semibold text-zinc-800">{s.title}</p></div>
-        <p className="text-[11px] text-zinc-500 leading-relaxed">{s.desc}</p>
-        {s.action}
-      </div>
-      <div className="flex flex-col items-center py-2">
-        <div className="relative mb-3">
-          <img src={voice.avatarUrl} alt={voice.name} className="size-14 rounded-full object-cover" />
-          <button onClick={() => onPlayToggle(voice.id)} className="absolute -bottom-1 -right-1 size-6 rounded-full bg-zinc-900 hover:bg-zinc-700 flex items-center justify-center shadow-md transition-colors">
-            {playing === voice.id ? <Pause className="size-2.5 text-white" /> : <Play className="size-2.5 text-white ml-0.5" />}
-          </button>
-        </div>
-        <p className="text-[13px] font-semibold text-zinc-900">{voice.name}</p>
-        <p className="text-[11px] text-zinc-400 mt-0.5">{voice.language} · {voice.gender}</p>
-        <div className="flex flex-wrap gap-1 justify-center mt-2">
-          {voice.style.map(tag => <span key={tag} className="px-2 py-0.5 bg-zinc-100 text-zinc-500 text-[10px] font-semibold rounded-full">{tag}</span>)}
-        </div>
-        <button onClick={onChooseVoice} className="mt-4 w-full py-1.5 border border-zinc-200 text-zinc-500 text-[11px] font-semibold rounded-lg hover:bg-zinc-100 transition-colors">Change Voice</button>
-      </div>
     </div>
   );
 }
