@@ -1,30 +1,20 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "react-router";
-import { ArrowLeft, FileText, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import confetti from "canvas-confetti";
 import { mockGuides, mockPOIs, mockEvents, mockChallenges } from "../../../data/mockData";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { POIEditor, type QuizQuestion } from "../pois/POIEditor";
-import { GuidePreviewModal } from "../guides/GuidePreviewModal";
+import { type QuizQuestion } from "../pois/POIEditor";
 import { PageShell } from "../_layout/PageShell";
 import { getMemberByGuideId, teamMembers, CURRENT_USER_ID, type TeamMember } from "../../../data/teamData";
 import type { GuidePOI, POI, ProductionPhase } from "../../../types";
-import { POIQuizModal } from "../engagement/POIQuizModal";
-import { CoverGalleryModal } from "./modals/CoverGalleryModal";
-import { AddPOIModal } from "./modals/AddPOIModal";
-import { AddEventModal } from "./modals/AddEventModal";
-import { PhaseBlockerModal } from "./modals/PhaseBlockerModal";
-import { AccessTypeConfirmModal } from "./modals/AccessTypeConfirmModal";
-import { PhaseTransitionModal } from "./modals/PhaseTransitionModal";
-import { PublishModal } from "./modals/PublishModal";
-import { FinalReviewModal } from "./modals/FinalReviewModal";
-import { TranslationsModal } from "./TranslationsModal";
-import { VoicingModal } from "./VoicingModal";
 import { GuideEditorSidebar } from "./GuideEditorSidebar";
-import { GuideHeaderCard, PHASES } from "./GuideHeaderCard";
+import { GuideHeaderCard } from "./GuideHeaderCard";
 import { POISection } from "./POISection";
 import { EventsSection } from "./EventsSection";
+import { GuideEditorModals } from "./GuideEditorModals";
+import { SourcesDrawer } from "./SourcesDrawer";
 
 
 function GuideEditorContent() {
@@ -74,7 +64,6 @@ function GuideEditorContent() {
   const [pendingPhase, setPendingPhase] = useState<{ phase: ProductionPhase; direction: "forward" | "back" } | null>(null);
   const [phaseBlocker, setPhaseBlocker] = useState<{ title: string; detail: string } | null>(null);
   const sources = incoming?.sources ?? [];
-  const [showSources, setShowSources] = useState(false);
   const [poiQuestions, setPoiQuestions] = useState<Record<string, QuizQuestion>>({});
   const [editingQuizPOI, setEditingQuizPOI] = useState<POI | null>(null);
 
@@ -84,12 +73,6 @@ function GuideEditorContent() {
       <span key={l}><span className="text-[#D33333] font-semibold">{l.toUpperCase()}</span>{i < translationLanguages.length - 1 ? ", " : ""}</span>
     ))} are being generated.</>
   ) : <>No additional languages configured. Add a language or skip directly to Voicing.</>;
-
-  const BACK_WARNINGS: Partial<Record<ProductionPhase, string>> = {
-    scripting:   "Going back to Scripting will unlock scripts for editing. Existing translations will need to be regenerated.",
-    translating: "Going back to Translation will unlock translations for editing. Generated audio may become outdated.",
-    voicing:     "Going back to Voicing will unlock audio generation. Review state will be reset.",
-  };
 
   const movePOI = (dragIndex: number, hoverIndex: number) => {
     const newPOIs = [...selectedPOIs];
@@ -336,243 +319,44 @@ function GuideEditorContent() {
         </div>
       </div>
 
-      {/* POI Editor — edit existing */}
-      {editingPOI && (
-        <POIEditor
-          poi={toEditorPOI(editingPOI)}
-          onClose={() => setEditingPOI(null)}
-          onSave={savePOI}
-          onDelete={() => { removePOI(editingPOI.id); setEditingPOI(null); }}
-          guideId={id}
-          guideContext={{ id: id || "", title, status, thumbnail, languages: selectedLanguages }}
-          guideLanguages={selectedLanguages}
-          quizQuestion={poiQuestions[editingPOI.id]}
-          onQuizChange={(q) => setPoiQuestions((prev) => q ? { ...prev, [editingPOI.id]: q } : Object.fromEntries(Object.entries(prev).filter(([k]) => k !== editingPOI.id)))}
-          hasChallenge={linkedChallengeId !== ""}
-        />
-      )}
-
-      {/* POI Editor — create new */}
-      {creatingPOI && (
-        <POIEditor
-          poi={blankEditorPOI()}
-          onClose={() => setCreatingPOI(false)}
-          onSave={handleNewPOISave}
-          onDelete={() => setCreatingPOI(false)}
-          guideId={id}
-          guideContext={{ id: id || "", title, status, thumbnail, languages: selectedLanguages }}
-          guideLanguages={selectedLanguages}
-          hasChallenge={linkedChallengeId !== ""}
-        />
-      )}
-
-      {/* Add POI Modal */}
-      {showAddPOI && (
-        <AddPOIModal
-          availablePOIs={availablePOIs}
-          onAdd={addPOI}
-          onCreate={() => { setShowAddPOI(false); setCreatingPOI(true); }}
-          onClose={() => setShowAddPOI(false)}
-        />
-      )}
-
-      {/* Add Event Modal */}
-      {showAddEvent && (
-        <AddEventModal
-          availableEvents={availableEvents}
-          onLink={(eventId) => { setLinkedEventIds((ids) => [...ids, eventId]); setShowAddEvent(false); }}
-          onClose={() => setShowAddEvent(false)}
-        />
-      )}
-
-      {/* Guide Preview Modal */}
-      {showPreview && (
-        <GuidePreviewModal guideName={title} guideId={id} onClose={() => setShowPreview(false)} />
-      )}
-
-      {/* Cover Gallery Modal */}
-      {showCoverGallery && (
-        <CoverGalleryModal
-          thumbnail={thumbnail}
-          onSelect={(url) => { setThumbnail(url); setShowCoverGallery(false); }}
-          onClose={() => setShowCoverGallery(false)}
-        />
-      )}
-
-      {/* Translations Modal */}
-      {activeModal === "translations" && (
-        <TranslationsModal
-          title={title}
-          guideId={id}
-          selectedLanguages={selectedLanguages}
-          onClose={() => setActiveModal(null)}
-          onCompletionChange={setTranslationsComplete}
-        />
-      )}
-
-      {/* Voicing Modal */}
-      {activeModal === "voicing" && (
-        <VoicingModal
-          title={title}
-          onClose={() => setActiveModal(null)}
-          onPublish={() => setActiveModal("publish")}
-        />
-      )}
-
-      {/* Publish Modal */}
-      {activeModal === "publish" && (
-        <PublishModal
-          title={title}
-          poiCount={selectedPOIs.length}
-          publishChecks={publishChecks}
-          allChecksOk={allChecksOk}
-          publishReadyPct={publishReadyPct}
-          canPublish={canPublish}
-          approvalState={approvalState}
-          reviewRequest={reviewRequest}
-          guideId={id}
-          onClose={() => setActiveModal(null)}
-          onPublish={handlePublish}
-          onFinalReview={() => setShowFinalReview(true)}
-          onSimulateApproval={() => reviewRequest && setApprovalState({ approvedBy: reviewRequest.to, date: reviewRequest.date })}
-        />
-      )}
-      {/* Access type change confirmation — published guides only */}
-      {pendingAccessType && (
-        <AccessTypeConfirmModal
-          pendingAccessType={pendingAccessType}
-          onConfirm={() => { setAccessType(pendingAccessType); setPendingAccessType(null); }}
-          onCancel={() => setPendingAccessType(null)}
-        />
-      )}
-
-      {/* Final Review sub-modal */}
-      {showFinalReview && (
-        <FinalReviewModal
-          title={title}
-          guideId={id}
-          currentUser={currentUser}
-          canSelfApprove={canSelfApprove}
-          reviewableMembers={reviewableMembers}
-          onClose={() => setShowFinalReview(false)}
-          onRequestReview={(to) => setReviewRequest({ to, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) })}
-          onSelfApprove={(user) => setApprovalState({ approvedBy: user, date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) })}
-        />
-      )}
-
-      {/* Phase blocker — cannot advance */}
-      {phaseBlocker && (
-        <PhaseBlockerModal
-          title={phaseBlocker.title}
-          detail={phaseBlocker.detail}
-          onGotoScripting={() => { setPhaseBlocker(null); setTimeout(() => document.getElementById("poi-section")?.scrollIntoView({ behavior: "smooth" }), 50); }}
-          onClose={() => setPhaseBlocker(null)}
-        />
-      )}
-
-      {/* Phase transition confirmation */}
-      {pendingPhase && (() => {
-        const isBack = pendingPhase.direction === "back";
-        const target = PHASES.find(p => p.id === pendingPhase.phase)!;
-        const warning = isBack ? BACK_WARNINGS[productionPhase] : null;
-        const noLangs = !isBack && pendingPhase.phase === "translating" && translationLanguages.length === 0;
-        const hintText = warning ?? (pendingPhase.phase === "translating" ? translatingHintJSX : target.hint);
-        return (
-          <PhaseTransitionModal
-            targetLabel={target.label}
-            isBack={isBack}
-            noLangs={noLangs}
-            hintText={hintText}
-            onConfirm={() => {
-              setProductionPhase(pendingPhase.phase);
-              setPendingPhase(null);
-              if (pendingPhase.direction === "forward") {
-                if (pendingPhase.phase === "translating") setActiveModal("translations");
-                if (pendingPhase.phase === "voicing") setActiveModal("voicing");
-                if (pendingPhase.phase === "review") setActiveModal("publish");
-              }
-            }}
-            onAddLanguage={() => { setPendingPhase(null); setTimeout(() => document.getElementById("languages-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); }}
-            onSkipToVoicing={() => { setProductionPhase("voicing"); setPendingPhase(null); setActiveModal("voicing"); }}
-            onCancel={() => setPendingPhase(null)}
-          />
-        );
-      })()}
-
-      {/* POI Quiz Modal */}
-      {editingQuizPOI && (
-        <POIQuizModal
-          poi={editingQuizPOI}
-          existing={poiQuestions[editingQuizPOI.id]}
-          onSave={(q) => {
-            setPoiQuestions((prev) => ({ ...prev, [editingQuizPOI.id]: q }));
-            setEditingQuizPOI(null);
-          }}
-          onRemove={() => {
-            setPoiQuestions((prev) => { const next = { ...prev }; delete next[editingQuizPOI.id]; return next; });
-            setEditingQuizPOI(null);
-          }}
-          onClose={() => setEditingQuizPOI(null)}
-        />
-      )}
-
-      {/* Context floating pill */}
-      {sources.length > 0 && (
-        <button
-          onClick={() => setShowSources((v) => !v)}
-          className={`fixed bottom-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl shadow-lg text-[13px] font-medium transition-all duration-200 ${
-            showSources
-              ? "bg-zinc-800 text-white scale-95"
-              : "bg-white text-zinc-700 hover:bg-zinc-50 hover:scale-105 border border-zinc-200"
-          }`}
-          style={{ right: "88px" }}
-          title="Context"
-        >
-          <FileText className="size-4 flex-shrink-0" strokeWidth={1.5} />
-          Context
-        </button>
-      )}
-
-      {/* Sources drawer */}
-      {showSources && sources.length > 0 && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setShowSources(false)} />
-          <div className="fixed top-0 right-0 h-full w-72 z-50 bg-white border-l border-zinc-200 flex flex-col shadow-xl" style={{ boxShadow: '-4px 0 24px 0 rgba(0,0,0,0.08)' }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
-              <div className="flex items-center gap-2">
-                <FileText className="size-4 text-zinc-400" />
-                <p className="text-sm font-semibold text-zinc-900">Sources</p>
-              </div>
-              <button onClick={() => setShowSources(false)} className="text-zinc-300 hover:text-zinc-500 transition-colors">
-                <X className="size-4" />
-              </button>
-            </div>
-            <p className="px-5 py-3 text-[11px] text-zinc-400 border-b border-zinc-100">
-              Documents used to generate this guide's content.
-            </p>
-            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-              {sources.map((s, i) => (
-                <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-50 transition-colors">
-                  <FileText className="size-3.5 text-zinc-400 flex-shrink-0" />
-                  <span className="text-xs text-zinc-700 flex-1 truncate">{s.name}</span>
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                    s.type === "library"
-                      ? "bg-blue-50 text-blue-600"
-                      : "bg-amber-50 text-amber-600"
-                  }`}>
-                    {s.type === "library" ? "library" : "uploaded"}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="px-5 py-4 border-t border-zinc-100">
-              <Link to="/guides/new" className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors underline underline-offset-2">
-                Edit sources
-              </Link>
-            </div>
-          </div>
-        </>
-      )}
+      <GuideEditorModals
+        guide={{ id, title, status, thumbnail, languages: selectedLanguages }}
+        poi={{
+          editingPOI, setEditingPOI,
+          creatingPOI, setCreatingPOI,
+          showAddPOI, setShowAddPOI,
+          availablePOIs, linkedChallengeId, poiCount: selectedPOIs.length,
+          poiQuestions, setPoiQuestions,
+          editingQuizPOI, setEditingQuizPOI,
+          addPOI, savePOI, removePOI, handleNewPOISave, toEditorPOI, blankEditorPOI,
+        }}
+        event={{
+          showAddEvent, setShowAddEvent, availableEvents,
+          onLinkEvent: (eventId) => setLinkedEventIds(ids => [...ids, eventId]),
+        }}
+        modal={{
+          activeModal, setActiveModal,
+          showPreview, setShowPreview,
+          showCoverGallery, setShowCoverGallery, setThumbnail,
+          showFinalReview, setShowFinalReview,
+        }}
+        publish={{
+          publishChecks, allChecksOk, publishReadyPct, canPublish,
+          approvalState, setApprovalState,
+          reviewRequest, setReviewRequest,
+          canSelfApprove, reviewableMembers, currentUser,
+          handlePublish,
+          pendingAccessType, setPendingAccessType, setAccessType,
+        }}
+        phase={{
+          phaseBlocker, setPhaseBlocker,
+          pendingPhase, setPendingPhase,
+          productionPhase, setProductionPhase,
+          translationLanguages, setTranslationsComplete, translatingHintJSX,
+          onAddLanguage: () => { setPendingPhase(null); setTimeout(() => document.getElementById("languages-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); },
+        }}
+      />
+      <SourcesDrawer sources={sources} />
     </PageShell>
   );
 }
